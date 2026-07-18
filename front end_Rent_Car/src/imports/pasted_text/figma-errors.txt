@@ -1,0 +1,1453 @@
+Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [Figment] Request failed to send, disabling further tracking
+(anonymous) @ vendor-core-2c4d3209a055b7aa.min.js.br:54
+errors.figma.com/api/sentry/api/56203/envelope/?sentry_key=d1b12a8fbe424e4b956eb33cadd5b30d&sentry_version=7&sentry_client=sentry.javascript.browser%2F8.40.0:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+browser-intake-datadoghq.com/api/v2/rum:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+vendor-core-2c4d3209a055b7aa.min.js.br:54 Statsig is not ready to log exposures, will retry in 1 seconds
+(anonymous) @ vendor-core-2c4d3209a055b7aa.min.js.br:54
+/api/figment-proxy/monitor:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/figment-proxy/monitor:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/figment-proxy/monitor:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/figment-proxy/page:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [Figment] Request failed to send, disabling further tracking
+(anonymous) @ vendor-core-2c4d3209a055b7aa.min.js.br:54
+vendor-core-2c4d3209a055b7aa.min.js.br:54 Loaded 49 scripts (6742464b), 49 from cache (6742464b)
+/api/web_logger/metrics/page_load:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/metrics/session_start:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+vendor-core-2c4d3209a055b7aa.min.js.br:54 Error trying to send tags Object T: XHR for "https://www.figma.com/api/web_logger/metrics/page_load" failed with status 0
+    at R (8044-8c8e9a490f0abe0b.min.js.br:1359:11506)
+    at async R.p [as crossOriginPost] (8044-8c8e9a490f0abe0b.min.js.br:1359:12459)
+    at async m (8044-8c8e9a490f0abe0b.min.js.br:1320:87452)
+(anonymous) @ vendor-core-2c4d3209a055b7aa.min.js.br:54
+vendor-core-2c4d3209a055b7aa.min.js.br:54 Autosave Changes not available or already claimed by another tab undefined
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [import] git: c9475b0de2284e342fb9b5b7178deb0038fcd629, stamp: 71FAF4996707C5DF
+8044-8c8e9a490f0abe0b.min.js.br:1359 Uncaught (in promise) T: XHR for "https://www.figma.com/api/web_logger/metrics/session_start" failed with status 0
+    at R (8044-8c8e9a490f0abe0b.min.js.br:1359:11506)
+    at async R.p [as crossOriginPost] (8044-8c8e9a490f0abe0b.min.js.br:1359:12459)
+    at async m (8044-8c8e9a490f0abe0b.min.js.br:1320:87452)
+errors.figma.com/api/sentry/api/56203/envelope/?sentry_key=d1b12a8fbe424e4b956eb33cadd5b30d&sentry_version=7&sentry_client=sentry.javascript.browser%2F8.40.0:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/metrics_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/metrics_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/histogram_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/metrics_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/metrics_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/histogram_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+vendor-core-2c4d3209a055b7aa.min.js.br:54 T: XHR for "https://www.figma.com/api/web_logger/metrics_batched" failed with status 0
+    at R (8044-8c8e9a490f0abe0b.min.js.br:1359:11506)
+    at async R.p [as crossOriginPost] (8044-8c8e9a490f0abe0b.min.js.br:1359:12459)
+    at async g (8044-8c8e9a490f0abe0b.min.js.br:1320:88106)
+    at async Promise.all (/make/8Z9ol8A51j7a8b6tZWNhCN/index 0)
+    at async Object.sendBatchedEvents (8044-8c8e9a490f0abe0b.min.js.br:200:174655)
+    at async HTMLDocument.<anonymous> (8044-8c8e9a490f0abe0b.min.js.br:200:174190)
+(anonymous) @ vendor-core-2c4d3209a055b7aa.min.js.br:54
+7058-1ff9452c8ae7705e.min.js.br:7 The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127
+initialize @ 7058-1ff9452c8ae7705e.min.js.br:7
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [Fullscreen] Booting... (emscripten version 4.0.21)
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [GPU] graphicsAPI:"WebGPU", vendor:"Google Inc. (AMD)" renderer:"ANGLE (AMD, AMD Radeon(TM) Vega 8 Graphics (0x000015D8) Direct3D11 vs_5_0 ps_5_0, D3D11)" deviceArchitecture:"gcn-5" deviceDescription:"" webGPUDevice:"" webGPUVendor:"amd" bindings:"emdawnwebgpu"
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [Fullscreen] Ready in 141.3ms
+7058-1ff9452c8ae7705e.min.js.br:7 The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127
+f @ 7058-1ff9452c8ae7705e.min.js.br:7
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [FullscreenApp] calling setEditorTheme and setting preference light
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [MultiplayerSession] connecting to wss://www.figma.com/api/multiplayer/8Z9ol8A51j7a8b6tZWNhCN?role=editor&tracking_session_id=FqAlLHltCGT9yg6X&version=180&recentReload=0&file-load-streaming-compression=&user-id=1649888305523024375&client_release=80e3e267afb8f6eaf5cd1ffaaad287406e0e27f6&previousLoadMode=full&reconnect-key=03d13110-77ca-4a3e-b2b8-753be4d9f62e&reconnect-sequence-number=128&initialFileVersion=106
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [MultiplayerSession] Joining file version 106 (skip_reload reconnect)
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [FullscreenApp] calling setEditorTheme and setting preference light
+/api/web_logger/histogram/performance.fullscreen.load_time:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/histogram/performance.fullscreen.create_time:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/metrics_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/histogram_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/metrics_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+vendor-core-2c4d3209a055b7aa.min.js.br:54 T: XHR for "https://www.figma.com/api/web_logger/metrics_batched" failed with status 0
+    at R (8044-8c8e9a490f0abe0b.min.js.br:1359:11506)
+    at async R.p [as crossOriginPost] (8044-8c8e9a490f0abe0b.min.js.br:1359:12459)
+    at async g (8044-8c8e9a490f0abe0b.min.js.br:1320:88106)
+    at async Promise.all (/make/8Z9ol8A51j7a8b6tZWNhCN/index 0)
+    at async 8044-8c8e9a490f0abe0b.min.js.br:200:174655
+(anonymous) @ vendor-core-2c4d3209a055b7aa.min.js.br:54
+/api/web_logger/histogram_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+errors.figma.com/api/sentry/api/56203/envelope/?sentry_key=d1b12a8fbe424e4b956eb33cadd5b30d&sentry_version=7&sentry_client=sentry.javascript.browser%2F8.40.0:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [devtools] Initialized LS
+/api/source/v1/make/environment/8Z9ol8A51j7a8b6tZWNhCN?guid=0%3A6:1  Failed to load resource: the server responded with a status of 403 ()
+/api/plans/e34a80b4-f2f2-4e83-89d5-8f5de30846d2/npm_private_registry/scopes:1  Failed to load resource: the server responded with a status of 403 ()
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] iframe_buffer_manager.sandbox_state_effect
+/api/web_logger/metrics_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [devtools] Initialized LS
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] iframe_buffer_manager.sandbox_state_effect
+/api/web_logger/histogram_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/metrics_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/histogram_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] sandbox_manager.sandbox_state_emitted
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] iframe_buffer_manager.sandbox_state_effect
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] iframe_buffer_manager.bundle_cached_preview_branch
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] iframe_buffer_manager.sandbox_state_effect
+/api/web_logger/metrics_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/histogram_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/metrics_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+vendor-core-2c4d3209a055b7aa.min.js.br:54 T: XHR for "https://www.figma.com/api/web_logger/metrics_batched" failed with status 0
+    at R (8044-8c8e9a490f0abe0b.min.js.br:1359:11506)
+    at async R.p [as crossOriginPost] (8044-8c8e9a490f0abe0b.min.js.br:1359:12459)
+    at async g (8044-8c8e9a490f0abe0b.min.js.br:1320:88106)
+    at async Promise.all (/make/8Z9ol8A51j7a8b6tZWNhCN/index 0)
+    at async 8044-8c8e9a490f0abe0b.min.js.br:200:174655
+(anonymous) @ vendor-core-2c4d3209a055b7aa.min.js.br:54
+/api/web_logger/histogram_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] iframe_buffer_manager.sandbox_state_effect
+/api/web_logger/metrics_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/histogram_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/metrics_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/histogram_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+errors.figma.com/api/sentry/api/56203/envelope/?sentry_key=d1b12a8fbe424e4b956eb33cadd5b30d&sentry_version=7&sentry_client=sentry.javascript.browser%2F8.40.0:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/metrics_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/histogram_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/metrics_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/histogram_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/histogram_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/histogram_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+errors.figma.com/api/sentry/api/56203/envelope/?sentry_key=d1b12a8fbe424e4b956eb33cadd5b30d&sentry_version=7&sentry_client=sentry.javascript.browser%2F8.40.0:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/metrics_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/histogram_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/metrics_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/histogram_batched:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+errors.figma.com/api/sentry/api/56203/envelope/?sentry_key=d1b12a8fbe424e4b956eb33cadd5b30d&sentry_version=7&sentry_client=sentry.javascript.browser%2F8.40.0:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+errors.figma.com/api/sentry/api/56203/envelope/?sentry_key=d1b12a8fbe424e4b956eb33cadd5b30d&sentry_version=7&sentry_client=sentry.javascript.browser%2F8.40.0:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/metrics/active_session:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+8044-8c8e9a490f0abe0b.min.js.br:1359 Uncaught (in promise) T: XHR for "https://www.figma.com/api/web_logger/metrics/active_session" failed with status 0
+    at R (8044-8c8e9a490f0abe0b.min.js.br:1359:11506)
+    at async R.p [as crossOriginPost] (8044-8c8e9a490f0abe0b.min.js.br:1359:12459)
+    at async m (8044-8c8e9a490f0abe0b.min.js.br:1320:87452)
+errors.figma.com/api/sentry/api/56203/envelope/?sentry_key=d1b12a8fbe424e4b956eb33cadd5b30d&sentry_version=7&sentry_client=sentry.javascript.browser%2F8.40.0:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [MultiplayerSession] connecting to wss://www.figma.com/api/multiplayer/8Z9ol8A51j7a8b6tZWNhCN?role=editor&tracking_session_id=FqAlLHltCGT9yg6X&version=180&recentReload=0&file-load-streaming-compression=&user-id=1649888305523024375&client_release=80e3e267afb8f6eaf5cd1ffaaad287406e0e27f6&previousLoadMode=full&reconnect-key=03d13110-77ca-4a3e-b2b8-753be4d9f62e&reconnect-sequence-number=128&initialFileVersion=106&incremental-loading-validation=0
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] sandbox_manager.sandbox_state_transition
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] sandbox_manager.sandbox_state_emitted
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] iframe_buffer_manager.sandbox_state_effect
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [Fullscreen] loadtime=5.77s maxmem=10768756
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] sandbox_manager.sandbox_state_transition
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] iframe_buffer_manager.sandbox_state_effect
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] sandbox_manager.sandbox_state_transition
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [MultiplayerSession] Joining file version 106 (skip_reload reconnect)
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] sandbox_manager.sandbox_state_transition
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] sandbox_manager.sandbox_state_emitted
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] iframe_buffer_manager.sandbox_state_effect
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] iframe_buffer_manager.set_buffered_entrypoint
+2vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] iframe_buffer_manager.sandbox_state_effect
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] iframe_buffer_manager.promote_buffered_to_active
+3vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] iframe_buffer_manager.sandbox_state_effect
+/api/cortex/foundry/keep-alive:1  Failed to load resource: net::ERR_CONNECTION_CLOSED
+/api/web_logger/metrics/web.cortex.error:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+8044-8c8e9a490f0abe0b.min.js.br:1359 Uncaught (in promise) T: XHR for "https://www.figma.com/api/web_logger/metrics/web.cortex.error" failed with status 0
+    at R (8044-8c8e9a490f0abe0b.min.js.br:1359:11506)
+    at async R.p [as crossOriginPost] (8044-8c8e9a490f0abe0b.min.js.br:1359:12459)
+    at async m (8044-8c8e9a490f0abe0b.min.js.br:1320:87452)
+code_components_preview_iframe-1865380f95b026c0.min.js.br:17 Warning: Encountered two children with the same key, `null`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. Component Stack
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/svg
+    at Surface (recharts.js?v=a1e332bd:6048:25)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at ChartLayoutContextProvider2 (recharts.js?v=a1e332bd:25504:28)
+    at CategoricalChartWrapper2 (recharts.js?v=a1e332bd:30786:7)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/CategoricalChart2
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at recharts.js?v=a1e332bd:9262:21
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Card (Misc.tsx:6:24)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at MotionDOMComponent (motion_react.js?v=5c1e04d0:5414:10)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PageTransition (Misc.tsx:56:34)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Dashboard (Dashboard.tsx:14:94)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Outlet (react-router.js?v=3836fcc8:7077:26)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/main
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AdminLayout (AdminLayout.tsx:25:50)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RequireAuth (Guards.tsx:5:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Routes (react-router.js?v=3836fcc8:7145:3)
+    at Router (react-router.js?v=3836fcc8:7086:13)
+    at BrowserRouter (react-router.js?v=3836fcc8:10282:3)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AppProvider (AppContext.tsx:62:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PrefsProvider (PrefsContext.tsx:26:33)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/App
+    at vS (code_components_preview_iframe-1865380f95b026c0.min.js.br:782:4559)
+    at W (code_components_preview_iframe-1865380f95b026c0.min.js.br:1035:13963)
+    at of (code_components_preview_iframe-1865380f95b026c0.min.js.br:1089:26084)
+    at LD (code_components_preview_iframe-1865380f95b026c0.min.js.br:1112:14444)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at vM (code_components_preview_iframe-1865380f95b026c0.min.js.br:784:2690)
+    at NQ (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:476515)
+    at DB (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:499315)
+    at Ax (code_components_preview_iframe-1865380f95b026c0.min.js.br:767:54879)
+    at SP (code_components_preview_iframe-1865380f95b026c0.min.js.br:755:4228)
+d @ code_components_preview_iframe-1865380f95b026c0.min.js.br:17
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] preview.console_error
+(anonymous) @ vendor-core-2c4d3209a055b7aa.min.js.br:54
+code_components_preview_iframe-1865380f95b026c0.min.js.br:17 Warning: Encountered two children with the same key, `null`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. Component Stack
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/svg
+    at Surface (recharts.js?v=a1e332bd:6048:25)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at ChartLayoutContextProvider2 (recharts.js?v=a1e332bd:25504:28)
+    at CategoricalChartWrapper2 (recharts.js?v=a1e332bd:30786:7)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/CategoricalChart2
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at recharts.js?v=a1e332bd:9262:21
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Card (Misc.tsx:6:24)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at MotionDOMComponent (motion_react.js?v=5c1e04d0:5414:10)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PageTransition (Misc.tsx:56:34)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Dashboard (Dashboard.tsx:14:94)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Outlet (react-router.js?v=3836fcc8:7077:26)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/main
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AdminLayout (AdminLayout.tsx:25:50)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RequireAuth (Guards.tsx:5:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Routes (react-router.js?v=3836fcc8:7145:3)
+    at Router (react-router.js?v=3836fcc8:7086:13)
+    at BrowserRouter (react-router.js?v=3836fcc8:10282:3)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AppProvider (AppContext.tsx:62:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PrefsProvider (PrefsContext.tsx:26:33)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/App
+    at vS (code_components_preview_iframe-1865380f95b026c0.min.js.br:782:4559)
+    at W (code_components_preview_iframe-1865380f95b026c0.min.js.br:1035:13963)
+    at of (code_components_preview_iframe-1865380f95b026c0.min.js.br:1089:26084)
+    at LD (code_components_preview_iframe-1865380f95b026c0.min.js.br:1112:14444)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at vM (code_components_preview_iframe-1865380f95b026c0.min.js.br:784:2690)
+    at NQ (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:476515)
+    at DB (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:499315)
+    at Ax (code_components_preview_iframe-1865380f95b026c0.min.js.br:767:54879)
+    at SP (code_components_preview_iframe-1865380f95b026c0.min.js.br:755:4228)
+d @ code_components_preview_iframe-1865380f95b026c0.min.js.br:17
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] preview.console_error
+(anonymous) @ vendor-core-2c4d3209a055b7aa.min.js.br:54
+code_components_preview_iframe-1865380f95b026c0.min.js.br:17 Warning: Encountered two children with the same key, `null`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. Component Stack
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/svg
+    at Surface (recharts.js?v=a1e332bd:6048:25)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at ChartLayoutContextProvider2 (recharts.js?v=a1e332bd:25504:28)
+    at CategoricalChartWrapper2 (recharts.js?v=a1e332bd:30786:7)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/CategoricalChart2
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at recharts.js?v=a1e332bd:9262:21
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Card (Misc.tsx:6:24)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at MotionDOMComponent (motion_react.js?v=5c1e04d0:5414:10)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PageTransition (Misc.tsx:56:34)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Dashboard (Dashboard.tsx:14:94)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Outlet (react-router.js?v=3836fcc8:7077:26)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/main
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AdminLayout (AdminLayout.tsx:25:50)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RequireAuth (Guards.tsx:5:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Routes (react-router.js?v=3836fcc8:7145:3)
+    at Router (react-router.js?v=3836fcc8:7086:13)
+    at BrowserRouter (react-router.js?v=3836fcc8:10282:3)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AppProvider (AppContext.tsx:62:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PrefsProvider (PrefsContext.tsx:26:33)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/App
+    at vS (code_components_preview_iframe-1865380f95b026c0.min.js.br:782:4559)
+    at W (code_components_preview_iframe-1865380f95b026c0.min.js.br:1035:13963)
+    at of (code_components_preview_iframe-1865380f95b026c0.min.js.br:1089:26084)
+    at LD (code_components_preview_iframe-1865380f95b026c0.min.js.br:1112:14444)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at vM (code_components_preview_iframe-1865380f95b026c0.min.js.br:784:2690)
+    at NQ (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:476515)
+    at DB (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:499315)
+    at Ax (code_components_preview_iframe-1865380f95b026c0.min.js.br:767:54879)
+    at SP (code_components_preview_iframe-1865380f95b026c0.min.js.br:755:4228)
+d @ code_components_preview_iframe-1865380f95b026c0.min.js.br:17
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] preview.console_error
+(anonymous) @ vendor-core-2c4d3209a055b7aa.min.js.br:54
+code_components_preview_iframe-1865380f95b026c0.min.js.br:17 Warning: Encountered two children with the same key, `null`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. Component Stack
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/svg
+    at Surface (recharts.js?v=a1e332bd:6048:25)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at ChartLayoutContextProvider2 (recharts.js?v=a1e332bd:25504:28)
+    at CategoricalChartWrapper2 (recharts.js?v=a1e332bd:30786:7)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/CategoricalChart2
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at recharts.js?v=a1e332bd:9262:21
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Card (Misc.tsx:6:24)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at MotionDOMComponent (motion_react.js?v=5c1e04d0:5414:10)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PageTransition (Misc.tsx:56:34)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Dashboard (Dashboard.tsx:14:94)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Outlet (react-router.js?v=3836fcc8:7077:26)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/main
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AdminLayout (AdminLayout.tsx:25:50)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RequireAuth (Guards.tsx:5:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Routes (react-router.js?v=3836fcc8:7145:3)
+    at Router (react-router.js?v=3836fcc8:7086:13)
+    at BrowserRouter (react-router.js?v=3836fcc8:10282:3)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AppProvider (AppContext.tsx:62:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PrefsProvider (PrefsContext.tsx:26:33)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/App
+    at vS (code_components_preview_iframe-1865380f95b026c0.min.js.br:782:4559)
+    at W (code_components_preview_iframe-1865380f95b026c0.min.js.br:1035:13963)
+    at of (code_components_preview_iframe-1865380f95b026c0.min.js.br:1089:26084)
+    at LD (code_components_preview_iframe-1865380f95b026c0.min.js.br:1112:14444)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at vM (code_components_preview_iframe-1865380f95b026c0.min.js.br:784:2690)
+    at NQ (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:476515)
+    at DB (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:499315)
+    at Ax (code_components_preview_iframe-1865380f95b026c0.min.js.br:767:54879)
+    at SP (code_components_preview_iframe-1865380f95b026c0.min.js.br:755:4228)
+d @ code_components_preview_iframe-1865380f95b026c0.min.js.br:17
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] preview.console_error
+(anonymous) @ vendor-core-2c4d3209a055b7aa.min.js.br:54
+code_components_preview_iframe-1865380f95b026c0.min.js.br:17 Warning: Encountered two children with the same key, `null`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. Component Stack
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/svg
+    at Surface (recharts.js?v=a1e332bd:6048:25)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at ChartLayoutContextProvider2 (recharts.js?v=a1e332bd:25504:28)
+    at CategoricalChartWrapper2 (recharts.js?v=a1e332bd:30786:7)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/CategoricalChart2
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at recharts.js?v=a1e332bd:9262:21
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Card (Misc.tsx:6:24)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at MotionDOMComponent (motion_react.js?v=5c1e04d0:5414:10)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PageTransition (Misc.tsx:56:34)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Dashboard (Dashboard.tsx:14:94)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Outlet (react-router.js?v=3836fcc8:7077:26)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/main
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AdminLayout (AdminLayout.tsx:25:50)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RequireAuth (Guards.tsx:5:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Routes (react-router.js?v=3836fcc8:7145:3)
+    at Router (react-router.js?v=3836fcc8:7086:13)
+    at BrowserRouter (react-router.js?v=3836fcc8:10282:3)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AppProvider (AppContext.tsx:62:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PrefsProvider (PrefsContext.tsx:26:33)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/App
+    at vS (code_components_preview_iframe-1865380f95b026c0.min.js.br:782:4559)
+    at W (code_components_preview_iframe-1865380f95b026c0.min.js.br:1035:13963)
+    at of (code_components_preview_iframe-1865380f95b026c0.min.js.br:1089:26084)
+    at LD (code_components_preview_iframe-1865380f95b026c0.min.js.br:1112:14444)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at vM (code_components_preview_iframe-1865380f95b026c0.min.js.br:784:2690)
+    at NQ (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:476515)
+    at DB (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:499315)
+    at Ax (code_components_preview_iframe-1865380f95b026c0.min.js.br:767:54879)
+    at SP (code_components_preview_iframe-1865380f95b026c0.min.js.br:755:4228)
+d @ code_components_preview_iframe-1865380f95b026c0.min.js.br:17
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] preview.console_error
+(anonymous) @ vendor-core-2c4d3209a055b7aa.min.js.br:54
+code_components_preview_iframe-1865380f95b026c0.min.js.br:17 Warning: Encountered two children with the same key, `null`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. Component Stack
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/svg
+    at Surface (recharts.js?v=a1e332bd:6048:25)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at ChartLayoutContextProvider2 (recharts.js?v=a1e332bd:25504:28)
+    at CategoricalChartWrapper2 (recharts.js?v=a1e332bd:30786:7)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/CategoricalChart2
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at recharts.js?v=a1e332bd:9262:21
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Card (Misc.tsx:6:24)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at MotionDOMComponent (motion_react.js?v=5c1e04d0:5414:10)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PageTransition (Misc.tsx:56:34)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Dashboard (Dashboard.tsx:14:94)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Outlet (react-router.js?v=3836fcc8:7077:26)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/main
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AdminLayout (AdminLayout.tsx:25:50)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RequireAuth (Guards.tsx:5:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Routes (react-router.js?v=3836fcc8:7145:3)
+    at Router (react-router.js?v=3836fcc8:7086:13)
+    at BrowserRouter (react-router.js?v=3836fcc8:10282:3)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AppProvider (AppContext.tsx:62:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PrefsProvider (PrefsContext.tsx:26:33)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/App
+    at vS (code_components_preview_iframe-1865380f95b026c0.min.js.br:782:4559)
+    at W (code_components_preview_iframe-1865380f95b026c0.min.js.br:1035:13963)
+    at of (code_components_preview_iframe-1865380f95b026c0.min.js.br:1089:26084)
+    at LD (code_components_preview_iframe-1865380f95b026c0.min.js.br:1112:14444)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at vM (code_components_preview_iframe-1865380f95b026c0.min.js.br:784:2690)
+    at NQ (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:476515)
+    at DB (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:499315)
+    at Ax (code_components_preview_iframe-1865380f95b026c0.min.js.br:767:54879)
+    at SP (code_components_preview_iframe-1865380f95b026c0.min.js.br:755:4228)
+d @ code_components_preview_iframe-1865380f95b026c0.min.js.br:17
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] preview.console_error
+(anonymous) @ vendor-core-2c4d3209a055b7aa.min.js.br:54
+errors.figma.com/api/sentry/api/56203/envelope/?sentry_key=d1b12a8fbe424e4b956eb33cadd5b30d&sentry_version=7&sentry_client=sentry.javascript.browser%2F8.40.0:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+/api/web_logger/metrics/active_session:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+8044-8c8e9a490f0abe0b.min.js.br:1359 Uncaught (in promise) T: XHR for "https://www.figma.com/api/web_logger/metrics/active_session" failed with status 0
+    at R (8044-8c8e9a490f0abe0b.min.js.br:1359:11506)
+    at async R.p [as crossOriginPost] (8044-8c8e9a490f0abe0b.min.js.br:1359:12459)
+    at async m (8044-8c8e9a490f0abe0b.min.js.br:1320:87452)
+errors.figma.com/api/sentry/api/56203/envelope/?sentry_key=d1b12a8fbe424e4b956eb33cadd5b30d&sentry_version=7&sentry_client=sentry.javascript.browser%2F8.40.0:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+errors.figma.com/api/sentry/api/56203/envelope/?sentry_key=d1b12a8fbe424e4b956eb33cadd5b30d&sentry_version=7&sentry_client=sentry.javascript.browser%2F8.40.0:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+code_components_preview_iframe-1865380f95b026c0.min.js.br:17 Warning: Encountered two children with the same key, `null`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. Component Stack
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/svg
+    at Surface (recharts.js?v=a1e332bd:6048:25)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at ChartLayoutContextProvider2 (recharts.js?v=a1e332bd:25504:28)
+    at CategoricalChartWrapper2 (recharts.js?v=a1e332bd:30786:7)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/CategoricalChart2
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at recharts.js?v=a1e332bd:9262:21
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Card (Misc.tsx:6:24)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at MotionDOMComponent (motion_react.js?v=5c1e04d0:5414:10)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PageTransition (Misc.tsx:56:34)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Dashboard (Dashboard.tsx:14:94)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Outlet (react-router.js?v=3836fcc8:7077:26)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/main
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AdminLayout (AdminLayout.tsx:25:50)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RequireAuth (Guards.tsx:5:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Routes (react-router.js?v=3836fcc8:7145:3)
+    at Router (react-router.js?v=3836fcc8:7086:13)
+    at BrowserRouter (react-router.js?v=3836fcc8:10282:3)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AppProvider (AppContext.tsx:62:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PrefsProvider (PrefsContext.tsx:26:33)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/App
+    at vS (code_components_preview_iframe-1865380f95b026c0.min.js.br:782:4559)
+    at W (code_components_preview_iframe-1865380f95b026c0.min.js.br:1035:13963)
+    at of (code_components_preview_iframe-1865380f95b026c0.min.js.br:1089:26084)
+    at LD (code_components_preview_iframe-1865380f95b026c0.min.js.br:1112:14444)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at vM (code_components_preview_iframe-1865380f95b026c0.min.js.br:784:2690)
+    at NQ (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:476515)
+    at DB (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:499315)
+    at Ax (code_components_preview_iframe-1865380f95b026c0.min.js.br:767:54879)
+    at SP (code_components_preview_iframe-1865380f95b026c0.min.js.br:755:4228)
+d @ code_components_preview_iframe-1865380f95b026c0.min.js.br:17
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] preview.console_error
+(anonymous) @ vendor-core-2c4d3209a055b7aa.min.js.br:54
+code_components_preview_iframe-1865380f95b026c0.min.js.br:17 Warning: Encountered two children with the same key, `null`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. Component Stack
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/svg
+    at Surface (recharts.js?v=a1e332bd:6048:25)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at ChartLayoutContextProvider2 (recharts.js?v=a1e332bd:25504:28)
+    at CategoricalChartWrapper2 (recharts.js?v=a1e332bd:30786:7)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/CategoricalChart2
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at recharts.js?v=a1e332bd:9262:21
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Card (Misc.tsx:6:24)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at MotionDOMComponent (motion_react.js?v=5c1e04d0:5414:10)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PageTransition (Misc.tsx:56:34)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Dashboard (Dashboard.tsx:14:94)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Outlet (react-router.js?v=3836fcc8:7077:26)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/main
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AdminLayout (AdminLayout.tsx:25:50)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RequireAuth (Guards.tsx:5:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Routes (react-router.js?v=3836fcc8:7145:3)
+    at Router (react-router.js?v=3836fcc8:7086:13)
+    at BrowserRouter (react-router.js?v=3836fcc8:10282:3)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AppProvider (AppContext.tsx:62:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PrefsProvider (PrefsContext.tsx:26:33)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/App
+    at vS (code_components_preview_iframe-1865380f95b026c0.min.js.br:782:4559)
+    at W (code_components_preview_iframe-1865380f95b026c0.min.js.br:1035:13963)
+    at of (code_components_preview_iframe-1865380f95b026c0.min.js.br:1089:26084)
+    at LD (code_components_preview_iframe-1865380f95b026c0.min.js.br:1112:14444)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at vM (code_components_preview_iframe-1865380f95b026c0.min.js.br:784:2690)
+    at NQ (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:476515)
+    at DB (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:499315)
+    at Ax (code_components_preview_iframe-1865380f95b026c0.min.js.br:767:54879)
+    at SP (code_components_preview_iframe-1865380f95b026c0.min.js.br:755:4228)
+d @ code_components_preview_iframe-1865380f95b026c0.min.js.br:17
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] preview.console_error
+(anonymous) @ vendor-core-2c4d3209a055b7aa.min.js.br:54
+code_components_preview_iframe-1865380f95b026c0.min.js.br:17 Warning: Encountered two children with the same key, `null`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. Component Stack
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/svg
+    at Surface (recharts.js?v=a1e332bd:6048:25)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at ChartLayoutContextProvider2 (recharts.js?v=a1e332bd:25504:28)
+    at CategoricalChartWrapper2 (recharts.js?v=a1e332bd:30786:7)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/CategoricalChart2
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at recharts.js?v=a1e332bd:9262:21
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Card (Misc.tsx:6:24)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at MotionDOMComponent (motion_react.js?v=5c1e04d0:5414:10)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PageTransition (Misc.tsx:56:34)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Dashboard (Dashboard.tsx:14:94)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Outlet (react-router.js?v=3836fcc8:7077:26)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/main
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AdminLayout (AdminLayout.tsx:25:50)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RequireAuth (Guards.tsx:5:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Routes (react-router.js?v=3836fcc8:7145:3)
+    at Router (react-router.js?v=3836fcc8:7086:13)
+    at BrowserRouter (react-router.js?v=3836fcc8:10282:3)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AppProvider (AppContext.tsx:62:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PrefsProvider (PrefsContext.tsx:26:33)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/App
+    at vS (code_components_preview_iframe-1865380f95b026c0.min.js.br:782:4559)
+    at W (code_components_preview_iframe-1865380f95b026c0.min.js.br:1035:13963)
+    at of (code_components_preview_iframe-1865380f95b026c0.min.js.br:1089:26084)
+    at LD (code_components_preview_iframe-1865380f95b026c0.min.js.br:1112:14444)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at vM (code_components_preview_iframe-1865380f95b026c0.min.js.br:784:2690)
+    at NQ (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:476515)
+    at DB (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:499315)
+    at Ax (code_components_preview_iframe-1865380f95b026c0.min.js.br:767:54879)
+    at SP (code_components_preview_iframe-1865380f95b026c0.min.js.br:755:4228)
+d @ code_components_preview_iframe-1865380f95b026c0.min.js.br:17
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] preview.console_error
+(anonymous) @ vendor-core-2c4d3209a055b7aa.min.js.br:54
+code_components_preview_iframe-1865380f95b026c0.min.js.br:17 Warning: Encountered two children with the same key, `null`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. Component Stack
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/svg
+    at Surface (recharts.js?v=a1e332bd:6048:25)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at ChartLayoutContextProvider2 (recharts.js?v=a1e332bd:25504:28)
+    at CategoricalChartWrapper2 (recharts.js?v=a1e332bd:30786:7)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/CategoricalChart2
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at recharts.js?v=a1e332bd:9262:21
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Card (Misc.tsx:6:24)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at MotionDOMComponent (motion_react.js?v=5c1e04d0:5414:10)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PageTransition (Misc.tsx:56:34)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Dashboard (Dashboard.tsx:14:94)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Outlet (react-router.js?v=3836fcc8:7077:26)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/main
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AdminLayout (AdminLayout.tsx:25:50)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RequireAuth (Guards.tsx:5:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Routes (react-router.js?v=3836fcc8:7145:3)
+    at Router (react-router.js?v=3836fcc8:7086:13)
+    at BrowserRouter (react-router.js?v=3836fcc8:10282:3)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AppProvider (AppContext.tsx:62:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PrefsProvider (PrefsContext.tsx:26:33)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/App
+    at vS (code_components_preview_iframe-1865380f95b026c0.min.js.br:782:4559)
+    at W (code_components_preview_iframe-1865380f95b026c0.min.js.br:1035:13963)
+    at of (code_components_preview_iframe-1865380f95b026c0.min.js.br:1089:26084)
+    at LD (code_components_preview_iframe-1865380f95b026c0.min.js.br:1112:14444)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at vM (code_components_preview_iframe-1865380f95b026c0.min.js.br:784:2690)
+    at NQ (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:476515)
+    at DB (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:499315)
+    at Ax (code_components_preview_iframe-1865380f95b026c0.min.js.br:767:54879)
+    at SP (code_components_preview_iframe-1865380f95b026c0.min.js.br:755:4228)
+d @ code_components_preview_iframe-1865380f95b026c0.min.js.br:17
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] preview.console_error
+(anonymous) @ vendor-core-2c4d3209a055b7aa.min.js.br:54
+code_components_preview_iframe-1865380f95b026c0.min.js.br:17 Warning: Encountered two children with the same key, `null`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. Component Stack
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/svg
+    at Surface (recharts.js?v=a1e332bd:6048:25)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at ChartLayoutContextProvider2 (recharts.js?v=a1e332bd:25504:28)
+    at CategoricalChartWrapper2 (recharts.js?v=a1e332bd:30786:7)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/CategoricalChart2
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at recharts.js?v=a1e332bd:9262:21
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Card (Misc.tsx:6:24)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at MotionDOMComponent (motion_react.js?v=5c1e04d0:5414:10)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PageTransition (Misc.tsx:56:34)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Dashboard (Dashboard.tsx:14:94)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Outlet (react-router.js?v=3836fcc8:7077:26)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/main
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AdminLayout (AdminLayout.tsx:25:50)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RequireAuth (Guards.tsx:5:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Routes (react-router.js?v=3836fcc8:7145:3)
+    at Router (react-router.js?v=3836fcc8:7086:13)
+    at BrowserRouter (react-router.js?v=3836fcc8:10282:3)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AppProvider (AppContext.tsx:62:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PrefsProvider (PrefsContext.tsx:26:33)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/App
+    at vS (code_components_preview_iframe-1865380f95b026c0.min.js.br:782:4559)
+    at W (code_components_preview_iframe-1865380f95b026c0.min.js.br:1035:13963)
+    at of (code_components_preview_iframe-1865380f95b026c0.min.js.br:1089:26084)
+    at LD (code_components_preview_iframe-1865380f95b026c0.min.js.br:1112:14444)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at vM (code_components_preview_iframe-1865380f95b026c0.min.js.br:784:2690)
+    at NQ (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:476515)
+    at DB (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:499315)
+    at Ax (code_components_preview_iframe-1865380f95b026c0.min.js.br:767:54879)
+    at SP (code_components_preview_iframe-1865380f95b026c0.min.js.br:755:4228)
+d @ code_components_preview_iframe-1865380f95b026c0.min.js.br:17
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] preview.console_error
+(anonymous) @ vendor-core-2c4d3209a055b7aa.min.js.br:54
+code_components_preview_iframe-1865380f95b026c0.min.js.br:17 Warning: Encountered two children with the same key, `null`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. Component Stack
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/svg
+    at Surface (recharts.js?v=a1e332bd:6048:25)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at ChartLayoutContextProvider2 (recharts.js?v=a1e332bd:25504:28)
+    at CategoricalChartWrapper2 (recharts.js?v=a1e332bd:30786:7)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/CategoricalChart2
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at recharts.js?v=a1e332bd:9262:21
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Card (Misc.tsx:6:24)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at MotionDOMComponent (motion_react.js?v=5c1e04d0:5414:10)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PageTransition (Misc.tsx:56:34)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Dashboard (Dashboard.tsx:14:94)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Outlet (react-router.js?v=3836fcc8:7077:26)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/main
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AdminLayout (AdminLayout.tsx:25:50)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RequireAuth (Guards.tsx:5:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Routes (react-router.js?v=3836fcc8:7145:3)
+    at Router (react-router.js?v=3836fcc8:7086:13)
+    at BrowserRouter (react-router.js?v=3836fcc8:10282:3)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AppProvider (AppContext.tsx:62:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PrefsProvider (PrefsContext.tsx:26:33)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/App
+    at vS (code_components_preview_iframe-1865380f95b026c0.min.js.br:782:4559)
+    at W (code_components_preview_iframe-1865380f95b026c0.min.js.br:1035:13963)
+    at of (code_components_preview_iframe-1865380f95b026c0.min.js.br:1089:26084)
+    at LD (code_components_preview_iframe-1865380f95b026c0.min.js.br:1112:14444)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at vM (code_components_preview_iframe-1865380f95b026c0.min.js.br:784:2690)
+    at NQ (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:476515)
+    at DB (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:499315)
+    at Ax (code_components_preview_iframe-1865380f95b026c0.min.js.br:767:54879)
+    at SP (code_components_preview_iframe-1865380f95b026c0.min.js.br:755:4228)
+d @ code_components_preview_iframe-1865380f95b026c0.min.js.br:17
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] preview.console_error
+(anonymous) @ vendor-core-2c4d3209a055b7aa.min.js.br:54
+code_components_preview_iframe-1865380f95b026c0.min.js.br:17 Warning: Encountered two children with the same key, `null`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. Component Stack
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/svg
+    at Surface (recharts.js?v=a1e332bd:6048:25)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at ChartLayoutContextProvider2 (recharts.js?v=a1e332bd:25504:28)
+    at CategoricalChartWrapper2 (recharts.js?v=a1e332bd:30786:7)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/CategoricalChart2
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at recharts.js?v=a1e332bd:9262:21
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Card (Misc.tsx:6:24)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at MotionDOMComponent (motion_react.js?v=5c1e04d0:5414:10)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PageTransition (Misc.tsx:56:34)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Dashboard (Dashboard.tsx:14:94)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Outlet (react-router.js?v=3836fcc8:7077:26)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/main
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AdminLayout (AdminLayout.tsx:25:50)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RequireAuth (Guards.tsx:5:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Routes (react-router.js?v=3836fcc8:7145:3)
+    at Router (react-router.js?v=3836fcc8:7086:13)
+    at BrowserRouter (react-router.js?v=3836fcc8:10282:3)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AppProvider (AppContext.tsx:62:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PrefsProvider (PrefsContext.tsx:26:33)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/App
+    at vS (code_components_preview_iframe-1865380f95b026c0.min.js.br:782:4559)
+    at W (code_components_preview_iframe-1865380f95b026c0.min.js.br:1035:13963)
+    at of (code_components_preview_iframe-1865380f95b026c0.min.js.br:1089:26084)
+    at LD (code_components_preview_iframe-1865380f95b026c0.min.js.br:1112:14444)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at vM (code_components_preview_iframe-1865380f95b026c0.min.js.br:784:2690)
+    at NQ (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:476515)
+    at DB (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:499315)
+    at Ax (code_components_preview_iframe-1865380f95b026c0.min.js.br:767:54879)
+    at SP (code_components_preview_iframe-1865380f95b026c0.min.js.br:755:4228)
+d @ code_components_preview_iframe-1865380f95b026c0.min.js.br:17
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] preview.console_error
+(anonymous) @ vendor-core-2c4d3209a055b7aa.min.js.br:54
+2code_components_preview_iframe-1865380f95b026c0.min.js.br:17 Warning: Encountered two children with the same key, `null`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. Component Stack
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/svg
+    at Surface (recharts.js?v=a1e332bd:6048:25)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at ChartLayoutContextProvider2 (recharts.js?v=a1e332bd:25504:28)
+    at CategoricalChartWrapper2 (recharts.js?v=a1e332bd:30786:7)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/CategoricalChart2
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at recharts.js?v=a1e332bd:9262:21
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Card (Misc.tsx:6:24)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at MotionDOMComponent (motion_react.js?v=5c1e04d0:5414:10)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PageTransition (Misc.tsx:56:34)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Dashboard (Dashboard.tsx:14:94)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Outlet (react-router.js?v=3836fcc8:7077:26)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/main
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AdminLayout (AdminLayout.tsx:25:50)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RequireAuth (Guards.tsx:5:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Routes (react-router.js?v=3836fcc8:7145:3)
+    at Router (react-router.js?v=3836fcc8:7086:13)
+    at BrowserRouter (react-router.js?v=3836fcc8:10282:3)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AppProvider (AppContext.tsx:62:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PrefsProvider (PrefsContext.tsx:26:33)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/App
+    at vS (code_components_preview_iframe-1865380f95b026c0.min.js.br:782:4559)
+    at W (code_components_preview_iframe-1865380f95b026c0.min.js.br:1035:13963)
+    at of (code_components_preview_iframe-1865380f95b026c0.min.js.br:1089:26084)
+    at LD (code_components_preview_iframe-1865380f95b026c0.min.js.br:1112:14444)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at vM (code_components_preview_iframe-1865380f95b026c0.min.js.br:784:2690)
+    at NQ (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:476515)
+    at DB (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:499315)
+    at Ax (code_components_preview_iframe-1865380f95b026c0.min.js.br:767:54879)
+    at SP (code_components_preview_iframe-1865380f95b026c0.min.js.br:755:4228)
+d @ code_components_preview_iframe-1865380f95b026c0.min.js.br:17
+2vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] preview.console_error
+(anonymous) @ vendor-core-2c4d3209a055b7aa.min.js.br:54
+code_components_preview_iframe-1865380f95b026c0.min.js.br:17 Warning: Encountered two children with the same key, `null`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. Component Stack
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/svg
+    at Surface (recharts.js?v=a1e332bd:6048:25)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at ChartLayoutContextProvider2 (recharts.js?v=a1e332bd:25504:28)
+    at CategoricalChartWrapper2 (recharts.js?v=a1e332bd:30786:7)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/CategoricalChart2
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at recharts.js?v=a1e332bd:9262:21
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Card (Misc.tsx:6:24)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at MotionDOMComponent (motion_react.js?v=5c1e04d0:5414:10)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PageTransition (Misc.tsx:56:34)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Dashboard (Dashboard.tsx:14:94)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Outlet (react-router.js?v=3836fcc8:7077:26)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/main
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AdminLayout (AdminLayout.tsx:25:50)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RequireAuth (Guards.tsx:5:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Routes (react-router.js?v=3836fcc8:7145:3)
+    at Router (react-router.js?v=3836fcc8:7086:13)
+    at BrowserRouter (react-router.js?v=3836fcc8:10282:3)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AppProvider (AppContext.tsx:62:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PrefsProvider (PrefsContext.tsx:26:33)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/App
+    at vS (code_components_preview_iframe-1865380f95b026c0.min.js.br:782:4559)
+    at W (code_components_preview_iframe-1865380f95b026c0.min.js.br:1035:13963)
+    at of (code_components_preview_iframe-1865380f95b026c0.min.js.br:1089:26084)
+    at LD (code_components_preview_iframe-1865380f95b026c0.min.js.br:1112:14444)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at vM (code_components_preview_iframe-1865380f95b026c0.min.js.br:784:2690)
+    at NQ (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:476515)
+    at DB (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:499315)
+    at Ax (code_components_preview_iframe-1865380f95b026c0.min.js.br:767:54879)
+    at SP (code_components_preview_iframe-1865380f95b026c0.min.js.br:755:4228)
+d @ code_components_preview_iframe-1865380f95b026c0.min.js.br:17
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] preview.console_error
+(anonymous) @ vendor-core-2c4d3209a055b7aa.min.js.br:54
+code_components_preview_iframe-1865380f95b026c0.min.js.br:17 Warning: Encountered two children with the same key, `null`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. Component Stack
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/svg
+    at Surface (recharts.js?v=a1e332bd:6048:25)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at ChartLayoutContextProvider2 (recharts.js?v=a1e332bd:25504:28)
+    at CategoricalChartWrapper2 (recharts.js?v=a1e332bd:30786:7)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/CategoricalChart2
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at recharts.js?v=a1e332bd:9262:21
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Card (Misc.tsx:6:24)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at MotionDOMComponent (motion_react.js?v=5c1e04d0:5414:10)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PageTransition (Misc.tsx:56:34)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Dashboard (Dashboard.tsx:14:94)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Outlet (react-router.js?v=3836fcc8:7077:26)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/main
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AdminLayout (AdminLayout.tsx:25:50)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RequireAuth (Guards.tsx:5:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Routes (react-router.js?v=3836fcc8:7145:3)
+    at Router (react-router.js?v=3836fcc8:7086:13)
+    at BrowserRouter (react-router.js?v=3836fcc8:10282:3)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AppProvider (AppContext.tsx:62:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PrefsProvider (PrefsContext.tsx:26:33)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/App
+    at vS (code_components_preview_iframe-1865380f95b026c0.min.js.br:782:4559)
+    at W (code_components_preview_iframe-1865380f95b026c0.min.js.br:1035:13963)
+    at of (code_components_preview_iframe-1865380f95b026c0.min.js.br:1089:26084)
+    at LD (code_components_preview_iframe-1865380f95b026c0.min.js.br:1112:14444)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at vM (code_components_preview_iframe-1865380f95b026c0.min.js.br:784:2690)
+    at NQ (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:476515)
+    at DB (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:499315)
+    at Ax (code_components_preview_iframe-1865380f95b026c0.min.js.br:767:54879)
+    at SP (code_components_preview_iframe-1865380f95b026c0.min.js.br:755:4228)
+d @ code_components_preview_iframe-1865380f95b026c0.min.js.br:17
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] preview.console_error
+(anonymous) @ vendor-core-2c4d3209a055b7aa.min.js.br:54
+code_components_preview_iframe-1865380f95b026c0.min.js.br:17 Warning: Encountered two children with the same key, `null`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. Component Stack
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/svg
+    at Surface (recharts.js?v=a1e332bd:6048:25)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at ChartLayoutContextProvider2 (recharts.js?v=a1e332bd:25504:28)
+    at CategoricalChartWrapper2 (recharts.js?v=a1e332bd:30786:7)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/CategoricalChart2
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at recharts.js?v=a1e332bd:9262:21
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Card (Misc.tsx:6:24)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at MotionDOMComponent (motion_react.js?v=5c1e04d0:5414:10)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PageTransition (Misc.tsx:56:34)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at Dashboard (Dashboard.tsx:14:94)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Outlet (react-router.js?v=3836fcc8:7077:26)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/main
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AdminLayout (AdminLayout.tsx:25:50)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RequireAuth (Guards.tsx:5:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at RenderedRoute (react-router.js?v=3836fcc8:6296:26)
+    at Routes (react-router.js?v=3836fcc8:7145:3)
+    at Router (react-router.js?v=3836fcc8:7086:13)
+    at BrowserRouter (react-router.js?v=3836fcc8:10282:3)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at AppProvider (AppContext.tsx:62:31)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at PrefsProvider (PrefsContext.tsx:26:33)
+    at code_components_preview_iframe-1865380f95b026c0.min.js.br:355:5262
+    at FGCmp (fginspector:3:55)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/App
+    at vS (code_components_preview_iframe-1865380f95b026c0.min.js.br:782:4559)
+    at W (code_components_preview_iframe-1865380f95b026c0.min.js.br:1035:13963)
+    at of (code_components_preview_iframe-1865380f95b026c0.min.js.br:1089:26084)
+    at LD (code_components_preview_iframe-1865380f95b026c0.min.js.br:1112:14444)
+    at 1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/div
+    at vM (code_components_preview_iframe-1865380f95b026c0.min.js.br:784:2690)
+    at NQ (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:476515)
+    at DB (code_components_preview_iframe-1865380f95b026c0.min.js.br:1096:499315)
+    at Ax (code_components_preview_iframe-1865380f95b026c0.min.js.br:767:54879)
+    at SP (code_components_preview_iframe-1865380f95b026c0.min.js.br:755:4228)
+d @ code_components_preview_iframe-1865380f95b026c0.min.js.br:17
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] preview.console_error
+(anonymous) @ vendor-core-2c4d3209a055b7aa.min.js.br:54
+vendor-core-2c4d3209a055b7aa.min.js.br:54 [make] preview.asset_url_map_refresh_requested
+The FetchEvent for "https://1ef415af-1dbe-4317-96b1-59af90b78a62-v3-figmaiframepreview.figma.site/my-reservations" resulted in a network error response: the promise was rejected.
+preview_service_worker.js:156  Uncaught (in promise) TypeError: Failed to fetch
+    at releaseUnmatchedPendingRequests (preview_service_worker.js:156:23)
+    at handleAssetUrlMapUpdate (preview_service_worker.js:87:5)
+    at handleAssetUrlMapMessage (preview_service_worker.js:221:7)
+    at preview_service_worker.js:239:5
+releaseUnmatchedPendingRequests @ preview_service_worker.js:156
+handleAssetUrlMapUpdate @ preview_service_worker.js:87
+handleAssetUrlMapMessage @ preview_service_worker.js:221
+(anonymous) @ preview_service_worker.js:239
+vendor-core-2c4d3209a055b7aa.min.js.br:63  POST https://www.figma.com/api/web_logger/metrics/active_session net::ERR_BLOCKED_BY_CLIENT
+(anonymous) @ vendor-core-2c4d3209a055b7aa.min.js.br:63
+(anonymous) @ 8044-8c8e9a490f0abe0b.min.js.br:1320
+(anonymous) @ 8044-8c8e9a490f0abe0b.min.js.br:1359
+k @ 8044-8c8e9a490f0abe0b.min.js.br:1359
+R @ 8044-8c8e9a490f0abe0b.min.js.br:1359
+p @ 8044-8c8e9a490f0abe0b.min.js.br:1359
+m @ 8044-8c8e9a490f0abe0b.min.js.br:1320
+(anonymous) @ 8044-8c8e9a490f0abe0b.min.js.br:153
+u @ vendor-core-2c4d3209a055b7aa.min.js.br:54
+8044-8c8e9a490f0abe0b.min.js.br:1359 Uncaught (in promise) T: XHR for "https://www.figma.com/api/web_logger/metrics/active_session" failed with status 0
+    at R (8044-8c8e9a490f0abe0b.min.js.br:1359:11506)
+    at async R.p [as crossOriginPost] (8044-8c8e9a490f0abe0b.min.js.br:1359:12459)
+    at async m (8044-8c8e9a490f0abe0b.min.js.br:1320:87452)
+R @ 8044-8c8e9a490f0abe0b.min.js.br:1359
+await in R
+p @ 8044-8c8e9a490f0abe0b.min.js.br:1359
+m @ 8044-8c8e9a490f0abe0b.min.js.br:1320
+(anonymous) @ 8044-8c8e9a490f0abe0b.min.js.br:153
+u @ vendor-core-2c4d3209a055b7aa.min.js.br:54

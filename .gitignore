@@ -1,0 +1,39 @@
+# ==========================
+# Backend Spring Boot
+# ==========================
+
+Rent_Car/target/
+Rent_Car/.idea/
+Rent_Car/*.iml
+
+# Logs
+*.log
+
+
+# ==========================
+# Frontend React TypeScript
+# ==========================
+
+front end_Rent_Car/node_modules/
+front end_Rent_Car/dist/
+
+# Environment files
+front end_Rent_Car/.env
+front end_Rent_Car/.env.local
+
+
+# ==========================
+# IDE
+# ==========================
+
+.vscode/
+.idea/
+
+
+# ==========================
+# OS
+# ==========================
+
+.DS_Store
+Thumbs.db
+Rent_Car/uploads/
