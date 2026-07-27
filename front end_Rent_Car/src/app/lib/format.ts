@@ -15,11 +15,38 @@ export const daysBetween = (start: string, end: string) => {
   return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
 };
 
-export const formatDate = (date?: string) => {
+export const formatDate = (date?: string, includeTime: boolean = false) => {
   if (!date) return "";
-  return new Date(date).toLocaleDateString("fr-FR", {
+  const options: Intl.DateTimeFormatOptions = {
     day: "numeric",
-    month: "short",
+    month: "2-digit",
     year: "numeric",
-  });
+  };
+  if (includeTime) {
+    options.hour = "2-digit";
+    options.minute = "2-digit";
+  }
+  return new Date(date).toLocaleString("fr-FR", options);
+};
+
+export const relativeTime = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+
+  if (diffSec < 60) {
+    return "Il y a quelques secondes";
+  } else if (diffMin < 60) {
+    return `Il y a ${diffMin} minute${diffMin > 1 ? "s" : ""}`;
+  } else if (diffHour < 24) {
+    return `Il y a ${diffHour} heure${diffHour > 1 ? "s" : ""}`;
+  } else if (diffDay < 7) {
+    return `Il y a ${diffDay} jour${diffDay > 1 ? "s" : ""}`;
+  } else {
+    return formatDate(dateString);
+  }
 };

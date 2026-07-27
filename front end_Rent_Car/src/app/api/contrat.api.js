@@ -3,6 +3,7 @@ import { api } from "./axios";
 export const contractsAPI = {
   // CLIENT
   sign: (id) => api.put(`/contracts/${id}/sign`),
+  getMy: () => api.get("/contracts/my"),
 
   // AUTHENTIFIÉ
   getByReservation: (reservationId) => api.get(`/contracts/reservation/${reservationId}`),

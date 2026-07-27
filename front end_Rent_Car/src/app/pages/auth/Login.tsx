@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { Mail, Lock, AlertCircle } from "lucide-react";
-import { toast } from "sonner";
 import { motion } from "motion/react";
 import { useForm } from "react-hook-form";
 import { AuthShell } from "./AuthShell";
@@ -31,12 +30,15 @@ export default function Login() {
   });
 
   const onSubmit = async (data: LoginForm) => {
-    const user = await login(data.email, data.password);
-    if (!user) {
-      return;
+    try {
+      const user = await login(data.email, data.password);
+      if (!user) {
+        return;
+      }
+      navigate(user.role === "ADMIN" ? "/admin/dashboard" : "/cars");
+    } catch (error: any) {
+      toast.error(error.message || "Email ou mot de passe incorrect");
     }
-    toast.success(`Bienvenue, ${user.firstName} !`);
-    navigate(user.role === "ADMIN" ? "/admin/dashboard" : "/cars");
   };
 
   return (

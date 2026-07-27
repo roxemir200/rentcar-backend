@@ -59,6 +59,23 @@ export default function MyReservations() {
     if (currentUser) loadReservations();
   }, [currentUser]);
 
+  // ✅ Refresh en temps réel sans F5. AppContext diffuse 'rentcar:data-updated' chaque fois
+  // qu'une réservation / paiement / contrat évolue sur SSE → on recharge la liste pour être à jour.
+  useEffect(() => {
+    const onDataUpdated = (e: Event) => {
+      const ce = e as CustomEvent<{ kind: string; id?: string | number }>;
+      if (!ce.detail) {
+        loadReservations();
+        return;
+      }
+      if (ce.detail.kind === "reservation" || ce.detail.kind === "payment") {
+        loadReservations();
+      }
+    };
+    window.addEventListener("rentcar:data-updated", onDataUpdated);
+    return () => window.removeEventListener("rentcar:data-updated", onDataUpdated);
+  }, []);
+
   // ✅ Charger les contrats pour les réservations qui en ont besoin
   useEffect(() => {
     reservations.forEach(r => {

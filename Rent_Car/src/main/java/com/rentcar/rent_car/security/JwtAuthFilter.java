@@ -1,5 +1,6 @@
 package com.rentcar.rent_car.security;
 
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,13 +14,47 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.EnumSet;
 
 @Component
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
+    private static final EnumSet<DispatcherType> INTERNAL_DISPATCHES =
+            EnumSet.of(DispatcherType.ASYNC, DispatcherType.ERROR, DispatcherType.FORWARD);
+
     private final JwtUtils jwtUtils;
     private final UserDetailsServiceImpl userDetailsService;
+
+    /**
+     * ⭐ Bonne pratique SSE / async :
+     * Pour les dispatches INTERNES (ASYNC/ERROR/FORWARD), on SAUTE complètement
+     * la validation JWT + la mise à jour du SecurityContext.
+     * <p>
+     * Pourquoi : ces dispatches sont déclenchés par Tomcat/Spring MVC pour :
+     * - terminer une requête Async SSE (déconnexion client, timeout, erreur d'écriture)
+     * - gérer une page d'erreur
+     * - faire un forward/include
+     * L'authentification a déjà été validée sur le DispatchType.REQUEST initial.
+     * Revalider/refournir un Authentication ici vide (car le token n'est plus présent
+     * dans le dispatch interne) ferait perdre le contexte et produirait des
+     * AuthorizationDeniedException sur les SSE.
+     */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return INTERNAL_DISPATCHES.contains(request.getDispatcherType());
+    }
+
+    @Override
+    protected boolean shouldNotFilterAsyncDispatch() {
+        // On veut que shouldNotFilter() (ci-dessus) soit bien évalué même sur un dispatch ASYNC.
+        return false;
+    }
+
+    @Override
+    protected boolean shouldNotFilterErrorDispatch() {
+        return false;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -51,12 +86,18 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    // Extraire le token du header "Authorization: Bearer xxx"
+    // Extraire le token du header "Authorization: Bearer xxx" ou du paramètre query "token"
     private String extractTokenFromRequest(HttpServletRequest request) {
+        // Essayer d'abord le header Authorization
         String bearerToken = request.getHeader("Authorization");
-
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7); // Enlever "Bearer " (7 caractères)
+        }
+
+        // Si pas dans le header, essayer le paramètre query "token" (pour SSE)
+        String queryToken = request.getParameter("token");
+        if (StringUtils.hasText(queryToken)) {
+            return queryToken;
         }
 
         return null;

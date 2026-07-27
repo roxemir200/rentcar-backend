@@ -13,6 +13,8 @@ const stripePromise = loadStripe("pk_test_51QxQ0L013eLvCqd8VjOvdkFwebSB80M2Hc9ep
 const Login = React.lazy(() => import("./pages/auth/Login"));
 const Register = React.lazy(() => import("./pages/auth/Register"));
 const ForgotPassword = React.lazy(() => import("./pages/auth/ForgotPassword"));
+const ResetPassword = React.lazy(() => import("./pages/auth/ResetPassword"));
+const VerifyEmail = React.lazy(() => import("./pages/auth/VerifyEmail"));
 
 const Home = React.lazy(() => import("./pages/client/Home"));
 const CarsList = React.lazy(() => import("./pages/client/CarsList"));
@@ -39,6 +41,7 @@ const AdminUsers = React.lazy(() => import("./pages/admin/AdminUsers"));
 const AdminNotifications = React.lazy(() => import("./pages/admin/AdminNotifications"));
 const AdminExport = React.lazy(() => import("./pages/admin/AdminExport"));
 const AdminCalendar = React.lazy(() => import("./pages/admin/AdminCalendar"));
+const AdminChat = React.lazy(() => import("./pages/admin/AdminChat"));
 
 function PageLoader() {
   return (
@@ -60,6 +63,8 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
 
             {/* Client space */}
             <Route element={<ClientLayout />}>
@@ -95,6 +100,7 @@ export default function App() {
               <Route path="/admin/payments" element={<AdminPayments />} />
               <Route path="/admin/users" element={<AdminUsers />} />
               <Route path="/admin/notifications" element={<AdminNotifications />} />
+              <Route path="/admin/chat" element={<AdminChat />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

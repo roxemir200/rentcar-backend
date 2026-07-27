@@ -1,8 +1,6 @@
 package com.rentcar.rent_car.controller;
 
-import com.rentcar.rent_car.dto.request.LoginRequest;
-import com.rentcar.rent_car.dto.request.RegisterRequest;
-import com.rentcar.rent_car.dto.request.UpdateProfileRequest;
+import com.rentcar.rent_car.dto.request.*;
 import com.rentcar.rent_car.dto.response.JwtResponse;
 import com.rentcar.rent_car.dto.response.MessageResponse;
 import com.rentcar.rent_car.dto.response.UserResponse;
@@ -14,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -33,6 +33,22 @@ public class AuthController {
             return ResponseEntity.badRequest().body(response);
         }
     }
+    @PutMapping("/change-password")
+    public ResponseEntity<MessageResponse> changePassword(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @Valid @RequestBody ChangePasswordRequest request) {
+
+        MessageResponse response = authService.changePassword(
+                userDetails.getEmail(),
+                request
+        );
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        }
+        return ResponseEntity.badRequest().body(response);
+    }
+
 
     // Connexion
     @PostMapping("/login")
@@ -63,6 +79,61 @@ public class AuthController {
             return ResponseEntity.ok(response);
         }
         return ResponseEntity.badRequest().body(response);
+    }
+    @PostMapping("/forgot-password")
+    public ResponseEntity<MessageResponse> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request) {
+        return ResponseEntity.ok(authService.forgotPassword(request));
+    }
+
+    @GetMapping("/verify-token")
+    public ResponseEntity<MessageResponse> verifyResetToken(
+            @RequestParam String token) {
+        return ResponseEntity.ok(authService.verifyResetToken(token));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<MessageResponse> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request) {
+        MessageResponse response = authService.resetPassword(request);
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        }
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    // ✅ Vérifier l'email
+    @GetMapping("/verify-email")
+    public ResponseEntity<MessageResponse> verifyEmail(@RequestParam String token) {
+        MessageResponse response = authService.verifyEmail(token);
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        }
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    // ✅ Renvoyer l'email de vérification
+    @PostMapping("/resend-verification")
+    public ResponseEntity<MessageResponse> resendVerification(@RequestParam String email) {
+        MessageResponse response = authService.resendVerificationEmail(email);
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        }
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    // ✅ Vérifier si email existe
+    @GetMapping("/check-email")
+    public ResponseEntity<Map<String, Boolean>> checkEmail(@RequestParam String email) {
+        boolean exists = authService.existsByEmail(email);
+        return ResponseEntity.ok(Map.of("exists", exists));
+    }
+
+    // ✅ Vérifier si téléphone existe
+    @GetMapping("/check-phone")
+    public ResponseEntity<Map<String, Boolean>> checkPhone(@RequestParam String phone) {
+        boolean exists = authService.existsByPhoneNumber(phone);
+        return ResponseEntity.ok(Map.of("exists", exists));
     }
 
 }

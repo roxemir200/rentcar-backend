@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router";
 import {
   ChevronLeft, ChevronRight, ArrowLeft, Gauge, Palette, Hash, Users,
@@ -11,15 +11,16 @@ import { StarRating } from "../../components/common/StarRating";
 import { Button } from "../../components/common/Button";
 import { Input, Textarea } from "../../components/common/Input";
 import { Card, PageTransition, EmptyState } from "../../components/common/Misc";
-import { useApp } from "../../context/AppContext";
+import { useApp, mapReviewFromApi } from "../../context/AppContext";
 import { reservationsAPI } from "../../api/reservations.api";
+import { reviewsAPI } from "../../api/reviews.api";
 import { euro, daysBetween, formatDate } from "../../lib/format";
 import { cn } from "../../components/ui/utils";
 
 export default function CarDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { cars, carsLoading, carsError, loadCars, getCarRating, reviews, getUser, currentUser } = useApp();
+  const { cars, carsLoading, carsError, loadCars, getCarRating, getUser, currentUser, reviews, loadReviews } = useApp();
   const car = id ? cars.find((c) => c.id === id) : undefined;
   const [active, setActive] = useState(0);
   const [start, setStart] = useState("");
@@ -29,6 +30,29 @@ export default function CarDetail() {
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<{ start?: string; end?: string }>({});
   const [submitting, setSubmitting] = useState(false);
+  const [carReviews, setCarReviews] = useState<any[]>([]);
+  const [averageRating, setAverageRating] = useState<number>(0);
+
+  // Load car reviews and average rating
+  useEffect(() => {
+    if (!id) return;
+
+    const loadCarData = async () => {
+      try {
+        const [reviewsRes, avgRes] = await Promise.all([
+          reviewsAPI.getByCar(Number(id)),
+          reviewsAPI.getAverageRating(Number(id)),
+        ]);
+        const reviewsData = reviewsRes.data?.value || reviewsRes.data || [];
+        setCarReviews(reviewsData.map(mapReviewFromApi));
+        setAverageRating(avgRes.data || 0);
+      } catch (err) {
+        // Error loading reviews
+      }
+    };
+
+    loadCarData();
+  }, [id]);
 
   // États de chargement / erreur
   if (carsLoading) {
@@ -69,10 +93,10 @@ export default function CarDetail() {
   }
 
   // Calculs avis
-  const rating = getCarRating(car.id);
-  const carReviews = reviews
-    .filter((r) => r.carId === car.id)
-    .sort((a, b) => +new Date(b.date) - +new Date(a.date));
+  const rating = {
+    avg: averageRating,
+    count: carReviews.length,
+  };
   const today = new Date().toISOString().slice(0, 10);
   const days = start && end ? daysBetween(start, end) : 0;
   const total = days * car.pricePerDay;
@@ -273,32 +297,37 @@ export default function CarDetail() {
                     </div>
                   </div>
                   <div className="space-y-4">
-                    {carReviews.map((rev) => {
-                      const u = getUser(rev.userId);
-                      return (
-                        <div key={rev.id} className="border-t border-border pt-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className="size-8 rounded-full bg-accent text-primary flex items-center justify-center text-sm font-semibold">
-                                {u?.firstName?.[0]}
-                                {u?.lastName?.[0]}
-                              </span>
-                              <span className="font-medium text-foreground text-sm">
-                                {u?.firstName} {u?.lastName?.[0]}.
-                              </span>
-                            </div>
-                            <span className="text-xs text-muted-foreground">
-                              {formatDate(rev.date)}
-                            </span>
-                          </div>
-                          <div className="mt-2">
-                            <StarRating value={rev.rating} size={14} />
-                          </div>
-                          <p className="mt-1.5 text-sm text-foreground/80">{rev.comment}</p>
-                        </div>
-                      );
-                    })}
+            {carReviews.map((rev) => {
+              const userFirstName = rev.userFirstName || "";
+              const userLastName = rev.userLastName || "";
+              const initials = (userFirstName?.[0]?.toUpperCase() || "") + (userLastName?.[0]?.toUpperCase() || "");
+              const displayName = userFirstName ? `${userFirstName} ${userLastName?.[0]?.toUpperCase() || ""}.` : "Utilisateur";
+              
+              return (
+                <div key={rev.id} className="border-t border-border pt-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="size-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-base font-semibold">
+                        {initials || "U"}
+                      </span>
+                      <span className="font-medium text-foreground">
+                        {displayName}
+                      </span>
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {formatDate(rev.date)}
+                    </span>
                   </div>
+                  <div className="mt-2">
+                    <StarRating value={rev.rating} size={16} />
+                  </div>
+                  {rev.comment && (
+                    <p className="mt-2 text-sm text-muted-foreground">{rev.comment}</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
                 </>
               ) : (
                 <EmptyState

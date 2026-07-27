@@ -4,5 +4,6 @@ public enum NotificationType {
     RESERVATION,
     PAYMENT,
     CONTRACT,
-    SYSTEM
+    SYSTEM,
+    CHAT
 }

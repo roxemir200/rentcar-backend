@@ -28,11 +28,14 @@ public class CorsConfig {
         // Exposer le header Authorization
         config.setExposedHeaders(Arrays.asList("Authorization"));
 
+        // Autoriser les credentials
+        config.setAllowCredentials(true);
+
         // Durée de validité du preflight (1 heure)
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", config);
+        source.registerCorsConfiguration("/**", config);
 
         return new CorsFilter(source);
     }

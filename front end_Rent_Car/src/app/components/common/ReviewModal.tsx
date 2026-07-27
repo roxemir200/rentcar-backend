@@ -14,22 +14,30 @@ export function ReviewModal({ isOpen, onClose, reservation }: {
   const { currentUser, getCar, addReview, reviews } = useApp();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
+  const [loading, setLoading] = useState(false);
 
   if (!reservation) return null;
   const car = getCar(reservation.carId);
-  const already = reviews.find((r) => r.reservationId === reservation.id);
+  const already = reviews.find((r) => String(r.reservationId) === String(reservation.id));
 
-  const submit = () => {
+  const submit = async () => {
     if (rating === 0) { toast.error("Merci de sélectionner une note."); return; }
-    addReview({ userId: currentUser!.id, carId: reservation.carId, reservationId: reservation.id, rating, comment });
-    toast.success("Avis publié ! Merci ⭐");
-    setRating(0); setComment("");
-    onClose();
+    setLoading(true);
+    try {
+      await addReview({ userId: currentUser!.id, carId: reservation.carId, reservationId: reservation.id, rating, comment });
+      toast.success("Avis publié ! Merci ⭐");
+      setRating(0); setComment("");
+      onClose();
+    } catch (err) {
+      // Error submitting review
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Donner mon avis" size="md"
-      footer={!already && <><Button variant="outline" onClick={onClose}>Annuler</Button><Button onClick={submit}>Publier mon avis</Button></>}>
+      footer={!already && <><Button variant="outline" onClick={onClose} disabled={loading}>Annuler</Button><Button onClick={submit} loading={loading}>Publier mon avis</Button></>}>
       {already ? (
         <div className="text-center py-4">
           <CheckCircle2 className="size-12 mx-auto text-emerald-500 mb-3" />

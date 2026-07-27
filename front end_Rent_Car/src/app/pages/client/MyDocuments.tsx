@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router";
 import { FileText, Receipt, Eye, Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -10,14 +10,58 @@ import { usePrefs } from "../../context/PrefsContext";
 import { euro, formatDate, daysBetween } from "../../lib/format";
 import { generateContractPDF, generateInvoicePDF } from "../../lib/exporters";
 import { cn } from "../../components/ui/utils";
+import { contractsAPI } from "../../api/contrat.api";
+import { mapContractFromApi } from "../../context/AppContext";
 
 type Tab = "contracts" | "invoices";
 
 export default function MyDocuments() {
-  const { currentUser, reservations, contracts, payments, getCar, getUser } = useApp();
+  const { currentUser, reservations, contracts, payments, getCar, getUser, setContracts } = useApp();
   const { t } = usePrefs();
   const [tab, setTab] = useState<Tab>("contracts");
   const [busy, setBusy] = useState<string | null>(null);
+  const [loadingContracts, setLoadingContracts] = useState(true);
+
+  // Load contracts for each of the user's reservations that have payments
+  useEffect(() => {
+    if (!currentUser || reservations.length === 0 || payments.length === 0) {
+      setLoadingContracts(false);
+      return;
+    }
+
+    const loadContractsForReservations = async () => {
+      setLoadingContracts(true);
+
+      // Get user's reservation IDs that have payments
+      const reservationIdsWithPayments = payments
+        .map(payment => payment.reservationId)
+        .filter(resId => {
+          const res = reservations.find(r => r.id === resId);
+          return res && res.userId === currentUser.id;
+        });
+
+      // Make parallel API calls only for reservations with payments
+      const contractPromises = reservationIdsWithPayments.map(async (resId) => {
+        try {
+          const contractRes = await contractsAPI.getByReservation(resId);
+          return contractRes.data?.value || contractRes.data;
+        } catch (err) {
+          return null; // Ignore failed calls
+        }
+      });
+
+      // Wait for all promises to resolve
+      const contractResults = await Promise.all(contractPromises);
+      const loadedContracts = contractResults.filter(c => c !== null);
+
+      // Map the contracts and update the global state
+      const mappedContracts = loadedContracts.map(mapContractFromApi);
+      setContracts(mappedContracts);
+      setLoadingContracts(false);
+    };
+
+    loadContractsForReservations();
+  }, [currentUser, reservations, payments, setContracts]);
 
   // Contrats du client connecté
   const myContracts = useMemo(
@@ -40,16 +84,15 @@ export default function MyDocuments() {
 
   const downloadContract = (contractId: string) => {
     const item = myContracts.find((x) => x.c.id === contractId);
-    if (!item?.res) return;
+    if (!item?.res || !currentUser) return;
     const car = getCar(item.res.carId);
-    const client = getUser(item.res.userId);
     setBusy(contractId);
     setTimeout(() => {
       generateContractPDF({
         number: item.c.number,
         status: item.c.status === "SIGNED" ? "Signé" : item.c.status === "DRAFT" ? "Brouillon" : "Annulé",
-        client: `${client?.firstName} ${client?.lastName}`,
-        email: client?.email ?? "",
+        client: `${currentUser.firstName} ${currentUser.lastName}`,
+        email: currentUser.email ?? "",
         car: `${car?.brand} ${car?.model} (${car?.year})`,
         plate: car?.plate ?? "",
         startDate: formatDate(item.res!.startDate),
@@ -66,9 +109,8 @@ export default function MyDocuments() {
 
   const downloadInvoice = (paymentId: string) => {
     const item = myInvoices.find((x) => x.p.id === paymentId);
-    if (!item?.res) return;
+    if (!item?.res || !currentUser) return;
     const car = getCar(item.res.carId);
-    const client = getUser(item.res.userId);
     const days = daysBetween(item.res.startDate, item.res.endDate);
     const total = item.p.amount;
     const subtotal = total / 1.19;
@@ -77,8 +119,8 @@ export default function MyDocuments() {
     setTimeout(() => {
       generateInvoicePDF({
         number: `FAC-${item.p.stripeId.slice(-8).toUpperCase()}`,
-        client: `${client?.firstName} ${client?.lastName}`,
-        email: client?.email ?? "",
+        client: `${currentUser.firstName} ${currentUser.lastName}`,
+        email: currentUser.email ?? "",
         car: `${car?.brand} ${car?.model}`,
         startDate: formatDate(item.res!.startDate),
         endDate: formatDate(item.res!.endDate),
@@ -121,7 +163,14 @@ export default function MyDocuments() {
         </div>
 
         {tab === "contracts" ? (
-          myContracts.length === 0 ? (
+          loadingContracts ? (
+            <Card>
+              <div className="p-8 text-center">
+                <Loader2 className="size-8 animate-spin mx-auto text-primary mb-4" />
+                <p className="text-muted-foreground">Chargement des contrats...</p>
+              </div>
+            </Card>
+          ) : myContracts.length === 0 ? (
             <Card><EmptyState icon={<FileText className="size-8" />} title={t("docs.emptyContracts")}
               action={<Link to="/cars"><Button>{t("nav.cars")}</Button></Link>} /></Card>
           ) : (

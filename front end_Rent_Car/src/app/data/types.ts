@@ -17,7 +17,7 @@ export type ReservationStatus =
 export type ContractStatus = "DRAFT" | "SIGNED" | "CANCELLED";
 export type PaymentStatus = "PENDING" | "COMPLETED" | "FAILED" | "REFUNDED";
 export type FuelLevel = "Vide" | "Quart" | "Moitié" | "Trois-quarts" | "Plein";
-export type NotificationType = "RESERVATION" | "PAYMENT" | "CONTRACT" | "SYSTEM";
+export type NotificationType = "RESERVATION" | "PAYMENT" | "CONTRACT" | "SYSTEM" | "CHAT";
 
 export interface User {
   id: string;
@@ -93,10 +93,17 @@ export interface Contract {
 export interface Payment {
   id: string;
   stripeId: string;
+  externalPaymentId?: string;
   reservationId: string;
+  clientName?: string;
+  carInfo?: string;
   amount: number;
+  currency?: string;
+  provider?: string;
   status: PaymentStatus;
   date?: string;
+  paymentDate?: string;
+  createdAt?: string;
 }
 
 export interface Review {
@@ -107,6 +114,8 @@ export interface Review {
   rating: number;
   comment: string;
   date: string;
+  userFirstName?: string;
+  userLastName?: string;
 }
 
 export interface AppNotification {

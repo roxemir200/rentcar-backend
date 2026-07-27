@@ -34,4 +34,13 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                                                        @Param("statuses") List<ReservationStatus> statuses);
 
     List<Reservation> findByStartDateBetween(LocalDate start, LocalDate end);
+    // repository/ReservationRepository.java (ajouter)
+    @Query("SELECT r FROM Reservation r " +
+            "WHERE r.startDate <= :endDate " +
+            "AND r.endDate >= :startDate " +
+            "ORDER BY r.startDate ASC")
+    List<Reservation> findReservationsBetweenDates(
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
 }

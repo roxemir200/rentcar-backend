@@ -58,7 +58,6 @@ export default function Contract({ admin }: { admin?: boolean }) {
     try {
       const res = await contractsAPI.sign(contract.id);
       if (res.data.success) {
-        toast.success("Contrat signé électroniquement !");
         const data = res.data.data;
         // ✅ Stocker le clientSecret reçu du backend
         if (data?.clientSecret) {

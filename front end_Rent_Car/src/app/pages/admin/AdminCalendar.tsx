@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router";
 import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -26,14 +26,19 @@ const STATUS_COLORS: Record<ReservationStatus, { bar: string; label: string; dot
 const atMidnight = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
 export default function AdminCalendar() {
-  const { reservations, getCar, getUser } = useApp();
+  const { calendarReservations, loadCalendarReservations } = useApp();
   const today = new Date();
   const [cursor, setCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
-  const [hovered, setHovered] = useState<{ res: Reservation; day: number } | null>(null);
+  const [hovered, setHovered] = useState<{ res: any; day: number } | null>(null);
   const [dayModal, setDayModal] = useState<Date | null>(null);
 
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
+  
+  // Load calendar reservations when year/month changes
+  useEffect(() => {
+    loadCalendarReservations(year, month + 1); // API expects month 1-12
+  }, [year, month, loadCalendarReservations]);
 
   // Grille du mois : cases de début alignées sur Lundi
   const cells = useMemo(() => {
@@ -50,7 +55,7 @@ export default function AdminCalendar() {
   // Réservations couvrant un jour donné (entre startDate et endDate inclus)
   const reservationsOn = (date: Date) => {
     const t = atMidnight(date).getTime();
-    return reservations.filter((r) => {
+    return calendarReservations.filter((r) => {
       const s = atMidnight(new Date(r.startDate)).getTime();
       const e = atMidnight(new Date(r.endDate)).getTime();
       return t >= s && t <= e;
@@ -109,18 +114,19 @@ export default function AdminCalendar() {
                 <span className={cn("text-xs font-semibold", isToday(date) ? "text-primary" : "text-foreground")}>{date.getDate()}</span>
                 <div className="flex flex-col gap-0.5">
                   {dayRes.slice(0, 3).map((r) => {
-                    const car = getCar(r.carId);
+                    const carLabel = r.carBrand && r.carModel ? `${r.carBrand} ${r.carModel}` : "Voiture";
+                    const clientLabel = r.clientFirstName && r.clientLastName ? `${r.clientFirstName} ${r.clientLastName}` : "Client";
                     return (
                       <div
                         key={r.id}
                         onMouseEnter={() => setHovered({ res: r, day: i })}
                         onMouseLeave={() => setHovered(null)}
-                        className={cn("truncate rounded px-1.5 py-0.5 text-[10px] font-medium relative", STATUS_COLORS[r.status].bar)}
+                        className={cn("truncate rounded px-1.5 py-0.5 text-[10px] font-medium relative", STATUS_COLORS[r.status as ReservationStatus].bar)}
                       >
-                        {car?.brand} {car?.model}
+                        {carLabel}
                         {/* Popover survol */}
                         {hovered?.res.id === r.id && hovered.day === i && (
-                          <HoverCard res={r} carLabel={`${car?.brand} ${car?.model}`} clientLabel={(() => { const u = getUser(r.userId); return `${u?.firstName} ${u?.lastName}`; })()} />
+                          <HoverCard res={r} carLabel={carLabel} clientLabel={clientLabel} />
                         )}
                       </div>
                     );
@@ -141,15 +147,16 @@ export default function AdminCalendar() {
           return (
             <div className="space-y-3">
               {list.map((r) => {
-                const car = getCar(r.carId); const client = getUser(r.userId);
+                const carLabel = r.carBrand && r.carModel ? `${r.carBrand} ${r.carModel}` : "Voiture";
+                const clientLabel = r.clientFirstName && r.clientLastName ? `${r.clientFirstName} ${r.clientLastName}` : "Client";
                 return (
                   <div key={r.id} className="flex items-center gap-3 p-3 rounded-xl border border-border">
-                    <span className={cn("size-2.5 rounded-full shrink-0", STATUS_COLORS[r.status].dot)} />
+                    <span className={cn("size-2.5 rounded-full shrink-0", STATUS_COLORS[r.status as ReservationStatus].dot)} />
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">{car?.brand} {car?.model}</p>
-                      <p className="text-sm text-muted-foreground truncate">{client?.firstName} {client?.lastName} · {formatDate(r.startDate)} → {formatDate(r.endDate)}</p>
+                      <p className="font-medium text-foreground truncate">{carLabel}</p>
+                      <p className="text-sm text-muted-foreground truncate">{clientLabel} · {formatDate(r.startDate)} → {formatDate(r.endDate)}</p>
                     </div>
-                    <ReservationBadge status={r.status} />
+                    <ReservationBadge status={r.status as ReservationStatus} />
                     <Link to={`/admin/reservation/${r.id}`} onClick={() => setDayModal(null)}><Button size="sm" variant="outline">Détails</Button></Link>
                   </div>
                 );

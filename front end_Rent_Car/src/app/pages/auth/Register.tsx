@@ -1,32 +1,37 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
-import { CheckCircle2 } from "lucide-react";
+import { MailCheck } from "lucide-react";
 import { motion } from "motion/react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { AuthShell } from "./AuthShell";
 import { Input } from "../../components/common/Input";
 import { Button } from "../../components/common/Button";
 import { useApp } from "../../context/AppContext";
+import { authAPI } from "../../api/auth.api";
 
 type RegisterForm = {
   firstName: string;
   lastName: string;
   email: string;
   password: string;
-  phone: string;
-  address: string;
-  licenseNumber: string;
+  confirmPassword: string;
 };
 
 export default function Register() {
   const { register: registerUser } = useApp();
   const navigate = useNavigate();
   const [success, setSuccess] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
+  const [emailExists, setEmailExists] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
 
   const {
     register: registerField,
     handleSubmit,
+    watch,
     formState: { errors, isValid, isSubmitting },
+    getValues,
   } = useForm<RegisterForm>({
     mode: "onChange",
     defaultValues: {
@@ -34,38 +39,101 @@ export default function Register() {
       lastName: "",
       email: "",
       password: "",
-      phone: "",
-      address: "",
-      licenseNumber: "",
+      confirmPassword: "",
     },
   });
 
+  const watchedEmail = watch("email");
+  const watchedPassword = watch("password");
+
+  // Debounce function to wait before checking email
+  const debounce = (func: Function, wait: number) => {
+    let timeout: NodeJS.Timeout;
+    return (...args: any[]) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func(...args), wait);
+    };
+  };
+
+  const checkEmailAvailability = useCallback(
+    debounce(async (email: string) => {
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        setEmailExists(false);
+        return;
+      }
+      setCheckingEmail(true);
+      try {
+        const response = await authAPI.checkEmail(email);
+        setEmailExists(response.exists);
+      } catch (err) {
+        console.error("Error checking email:", err);
+        setEmailExists(false);
+      } finally {
+        setCheckingEmail(false);
+      }
+    }, 500),
+    []
+  );
+
+  useEffect(() => {
+    checkEmailAvailability(watchedEmail);
+  }, [watchedEmail, checkEmailAvailability]);
+
   const onSubmit = async (data: RegisterForm) => {
+    if (emailExists) {
+      return;
+    }
     const res = await registerUser({
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email,
       password: data.password,
-      phone: data.phone,
-      address: data.address,
-      licenseNumber: data.licenseNumber,
     });
     if (!res.ok) {
       return;
     }
+    setRegisteredEmail(data.email);
     setSuccess(true);
+  };
+
+  const handleResend = async () => {
+    try {
+      const response = await authAPI.resendVerification(registeredEmail);
+      if (response.success) {
+        toast.success("Un nouvel email de vérification a été envoyé !");
+      } else {
+        toast.error(response.message || "Erreur lors de l'envoi de l'email");
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Erreur lors de l'envoi de l'email");
+    }
   };
 
   if (success) {
     return (
-      <AuthShell title="Inscription réussie !" subtitle="Votre compte a bien été créé.">
+      <AuthShell title="Vérifiez votre email !" subtitle="Un email de vérification vous a été envoyé.">
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-6">
           <div className="size-16 mx-auto rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center mb-5">
-            <CheckCircle2 className="size-9" />
+            <MailCheck className="size-9" />
           </div>
-          <h3 className="text-foreground">🎉 Bienvenue chez RentCar !</h3>
-          <p className="mt-2 text-muted-foreground">Vous pouvez dès maintenant vous connecter et réserver votre première voiture.</p>
-          <Button size="lg" className="w-full mt-6" onClick={() => navigate("/login")}>Se connecter</Button>
+          <h3 className="text-foreground">📧 Vérifiez votre boîte mail</h3>
+          <p className="mt-2 text-muted-foreground">
+            Un email de vérification a été envoyé à <span className="font-medium text-foreground">{registeredEmail}</span>.
+            <br />
+            Cliquez sur le lien pour activer votre compte.
+          </p>
+          <Button size="lg" className="w-full mt-6" onClick={() => navigate("/login")}>
+            Retour à la connexion
+          </Button>
+          <p className="mt-4 text-sm text-muted-foreground">
+            Vous n'avez pas reçu l'email ?{" "}
+            <button
+              onClick={handleResend}
+              className="text-primary hover:underline font-medium"
+            >
+              Renvoyer
+            </button>
+          </p>
         </motion.div>
       </AuthShell>
     );
@@ -95,7 +163,7 @@ export default function Register() {
           type="email"
           required
           placeholder="vous@exemple.com"
-          error={errors.email?.message}
+          error={emailExists ? "Cet email est déjà utilisé" : errors.email?.message}
           {...registerField("email", {
             required: "L'email est obligatoire",
             pattern: {
@@ -119,10 +187,21 @@ export default function Register() {
             },
           })}
         />
-        <Input label="Téléphone" placeholder="+216 98 765 432" {...registerField("phone")} />
-        <Input label="Adresse" placeholder="12 Avenue Habib Bourguiba, Tunis" {...registerField("address")} />
-        <Input label="Numéro de permis de conduire" placeholder="12AB34567" {...registerField("licenseNumber")} />
-        <Button type="submit" size="lg" loading={isSubmitting} disabled={!isValid || isSubmitting} className="w-full">
+        <Input
+          label="Confirmer le mot de passe"
+          type="password"
+          required
+          placeholder="••••••••"
+          error={errors.confirmPassword?.message}
+          {...registerField("confirmPassword", {
+            required: "Veuillez confirmer votre mot de passe",
+            validate: (value) => {
+              const password = getValues("password");
+              return value === password || "Les mots de passe ne correspondent pas";
+            },
+          })}
+        />
+        <Button type="submit" size="lg" loading={isSubmitting || checkingEmail} disabled={!isValid || isSubmitting || emailExists || checkingEmail} className="w-full">
           {isSubmitting ? "Création en cours..." : "Créer mon compte"}
         </Button>
         <p className="text-center text-sm text-muted-foreground">

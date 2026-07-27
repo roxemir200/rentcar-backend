@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { User as UserIcon, Mail, Phone, MapPin, IdCard, Lock, Save, RotateCcw, CheckCircle2, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
@@ -7,6 +7,7 @@ import { Button } from "../../components/common/Button";
 import { Card, PageTransition } from "../../components/common/Misc";
 import { useApp } from "../../context/AppContext";
 import { formatDate } from "../../lib/format";
+import { authAPI } from "../../api/auth.api";
 
 // Champs modifiables du profil
 interface ProfileForm {
@@ -17,27 +18,101 @@ interface ProfileForm {
   licenseNumber: string;
 }
 
-// Validation numéro tunisien : +216 suivi de 8 chiffres (espaces tolérés)
-const isValidTnPhone = (v: string) => /^\+216\s?\d{2}\s?\d{3}\s?\d{3}$/.test(v.trim());
+// Formatte le numéro tunisien : +216 XX XXX XXX
+const formatTnPhone = (value: string) => {
+  // Enlever tous les caractères non numériques
+  let digits = value.replace(/[^\d]/g, "");
+  
+  // Si le premier chiffre n'est pas 2, ajouter 216 au début
+  if (!digits.startsWith("216")) {
+    digits = "216" + digits;
+  }
+  
+  // Garder seulement les 11 premiers chiffres (216 + 8)
+  digits = digits.slice(0, 11);
+  
+  let formatted = "+216";
+  if (digits.length > 3) {
+    formatted += " " + digits.slice(3, 5);
+  }
+  if (digits.length > 5) {
+    formatted += " " + digits.slice(5, 8);
+  }
+  if (digits.length > 8) {
+    formatted += " " + digits.slice(8, 11);
+  }
+  return formatted;
+};
+
+// Validation numéro tunisien : +216 suivi de 8 chiffres
+const isValidTnPhone = (v: string) => {
+  const digits = v.replace(/[^\d]/g, "");
+  return digits.length === 11 && digits.startsWith("216");
+};
 
 export default function Profile() {
   const { currentUser, updateProfile } = useApp();
   const [saving, setSaving] = useState(false);
+  const [phoneExists, setPhoneExists] = useState(false);
+  const [checkingPhone, setCheckingPhone] = useState(false);
   const {
     register: registerField,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors, isValid, isDirty, isSubmitting },
   } = useForm<ProfileForm>({
     mode: "onChange",
     defaultValues: {
       firstName: currentUser?.firstName ?? "",
       lastName: currentUser?.lastName ?? "",
-      phone: currentUser?.phone ?? "",
+      phone: currentUser?.phone ? currentUser.phone : "+216 ",
       address: currentUser?.address ?? "",
       licenseNumber: currentUser?.licenseNumber ?? "",
     },
   });
+
+  const watchedPhone = watch("phone");
+
+  // Format phone as user types
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatTnPhone(e.target.value);
+    setValue("phone", formatted, { shouldValidate: true, shouldDirty: true });
+  };
+
+  // Debounce function to wait before checking phone
+  const debounce = (func: Function, wait: number) => {
+    let timeout: NodeJS.Timeout;
+    return (...args: any[]) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func(...args), wait);
+    };
+  };
+
+  const checkPhoneAvailability = useCallback(
+    debounce(async (phone: string) => {
+      if (!phone || phone === currentUser?.phone || !isValidTnPhone(phone) || phone === "+216 ") {
+        setPhoneExists(false);
+        return;
+      }
+      setCheckingPhone(true);
+      try {
+        const response = await authAPI.checkPhone(phone);
+        setPhoneExists(response.exists);
+      } catch (err) {
+        console.error("Error checking phone:", err);
+        setPhoneExists(false);
+      } finally {
+        setCheckingPhone(false);
+      }
+    }, 500),
+    [currentUser?.phone]
+  );
+
+  useEffect(() => {
+    checkPhoneAvailability(watchedPhone);
+  }, [watchedPhone, checkPhoneAvailability]);
 
   if (!currentUser) return null;
 
@@ -45,18 +120,21 @@ export default function Profile() {
     reset({
       firstName: currentUser.firstName ?? "",
       lastName: currentUser.lastName ?? "",
-      phone: currentUser.phone ?? "",
+      phone: currentUser.phone ? currentUser.phone : "+216 ",
       address: currentUser.address ?? "",
       licenseNumber: currentUser.licenseNumber ?? "",
     });
   }, [currentUser, reset]);
 
   const onSubmit = async (form: ProfileForm) => {
+    if (phoneExists) {
+      return;
+    }
     setSaving(true);
     const res = await updateProfile({
       firstName: form.firstName.trim(),
       lastName: form.lastName.trim(),
-      phone: form.phone.trim() || undefined,
+      phone: form.phone.trim() && form.phone.trim() !== "+216" ? form.phone.trim() : undefined,
       address: form.address.trim() || undefined,
       licenseNumber: form.licenseNumber.trim() || undefined,
     });
@@ -144,7 +222,17 @@ export default function Profile() {
                 type="tel"
                 leftIcon={<Phone className="size-4" />}
                 placeholder="+216 98 765 432"
-                {...registerField("phone")}
+                error={phoneExists ? "Ce numéro de téléphone est déjà utilisé" : errors.phone?.message}
+                {...registerField("phone", {
+                  validate: (value) => {
+                    if (!value || value === "+216 ") return true; // Optional
+                    if (!isValidTnPhone(value)) {
+                      return "Numéro invalide";
+                    }
+                    return true;
+                  },
+                })}
+                onChange={handlePhoneChange}
               />
               <Input
                 label="Numéro de permis"
@@ -189,7 +277,7 @@ export default function Profile() {
                     reset({
                       firstName: currentUser.firstName ?? "",
                       lastName: currentUser.lastName ?? "",
-                      phone: currentUser.phone ?? "",
+                      phone: currentUser.phone ? currentUser.phone : "+216 ",
                       address: currentUser.address ?? "",
                       licenseNumber: currentUser.licenseNumber ?? "",
                     });
@@ -197,7 +285,7 @@ export default function Profile() {
                 >
                   <RotateCcw className="size-4" /> Réinitialiser
                 </Button>
-                <Button type="submit" loading={saving || isSubmitting} disabled={!isValid || saving || isSubmitting}>
+                <Button type="submit" loading={saving || isSubmitting || checkingPhone} disabled={!isValid || saving || isSubmitting || phoneExists || checkingPhone}>
                   <Save className="size-4" /> Enregistrer les modifications
                 </Button>
               </div>

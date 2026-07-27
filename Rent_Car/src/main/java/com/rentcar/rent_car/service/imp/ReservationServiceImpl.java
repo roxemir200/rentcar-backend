@@ -1,8 +1,11 @@
 package com.rentcar.rent_car.service.impl;
 
+import com.rentcar.rent_car.entity.Contract;
 import com.rentcar.rent_car.entity.Payment;
+import com.rentcar.rent_car.enums.ContractStatus;
 import com.rentcar.rent_car.enums.PaymentStatus;
 import com.rentcar.rent_car.enums.Role;
+import com.rentcar.rent_car.repository.ContractRepository;
 import com.rentcar.rent_car.repository.PaymentRepository;
 import com.rentcar.rent_car.dto.mapper.ReservationMapper;
 import com.rentcar.rent_car.dto.request.CompleteReservationRequest;
@@ -33,12 +36,30 @@ import java.util.stream.Collectors;
 public class ReservationServiceImpl implements ReservationService {
     private final SseService sseService;
     private final PaymentRepository paymentRepository;
+    private final ContractRepository contractRepository;
+    private final ReservationMapper reservationMapper;
+    private final com.rentcar.rent_car.dto.mapper.CarMapper carMapper;
+    private final ContractService contractService;
 
     private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
     private final CarRepository carRepository;
-    private final ReservationMapper reservationMapper;
-    private final ContractService contractService;
+
+    private void broadcastReservationUpdate(Reservation reservation) {
+        ReservationResponse dto = reservationMapper.toResponse(reservation);
+        // Client concerné
+        sseService.sendEvent(reservation.getClient().getId(), "reservation.updated", dto);
+        // Tous les admins
+        sseService.sendEventToAllAdmins("reservation.updated", dto);
+    }
+
+    private void broadcastCarUpdate(Car car) {
+        com.rentcar.rent_car.dto.response.CarResponse dto = carMapper.toResponse(car);
+        sseService.sendEventToAllAdmins("car.updated", dto);
+        userRepository.findByIsActiveTrue().forEach(user ->
+                sseService.sendEvent(user.getId(), "car.updated", dto)
+        );
+    }
 
     @Override
     @Transactional
@@ -72,6 +93,8 @@ public class ReservationServiceImpl implements ReservationService {
         reservationRepository.save(reservation);
         User client = userRepository.findByEmail(clientEmail)
                 .orElseThrow(() -> new RuntimeException("Client non trouvé"));
+
+        broadcastReservationUpdate(reservation);
 
         sseService.createAndSend(client.getId(),
                 "Réservation en attente",
@@ -141,6 +164,10 @@ public class ReservationServiceImpl implements ReservationService {
         reservation.getCar().setStatus(CarStatus.AVAILABLE);
         carRepository.save(reservation.getCar());
         reservationRepository.save(reservation);
+
+        broadcastReservationUpdate(reservation);
+        broadcastCarUpdate(reservation.getCar());
+
         sseService.createAndSend(
                 reservation.getClient().getId(),
                 "Réservation annulée ❌",
@@ -162,6 +189,10 @@ public class ReservationServiceImpl implements ReservationService {
         carRepository.save(reservation.getCar());
         reservationRepository.save(reservation);
         contractService.generateContract(id);
+
+        broadcastReservationUpdate(reservation);
+        broadcastCarUpdate(reservation.getCar());
+
         sseService.createAndSend(reservation.getClient().getId(),
                 "Réservation confirmée ✅",
                 "Votre réservation #" + id + " a été confirmée. Le contrat est prêt.",
@@ -176,12 +207,27 @@ public class ReservationServiceImpl implements ReservationService {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Réservation non trouvée"));
 
+        // 1. Vérifier que le contrat est signé par le client
+        Contract contract = contractRepository.findByReservationId(id).orElse(null);
+        if (contract == null) {
+            return MessageResponse.error("Aucun contrat n'a été généré pour cette réservation. Confirmez d'abord la réservation.");
+        }
+        if (contract.getStatus() == ContractStatus.DRAFT) {
+            return MessageResponse.error("Le client n'a pas encore signé le contrat. Demandez-lui de signer le contrat avant de démarrer la location.");
+        }
+        if (contract.getStatus() == ContractStatus.CANCELLED) {
+            return MessageResponse.error("Le contrat a été annulé. La location ne peut pas démarrer.");
+        }
+        if (contract.getStatus() != ContractStatus.SIGNED) {
+            return MessageResponse.error("Le contrat n'est pas valide. Statut actuel : " + contract.getStatus());
+        }
 
+        // 2. Vérifier que le paiement est bien effectué
         Payment payment = paymentRepository.findByReservationId(id)
                 .orElse(null);
 
         if (payment == null || payment.getStatus() != PaymentStatus.COMPLETED) {
-            return MessageResponse.error("Le paiement doit être complété avant de démarrer la location");
+            return MessageResponse.error("Le paiement n'a pas été reçu. Le client doit payer avant de démarrer la location.");
         }
 
         // Démarrer la location
@@ -194,6 +240,10 @@ public class ReservationServiceImpl implements ReservationService {
         car.setStatus(CarStatus.RENTED);
         carRepository.save(car);
         reservationRepository.save(reservation);
+
+        broadcastReservationUpdate(reservation);
+        broadcastCarUpdate(car);
+
         sseService.createAndSend(reservation.getClient().getId(),
                 "Bonne route 🚗",
                 "Votre location de " + reservation.getCar().getBrand() + " " + reservation.getCar().getModel() + " a démarré.",
@@ -219,6 +269,10 @@ public class ReservationServiceImpl implements ReservationService {
         carRepository.save(car);
 
         reservationRepository.save(reservation);
+
+        broadcastReservationUpdate(reservation);
+        broadcastCarUpdate(car);
+
         sseService.createAndSend(reservation.getClient().getId(),
                 "Location terminée ✅",
                 "Merci pour votre confiance ! Donnez votre avis sur " + reservation.getCar().getBrand() + " " + reservation.getCar().getModel() + " ⭐",

@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link, useLocation } from "react-router";
 import { ArrowLeft, CreditCard, AlertTriangle, CheckCircle2, XCircle, Lock, Loader2 } from "lucide-react";
-import { toast } from "sonner";
 import { motion } from "motion/react";
 import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
 import { ImageWithFallback } from "../../components/figma/ImageWithFallback";
@@ -25,7 +24,7 @@ function StripePaymentForm({
 }: {
   amount: number;
   clientSecret: string;
-  onSuccess: () => void;
+  onSuccess: (status: "success" | "error", message?: string) => void;
   stripe: any;
 }) {
   const elements = useElements();
@@ -41,12 +40,11 @@ function StripePaymentForm({
     });
 
     if (stripeError) {
-      toast.error(stripeError.message || "Paiement échoué");
+      onSuccess("error", stripeError.message || "Paiement échoué");
       setPhase("idle");
     } else {
-      toast.success("Paiement effectué avec succès !");
       setPhase("done");
-      onSuccess();
+      onSuccess("success");
     }
   };
 
@@ -84,16 +82,19 @@ export default function Payment() {
   const navigate = useNavigate();
   const location = useLocation();
   const stripe = useStripe();
-  const { getCar } = useApp();
+  const { getCar, getPaymentByReservation, payments, addOrUpdatePayment } = useApp();
 
   const [reservation, setReservation] = useState<any>(null);
-  const [payment, setPayment] = useState<any>(null);
   const [contract, setContract] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
 
   const passedClientSecret = (location.state as any)?.clientSecret;
   const dataLoadedRef = useRef(false);
+
+  // Get payment from AppContext's payments array
+  const payment = getPaymentByReservation(reservationId || "") || null;
 
   const loadData = async () => {
     if (!reservationId) return;
@@ -106,8 +107,25 @@ export default function Payment() {
         contractsAPI.getByReservation(reservationId).catch(() => ({ data: null })),
       ]);
       setReservation(resRes.data?.value || resRes.data);
-      setPayment(payRes.data?.value || payRes.data);
       setContract(contractRes.data?.value || contractRes.data);
+      
+      // If we got a payment from the API, add it to AppContext
+      const apiPayment = payRes.data?.value || payRes.data;
+      if (apiPayment) {
+        addOrUpdatePayment({
+          id: String(apiPayment.id),
+          stripeId: apiPayment.externalPaymentId,
+          externalPaymentId: apiPayment.externalPaymentId,
+          reservationId: String(apiPayment.reservationId),
+          amount: apiPayment.amount,
+          currency: apiPayment.currency,
+          provider: apiPayment.provider,
+          status: apiPayment.status,
+          date: apiPayment.paymentDate,
+          paymentDate: apiPayment.paymentDate,
+          createdAt: apiPayment.createdAt,
+        });
+      }
     } catch (err) {
       setError("Erreur lors du chargement des données");
     } finally {
@@ -121,6 +139,22 @@ export default function Payment() {
       loadData();
     }
   }, [reservationId]);
+
+  // We don't need polling anymore because we use SSE!
+  // Just show a toast and wait for the SSE event to update the payment
+  useEffect(() => {
+    if (payment?.status && payment.status !== "PENDING") {
+      setAwaitingConfirmation(false);
+    }
+  }, [payment?.status]);
+
+  const car = reservation ? getCar(String(reservation.carId)) : undefined;
+  const signed = contract?.status === "SIGNED";
+  const isPaid = payment?.status === "COMPLETED";
+  const isPending = payment?.status === "PENDING";
+  const amount = payment?.amount || reservation?.totalAmount || reservation?.total || 0;
+  const clientSecret = passedClientSecret || payment?.clientSecret;
+  const canPay = isPending && signed && clientSecret;
 
   // Loading
   if (loading) {
@@ -142,16 +176,13 @@ export default function Payment() {
     );
   }
 
-  const car = getCar(String(reservation.carId));
-  const signed = contract?.status === "SIGNED";
-  const isPaid = payment?.status === "COMPLETED";
-  const isPending = payment?.status === "PENDING";
-  const amount = payment?.amount || reservation.totalAmount || reservation.total || 0;
-  const clientSecret = passedClientSecret || payment?.clientSecret;
-  const canPay = isPending && signed && clientSecret;
+  const handlePaymentResult = (status: "success" | "error") => {
+    if (status === "success") {
+      setAwaitingConfirmation(true);
+      return;
+    }
 
-  const handlePaymentSuccess = () => {
-    setTimeout(() => loadData(), 2000);
+    setAwaitingConfirmation(false);
   };
 
   return (
@@ -160,7 +191,13 @@ export default function Payment() {
         <button onClick={() => navigate(-1)} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4">
           <ArrowLeft className="size-4" /> Retour
         </button>
-        <h1 className="text-foreground mb-6" style={{ fontSize: "1.5rem", fontWeight: 700 }}>Paiement de votre réservation</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-foreground" style={{ fontSize: "1.5rem", fontWeight: 700 }}>Paiement de votre réservation</h1>
+          <Button size="sm" onClick={loadData} className="flex items-center gap-1">
+            <Loader2 className={`size-4 ${loading ? "animate-spin" : ""}`} />
+            Actualiser
+          </Button>
+        </div>
 
         {/* Résumé */}
         <Card className="p-5 mb-5">
@@ -211,11 +248,19 @@ export default function Payment() {
             <PaymentBadge status="REFUNDED" />
             <p className="mt-3 text-muted-foreground">Ce paiement a été remboursé.</p>
           </Card>
+        ) : awaitingConfirmation ? (
+          <Card className="p-6 text-center">
+            <Loader2 className="size-10 mx-auto text-primary animate-spin mb-3" />
+            <h3 className="text-foreground">Confirmation du paiement en cours</h3>
+            <p className="text-muted-foreground mt-1">
+              Votre paiement a été envoyé à Stripe. La confirmation finale arrive automatiquement.
+            </p>
+          </Card>
         ) : canPay ? (
           <StripePaymentForm
             amount={amount}
             clientSecret={clientSecret}
-            onSuccess={handlePaymentSuccess}
+            onSuccess={handlePaymentResult}
             stripe={stripe}
           />
         ) : (
@@ -229,10 +274,10 @@ export default function Payment() {
           <Card className="p-5 mt-5">
             <h3 className="text-foreground mb-3">Historique du paiement</h3>
             <dl className="space-y-2 text-sm">
-              <div className="flex justify-between"><dt className="text-muted-foreground">ID Stripe</dt><dd className="font-mono">{payment.externalPaymentId}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted-foreground">Montant</dt><dd>{euro(payment.amount)}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">ID Paiement Stripe</dt><dd className="font-mono">{payment.stripeId || payment.externalPaymentId}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Montant payé</dt><dd>{euro(payment.amount)}</dd></div>
               <div className="flex justify-between"><dt className="text-muted-foreground">Statut</dt><dd><PaymentBadge status={payment.status} /></dd></div>
-              {payment.paymentDate && <div className="flex justify-between"><dt className="text-muted-foreground">Date</dt><dd>{formatDate(payment.paymentDate)}</dd></div>}
+              {(payment.date || payment.paymentDate) && <div className="flex justify-between"><dt className="text-muted-foreground">Date</dt><dd>{formatDate(payment.date || payment.paymentDate || "", true)}</dd></div>}
             </dl>
           </Card>
         )}

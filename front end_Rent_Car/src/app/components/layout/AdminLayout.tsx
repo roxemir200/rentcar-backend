@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router";
 import {
-  LayoutDashboard, CalendarClock, CalendarDays, Car, Tags, FileText, CreditCard, Users, Bell, LogOut, Menu, X, Download,
+  LayoutDashboard, CalendarClock, CalendarDays, Car, Tags, FileText, CreditCard, Users, Bell, LogOut, Menu, X, Download, MessageCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useApp } from "../../context/AppContext";
@@ -17,6 +17,7 @@ const links = [
   { to: "/admin/contracts", label: "Contrats", icon: FileText },
   { to: "/admin/payments", label: "Paiements", icon: CreditCard },
   { to: "/admin/users", label: "Utilisateurs", icon: Users },
+  { to: "/admin/chat", label: "Chat", icon: MessageCircle },
   { to: "/admin/export", label: "Export données", icon: Download },
   { to: "/admin/notifications", label: "Notifications", icon: Bell },
 ];

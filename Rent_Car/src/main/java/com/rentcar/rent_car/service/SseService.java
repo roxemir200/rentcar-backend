@@ -21,4 +21,14 @@ public interface SseService {
      * Créer et envoyer une notification
      */
     void createAndSend(Long userId, String title, String message, String type);
+
+    /**
+     * Envoyer un événement personnalisé
+     */
+    void sendEvent(Long userId, String eventName, Object data);
+
+    /**
+     * Envoyer un événement à TOUS les administrateurs connectés.
+     */
+    void sendEventToAllAdmins(String eventName, Object data);
 }

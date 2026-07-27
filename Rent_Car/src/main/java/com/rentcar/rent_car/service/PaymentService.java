@@ -16,5 +16,7 @@ public interface PaymentService {
 
     List<PaymentResponse> getAllPayments();
 
+    List<PaymentResponse> getPaymentsByCurrentUser(String clientEmail);
+
     MessageResponse refundPayment(Long paymentId);
 }

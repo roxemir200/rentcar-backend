@@ -8,23 +8,22 @@ import { Button } from "../../components/common/Button";
 import { useApp } from "../../context/AppContext";
 import { cn } from "../../components/ui/utils";
 
-// Options avec valeurs backend réelles
 const fuelOptions = [
   { value: "", label: "Carburant" },
-  { value: "GASOLINE", label: "Essence" },
-  { value: "DIESEL", label: "Diesel" },
-  { value: "HYBRID", label: "Hybride" },
-  { value: "ELECTRIC", label: "Électrique" },
+  { value: "Essence", label: "Essence" },
+  { value: "Diesel", label: "Diesel" },
+  { value: "Hybride", label: "Hybride" },
+  { value: "Électrique", label: "Électrique" },
 ];
 
 const transmissionOptions = [
   { value: "", label: "Transmission" },
-  { value: "MANUAL", label: "Manuelle" },
-  { value: "AUTOMATIC", label: "Automatique" },
+  { value: "Manuelle", label: "Manuelle" },
+  { value: "Automatique", label: "Automatique" },
 ];
 
 export default function CarsList() {
-  const { cars, categories, carsLoading, carsError, loadCars, getCarRating } = useApp();
+  const { cars, categories, carsLoading, carsError, loadCars, getCarRating, showWelcomeToast } = useApp();
   const [params, setParams] = useSearchParams();
   const [brand, setBrand] = useState("");
   const [fuel, setFuel] = useState("");
@@ -32,6 +31,10 @@ export default function CarsList() {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [category, setCategory] = useState(params.get("category") ?? "");
+
+  useEffect(() => {
+    showWelcomeToast();
+  }, [showWelcomeToast]);
 
   // Filtrage sur les propriétés front du Car
   const filtered = useMemo(

@@ -66,7 +66,7 @@ export function Modal({
 }
 
 export function ConfirmModal({
-  isOpen, onClose, onConfirm, title, message, confirmLabel = "Confirmer", danger,
+  isOpen, onClose, onConfirm, title, message, confirmLabel = "Confirmer", danger, confirmDisabled,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -75,13 +75,17 @@ export function ConfirmModal({
   message: string;
   confirmLabel?: string;
   danger?: boolean;
+  confirmDisabled?: boolean;
 }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm"
       footer={
         <>
-          <Button variant="outline" onClick={onClose}>Annuler</Button>
-          <Button variant={danger ? "danger" : "primary"} onClick={() => { onConfirm(); onClose(); }}>{confirmLabel}</Button>
+          <Button variant="outline" onClick={onClose} disabled={confirmDisabled}>Annuler</Button>
+          <Button variant={danger ? "danger" : "primary"} disabled={confirmDisabled} onClick={() => {
+            if (confirmDisabled) return;
+            onConfirm();
+          }}>{confirmLabel}</Button>
         </>
       }
     >

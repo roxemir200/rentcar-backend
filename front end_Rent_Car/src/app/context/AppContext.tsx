@@ -1,16 +1,22 @@
-import { createContext, useContext, useState, useCallback, type ReactNode, useEffect } from "react";
+import { createContext, useContext, useState, useCallback, type ReactNode, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { carsAPI } from "../api/cars.api";
 import { categoriesAPI } from "../api/categories.api";
 import { reservationsAPI } from "../api/reservations.api";  // ✅ AJOUTÉ
+import { paymentsAPI } from "../api/payments.api";
+import { usersAPI } from "../api/users.api";
+import { reviewsAPI } from "../api/reviews.api";
+import { contractsAPI } from "../api/contrat.api";
+import { dashboardAPI } from "../api/dashboard.api";
+import { notificationsAPI } from "../api/notifications.api";
+import { calendarAPI } from "../api/calendar.api";
 import type {
   User, Car, Category, Reservation, Contract, Payment, Review, AppNotification,
   ReservationStatus, Inspection, Role,
 } from "../data/types";
 import { authAPI, toFrontendUser } from "../api/auth.api";
 import {
-  seedUsers,
-  seedContracts, seedPayments, seedReviews, seedNotifications,  // ✅ seedReservations supprimé
+  seedContracts, seedReviews, seedNotifications,  // ✅ seedReservations et seedUsers supprimés
 } from "../data/mockData";
 import { api } from "../api/axios";
 
@@ -24,6 +30,12 @@ interface AppContextValue {
   payments: Payment[];
   reviews: Review[];
   notifications: AppNotification[];
+  // dashboard
+  dashboardStats: any;
+  dashboardRevenue: any[];
+  dashboardTopCars: any[];
+  // calendar
+  calendarReservations: any[];
   // auth
   login: (email: string, password: string) => Promise<User | null>;
   register: (data: Partial<User>) => Promise<{ ok: boolean; error?: string; user?: User }>;
@@ -31,6 +43,7 @@ interface AppContextValue {
   getProfile: (email: string) => Promise<User | null>;
   updateProfile: (data: Pick<User, "firstName" | "lastName" | "phone" | "address" | "licenseNumber">) => Promise<{ ok: boolean; error?: string }>;
   changePassword: (current: string, next: string) => { ok: boolean; error?: string };
+  showWelcomeToast: () => void;
   // reservations
   createReservation: (r: Omit<Reservation, "id" | "status" | "createdAt">) => Reservation;
   updateReservationStatus: (id: string, status: ReservationStatus, inspection?: { start?: Inspection; end?: Inspection }) => void;
@@ -38,12 +51,14 @@ interface AppContextValue {
   signContract: (reservationId: string) => void;
   cancelContract: (contractId: string) => void;
   payReservation: (reservationId: string) => void;
-  refundPayment: (paymentId: string) => void;
+  refundPayment: (paymentId: string) => Promise<{ ok: boolean; error?: string }>;
+  addOrUpdatePayment: (payment: Payment) => void;
   // reviews
-  addReview: (r: Omit<Review, "id" | "date">) => void;
+  addReview: (r: Omit<Review, "id" | "date">) => Promise<void>;
   // notifications
   markNotificationRead: (id: string) => void;
   markAllRead: () => void;
+  deleteNotification: (id: string) => void;
   // users
   toggleUserActive: (id: string) => void;
   changeUserRole: (id: string, role: Role) => void; 
@@ -58,6 +73,16 @@ interface AppContextValue {
   loadCars: () => Promise<void>;
   loadCategories: () => Promise<void>;
   loadReservations: () => Promise<void>;  // ✅ AJOUTÉ
+  loadPayments: () => Promise<void>;
+  loadDashboardStats: () => Promise<any>; // ✅ À AJOUTER
+  loadUsers: () => Promise<void>;  // ✅ AJOUTÉ
+  loadReviews: () => Promise<void>;  // ✅ AJOUTÉ
+  loadContracts: () => Promise<void>;  // ✅ AJOUTÉ
+  setContracts: (contracts: Contract[]) => void;  // ✅ AJOUTÉ
+  loadNotifications: () => Promise<void>;  // ✅ AJOUTÉ
+  loadDashboardRevenue: (year: number) => Promise<any[]>;
+  loadDashboardTopCars: (limit: number) => Promise<any[]>;
+  loadCalendarReservations: (year: number, month: number) => Promise<any[]>;
   // helpers
   getCar: (id: string) => Car | undefined;
   getUser: (id: string) => User | undefined;
@@ -122,9 +147,17 @@ const mapCarFromApi = (apiCar: any): Car => ({
   description: apiCar.description || '',
   category: apiCar.categoryName || '',
   categoryId: String(apiCar.categoryId || ''),
-  images: (apiCar.images || []).map((img: string) => 
-    img.startsWith('http') || img.startsWith('data:') ? img : `${API_BASE_URL}${img}`
-  ),
+  images: [
+    // Use primaryImage first if available
+    ...(apiCar.primaryImage ? [apiCar.primaryImage] : []),
+    // Then add other images
+    ...(apiCar.images || []),
+  ]
+    // Make sure no duplicates and all are full URLs
+    .filter((img, index, arr) => img && arr.indexOf(img) === index)
+    .map((img: string) => 
+      img.startsWith('http') || img.startsWith('data:') ? img : `${API_BASE_URL}${img}`
+    ),
 });
 
 const mapCarToApi = (car: Car): any => ({
@@ -148,20 +181,109 @@ const mapCarToApi = (car: Car): any => ({
   imageUrls: car.images || [],
 });
 
+const mapReservationFromApi = (apiRes: any): Reservation => ({
+  id: String(apiRes.id),
+  userId: String(apiRes.userId || apiRes.clientId),
+  carId: String(apiRes.carId),
+  startDate: apiRes.startDate || '',
+  endDate: apiRes.endDate || '',
+  pickupLocation: apiRes.pickupLocation || '',
+  returnLocation: apiRes.returnLocation || '',
+  total: apiRes.totalAmount || apiRes.total || 0,
+  totalAmount: apiRes.totalAmount || apiRes.total || 0,
+  status: apiRes.status || 'PENDING',
+  createdAt: apiRes.createdAt || '',
+});
+
+const mapPaymentFromApi = (apiPayment: any): Payment => ({
+  id: String(apiPayment.id),
+  stripeId: apiPayment.externalPaymentId || "",
+  externalPaymentId: apiPayment.externalPaymentId,
+  reservationId: String(apiPayment.reservationId),
+  clientName: apiPayment.clientName,
+  carInfo: apiPayment.carInfo,
+  amount: Number(apiPayment.amount ?? 0),
+  currency: apiPayment.currency,
+  provider: apiPayment.provider,
+  status: apiPayment.status,
+  date: apiPayment.paymentDate || apiPayment.createdAt,
+  paymentDate: apiPayment.paymentDate,
+  createdAt: apiPayment.createdAt,
+});
+
+const mapUserFromApi = (apiUser: any): User => ({
+  id: String(apiUser.id),
+  firstName: apiUser.firstName || "",
+  lastName: apiUser.lastName || "",
+  email: apiUser.email || "",
+  password: "", // We don't get the password from the API
+  phone: apiUser.phoneNumber || apiUser.phone,
+  address: apiUser.address,
+  licenseNumber: apiUser.drivingLicenseNumber || apiUser.licenseNumber,
+  role: apiUser.role || "CLIENT",
+  active: apiUser.active ?? true,
+  createdAt: apiUser.createdAt || new Date().toISOString(),
+});
+
+export const mapReviewFromApi = (apiReview: any): Review => ({
+  id: String(apiReview.id),
+  userId: String(apiReview.userId || apiReview.clientId || apiReview.client_id || ""),
+  carId: String(apiReview.carId || apiReview.car_id || ""),
+  reservationId: String(apiReview.reservationId || apiReview.reservation_id || ""),
+  rating: apiReview.rating,
+  comment: apiReview.comment || "",
+  date: apiReview.createdAt || apiReview.created_at || new Date().toISOString(),
+  userFirstName: apiReview.userFirstName || apiReview.clientFirstName || apiReview.firstName || apiReview.first_name || "",
+  userLastName: apiReview.userLastName || apiReview.clientLastName || apiReview.lastName || apiReview.last_name || "",
+});
+
+export const mapContractFromApi = (apiContract: any): Contract => ({
+  id: String(apiContract.id),
+  number: apiContract.contractNumber || apiContract.contract_number || apiContract.number || "",
+  reservationId: String(apiContract.reservationId || apiContract.reservation_id || ""),
+  status: apiContract.status || "DRAFT",
+  signedAt: apiContract.signedAt || apiContract.signed_at || null,
+});
+
+const mapNotificationFromApi = (apiNotification: any, currentUserId: string): AppNotification => ({
+  id: `server-${apiNotification.id}`,
+  userId: currentUserId, // since it's "my notifications", the recipient is current user
+  type: apiNotification.type || "SYSTEM",
+  title: apiNotification.title || "",
+  message: apiNotification.message || "",
+  read: Boolean(apiNotification.isRead),
+  date: apiNotification.createdAt || new Date().toISOString(),
+});
+
 // ──────────────── APP PROVIDER ────────────────
 export function AppProvider({ children }: { children: ReactNode }) {
+  const welcomeToastShownRef = useRef(false);
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     const token = localStorage.getItem("token");
     return token ? readStoredUser() : null;
   });
-  const [users, setUsers] = useState<User[]>(seedUsers);
+  const [users, setUsers] = useState<User[]>([]);  // ✅ Plus de seed
   const [cars, setCars] = useState<Car[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);  // ✅ Plus de seed
   const [contracts, setContracts] = useState<Contract[]>(seedContracts);
-  const [payments, setPayments] = useState<Payment[]>(seedPayments);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [reviews, setReviews] = useState<Review[]>(seedReviews);
   const [notifications, setNotifications] = useState<AppNotification[]>(seedNotifications);
+  const [dashboardStats, setDashboardStats] = useState<any>(null);
+  const [dashboardRevenue, setDashboardRevenue] = useState<any[]>([]);
+  const [dashboardTopCars, setDashboardTopCars] = useState<any[]>([]);
+  const [calendarReservations, setCalendarReservations] = useState<any[]>([]);
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const seenNotificationIdsRef = useRef<Set<string>>(new Set());
+
+  // ────── NOTIFICATIONS ──────
+  const pushNotification = useCallback((userId: string, type: AppNotification["type"], title: string, message: string, link?: string) => {
+    setNotifications(prev => [
+      { id: nextId("n"), userId, type, title, message, read: false, date: new Date().toISOString(), link },
+      ...prev,
+    ]);
+  }, []);
 
   const [carsLoading, setCarsLoading] = useState(true);
   const [carsError, setCarsError] = useState<string | null>(null);
@@ -198,35 +320,431 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // ✅ AJOUTÉ : Charger les réservations depuis l'API
   const loadReservations = useCallback(async () => {
+    if (!currentUser) {
+      setReservations([]);
+      return;
+    }
     setReservationsLoading(true);
     try {
-      const res = await reservationsAPI.getMyReservations();
-      setReservations(res.data?.value || res.data || []);
+      const res = currentUser.role === "ADMIN"
+        ? await reservationsAPI.getAll()
+        : await reservationsAPI.getMyReservations();
+      const apiReservations = res.data?.value || res.data || [];
+      setReservations(apiReservations.map(mapReservationFromApi));
     } catch (err) {
       console.error("Erreur chargement réservations:", err);
     } finally {
       setReservationsLoading(false);
     }
-  }, []);
+  }, [currentUser]);
+
+  const loadPayments = useCallback(async () => {
+    if (!currentUser) {
+      setPayments([]);
+      return;
+    }
+
+    try {
+      const res = currentUser.role === "ADMIN"
+        ? await paymentsAPI.getAll()
+        : await paymentsAPI.getMyPayments();
+      const apiPayments = res.data?.value || res.data || [];
+      setPayments(apiPayments.map(mapPaymentFromApi));
+    } catch (err) {
+      setPayments([]);
+    }
+  }, [currentUser]);
+
+  const loadUsers = useCallback(async () => {
+    if (!currentUser || currentUser.role !== "ADMIN") {
+      setUsers([]);
+      return;
+    }
+
+    try {
+      const res = await usersAPI.getAll();
+      const apiUsers = res.data?.value || res.data || [];
+      setUsers(apiUsers.map(mapUserFromApi));
+    } catch (err) {
+      setUsers([]);
+    }
+  }, [currentUser]);
+
+  const loadReviews = useCallback(async () => {
+    if (!currentUser) {
+      setReviews([]);
+      return;
+    }
+
+    try {
+      // Don't load reviews for admin if the endpoint is not authorized
+      if (currentUser.role === "ADMIN") {
+        setReviews([]);
+        return;
+      }
+      
+      const res = await reviewsAPI.getMyReviews();
+      const apiReviews = res.data?.value || res.data || [];
+      setReviews(apiReviews.map(mapReviewFromApi));
+    } catch (err) {
+      setReviews([]);
+    }
+  }, [currentUser]);
+
+  const loadContracts = useCallback(async () => {
+    if (!currentUser) {
+      setContracts([]);
+      return;
+    }
+
+    try {
+      let apiContracts: any[] = [];
+      if (currentUser.role === "ADMIN") {
+        const res = await contractsAPI.getAll();
+        apiContracts = res.data?.value || res.data || [];
+      } else {
+        // For clients, use getMy() when backend endpoint is available
+        // Uncomment these lines once you add the /api/contracts/my endpoint:
+        // const res = await contractsAPI.getMy();
+        // apiContracts = res.data?.value || res.data || [];
+        apiContracts = [];
+      }
+      setContracts(apiContracts.map(mapContractFromApi));
+    } catch (err) {
+      setContracts([]);
+    }
+  }, [currentUser]);
+
+  const loadNotifications = useCallback(async () => {
+    if (!currentUser) {
+      setNotifications([]);
+      return;
+    }
+
+    try {
+      const res = await notificationsAPI.getMyNotifications();
+      const apiNotifications = res.data?.value || res.data || [];
+      setNotifications(apiNotifications.map((n: any) => mapNotificationFromApi(n, currentUser.id)));
+    } catch (err) {
+      setNotifications([]);
+    }
+  }, [currentUser]);
+  const loadDashboardStats = useCallback(async () => {
+    if (!currentUser || currentUser.role !== "ADMIN") {
+      return null;
+    }
+    try {
+      const res = await dashboardAPI.getStats();
+      const data = res.data?.data || res.data;
+      setDashboardStats(data);
+      return data;
+    } catch (err) {
+      console.error("Erreur chargement dashboard:", err);
+      return null;
+    }
+  }, [currentUser]);
+
+  const loadDashboardRevenue = useCallback(async (year: number = 2026) => {
+    if (!currentUser || currentUser.role !== "ADMIN") {
+      return [];
+    }
+    try {
+      const res = await dashboardAPI.getRevenue(year);
+      const data = res.data?.data || res.data || [];
+      setDashboardRevenue(data);
+      return data;
+    } catch (err) {
+      console.error("Erreur chargement revenus:", err);
+      return [];
+    }
+  }, [currentUser]);
+
+  const loadDashboardTopCars = useCallback(async (limit: number = 5) => {
+    if (!currentUser || currentUser.role !== "ADMIN") {
+      return [];
+    }
+    try {
+      const res = await dashboardAPI.getTopCars(limit);
+      const data = res.data?.data || res.data || [];
+      setDashboardTopCars(data);
+      return data;
+    } catch (err) {
+      console.error("Erreur chargement top cars:", err);
+      return [];
+    }
+  }, [currentUser]);
+
+  const loadCalendarReservations = useCallback(async (year: number, month: number) => {
+    if (!currentUser || currentUser.role !== "ADMIN") {
+      return [];
+    }
+    try {
+      const res = await calendarAPI.getReservations(year, month);
+      const data = res.data?.data || res.data || [];
+      
+      // Map API response to Reservation type (add carBrand/carModel/clientFirstName/clientLastName as extra fields)
+      const mappedReservations = data.map((apiRes: any) => ({
+        ...mapReservationFromApi(apiRes),
+        carBrand: apiRes.carBrand,
+        carModel: apiRes.carModel,
+        clientFirstName: apiRes.clientFirstName,
+        clientLastName: apiRes.clientLastName
+      }));
+      
+      setCalendarReservations(mappedReservations);
+      return mappedReservations;
+    } catch (err) {
+      console.error("Erreur chargement calendrier:", err);
+      return [];
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     loadCars();
     loadCategories();
   }, [loadCars, loadCategories]);
 
+  // Show welcome toast — triggered ONCE by the landing page (dashboard / cars) once mounted
+  const showWelcomeToast = useCallback(() => {
+    if (!currentUser || welcomeToastShownRef.current) return;
+    welcomeToastShownRef.current = true;
+    toast.success(`Bienvenue, ${currentUser.firstName} !`);
+  }, [currentUser]);
+
   // Charger les réservations quand l'utilisateur est connecté
   useEffect(() => {
     if (currentUser) {
       loadReservations();
+      loadPayments();
+      loadUsers();
+      loadReviews();
+      loadContracts();
+      loadNotifications();
+        if (currentUser.role === "ADMIN") {
+      loadDashboardStats(); // ✅ Optionnel
+      loadDashboardRevenue(2026);
+      loadDashboardTopCars(5);
     }
-  }, [currentUser, loadReservations]);
+    } else {
+      setReservations([]);
+      setPayments([]);
+      setUsers([]);
+      setReviews([]);
+      setContracts([]);
+      setNotifications([]);
+      setDashboardStats(null);
+      setDashboardRevenue([]);
+      setDashboardTopCars([]);
+    }
+  }, [currentUser, loadReservations, loadPayments, loadUsers, loadReviews, loadContracts, loadNotifications, loadDashboardStats, loadDashboardRevenue, loadDashboardTopCars]);
+
+  // Gérer la connexion SSE
+  useEffect(() => {
+    if (!currentUser) {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    let reconnectAttempts = 0;
+    const maxShortRetries = 5; // Nombre de tentatives avec délais courts
+    const maxDelayMs = 60000; // 1 minute max delay
+    let reconnectTimeout: NodeJS.Timeout | null = null;
+
+    const connectSSE = () => {
+      try {
+        const eventSource = new EventSource(`http://localhost:8089/api/notifications/stream?token=${token}`);
+        eventSourceRef.current = eventSource;
+
+        eventSource.onopen = () => {
+          reconnectAttempts = 0; // Réinitialiser le compteur quand la connexion réussit
+        };
+
+        eventSource.onerror = (error) => {
+          eventSource.close();
+
+          if (reconnectAttempts < maxShortRetries) {
+            reconnectAttempts++;
+            // Exponential backoff starting at 2 seconds
+            const delay = Math.min(2000 * Math.pow(2, reconnectAttempts - 1), maxDelayMs);
+            reconnectTimeout = setTimeout(() => {
+              connectSSE();
+            }, delay);
+          } else {
+            // Après 5 tentatives, attendre 10 minutes avant de réessayer
+            reconnectTimeout = setTimeout(() => {
+              reconnectAttempts = 0;
+              connectSSE();
+            }, 10 * 60 * 1000);
+          }
+        };
+
+        eventSource.addEventListener("payment.updated", (event) => {
+          const updatedPayment = JSON.parse(event.data);
+          const normalizedPayment = mapPaymentFromApi(updatedPayment);
+          setPayments(prev => {
+            const index = prev.findIndex(p => p.id === normalizedPayment.id);
+            if (index === -1) {
+              return [normalizedPayment, ...prev];
+            }
+
+            const next = [...prev];
+            next[index] = {
+              ...next[index],
+              ...normalizedPayment,
+            };
+            return next;
+          });
+          // Informer les pages avec state local (ex: MyReservations qui charge son propre fetch)
+          // qu'un paiement évolue et qu'elles doivent recharger leurs données.
+          window.dispatchEvent(new CustomEvent("rentcar:data-updated", { detail: { kind: "payment", id: normalizedPayment.id } }));
+        });
+
+        eventSource.addEventListener("reservation.updated", (event) => {
+          const updated = JSON.parse(event.data);
+          const normalized = mapReservationFromApi(updated);
+          setReservations(prev => {
+            const idx = prev.findIndex(r => r.id === normalized.id);
+            if (idx === -1) return [normalized, ...prev];
+            const next = [...prev];
+            next[idx] = { ...next[idx], ...normalized };
+            return next;
+          });
+          window.dispatchEvent(new CustomEvent("rentcar:data-updated", { detail: { kind: "reservation", id: normalized.id } }));
+        });
+
+        eventSource.addEventListener("car.updated", (event) => {
+          const updated = JSON.parse(event.data);
+          const normalized = mapCarFromApi(updated);
+          setCars(prev => {
+            const idx = prev.findIndex(c => c.id === normalized.id);
+            if (idx === -1) return [normalized, ...prev];
+            const next = [...prev];
+            next[idx] = { ...next[idx], ...normalized };
+            return next;
+          });
+          window.dispatchEvent(new CustomEvent("rentcar:data-updated", { detail: { kind: "car", id: normalized.id } }));
+        });
+
+        eventSource.addEventListener("notification", (event) => {
+          const notification = JSON.parse(event.data);
+          const notificationId = notification?.id ? `server-${notification.id}` : "";
+
+          if (notificationId && seenNotificationIdsRef.current.has(notificationId)) {
+            return;
+          }
+
+          if (notificationId) {
+            seenNotificationIdsRef.current.add(notificationId);
+          }
+
+          setNotifications(prev => {
+            const nextNotification: AppNotification = {
+              id: notificationId || nextId("n"),
+              userId: currentUser.id,
+              type: notification.type,
+              title: notification.title,
+              message: notification.message,
+              read: Boolean(notification.isRead),
+              date: notification.createdAt || new Date().toISOString(),
+            };
+
+            if (prev.some(item => item.id === nextNotification.id)) {
+              return prev;
+            }
+
+            return [nextNotification, ...prev];
+          });
+
+          const isSelfReservationCreated =
+            notification.type === "RESERVATION" &&
+            notification.title === "Réservation en attente";
+
+          if (!isSelfReservationCreated) {
+            // Choix couleur toast selon type + titre :
+            // → Ce qui correspond à une ACTION RÉUSSIE (success) est affiché en VERT.
+            const type: keyof typeof toast = notification.type;
+            const title: string = notification.title ?? "";
+            const isSuccessToast =
+              (type === "CONTRACT" && title.startsWith("Contrat signé")) ||
+              (type === "PAYMENT" &&
+                (title.startsWith("Paiement accepté") || title.startsWith("Paiement reçu") || title.startsWith("Remboursement"))) ||
+              (type === "RESERVATION" &&
+                ["Réservation confirmée", "Location démarrée", "Location terminée"].some(t =>
+                  title.startsWith(t)
+                ));
+
+            const errorTitles = [
+              "Réservation annulée",
+              "Paiement échoué",
+            ];
+            const isErrorToast =
+              errorTitles.some(t => title.startsWith(t));
+
+            const toastId =
+              notificationId || `${notification.type}-${notification.title}-${notification.message}`;
+
+            if (isSuccessToast) {
+              toast.success(notification.title, {
+                id: toastId,
+                description: notification.message,
+              });
+            } else if (isErrorToast) {
+              toast.error(notification.title, {
+                id: toastId,
+                description: notification.message,
+              });
+            } else {
+              toast.info(notification.title, {
+                id: toastId,
+                description: notification.message,
+              });
+            }
+          }
+        });
+      } catch (e) {
+        // Erreur lors de la création de EventSource, réessayer
+        if (reconnectAttempts < maxShortRetries) {
+          reconnectAttempts++;
+          const delay = Math.min(2000 * Math.pow(2, reconnectAttempts - 1), maxDelayMs);
+          reconnectTimeout = setTimeout(() => {
+            connectSSE();
+          }, delay);
+        } else {
+          reconnectTimeout = setTimeout(() => {
+            reconnectAttempts = 0;
+            connectSSE();
+          }, 10 * 60 * 1000);
+        }
+      }
+    };
+
+    connectSSE();
+
+    return () => {
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+      }
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
+    };
+  }, [currentUser]);
 
   // ──────────────── AUTH ────────────────
   const login = useCallback(async (email: string, password: string) => {
     try {
       const authResponse = await authAPI.login({ email, password });
       const token = authResponse?.token;
-      if (!token) return null;
+      if (!token) {
+        throw new Error("Email ou mot de passe incorrect");
+      }
 
       localStorage.setItem("token", token);
 
@@ -244,10 +762,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setCurrentUser(user);
       persistAuth(user);
       return user;
-    } catch {
+    } catch (error: any) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      return null;
+      // Extract error message from backend if available
+      const message = error?.response?.data?.message || "Email ou mot de passe incorrect";
+      throw new Error(message);
     }
   }, []);
 
@@ -258,9 +778,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         lastName: data.lastName,
         email: data.email,
         password: data.password,
-        phoneNumber: data.phone,
-        address: data.address,
-        drivingLicenseNumber: data.licenseNumber,
       });
       return { ok: response?.success ?? true, error: response?.message };
     } catch (error) {
@@ -324,13 +841,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return { ok: true };
   }, [currentUser]);
 
-  // ────── NOTIFICATIONS ──────
-  const pushNotification = useCallback((userId: string, type: AppNotification["type"], title: string, message: string, link?: string) => {
-    setNotifications(prev => [
-      { id: nextId("n"), userId, type, title, message, read: false, date: new Date().toISOString(), link },
-      ...prev,
-    ]);
-  }, []);
+
 
   // ────── RESERVATIONS ──────
   const createReservation = useCallback((r: Omit<Reservation, "id" | "status" | "createdAt">) => {
@@ -381,28 +892,119 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setContracts(prev => prev.map(c => c.id === contractId ? { ...c, status: "CANCELLED" } : c));
   }, []);
 
+  const addOrUpdatePayment = useCallback((payment: Payment) => {
+    setPayments(prev => {
+      const index = prev.findIndex(p => p.id === payment.id);
+      if (index !== -1) {
+        const newPayments = [...prev];
+        newPayments[index] = { ...newPayments[index], ...payment };
+        return newPayments;
+      }
+      return [...prev, payment];
+    });
+  }, []);
+
   const payReservation = useCallback((reservationId: string) => {
     setPayments(prev => prev.map(p => p.reservationId === reservationId ? { ...p, status: "COMPLETED", date: new Date().toISOString() } : p));
     const res = reservations.find(r => r.id === reservationId);
-    if (res) pushNotification(res.userId, "PAYMENT", "Paiement réussi",
-      "Merci pour votre confiance !", `/reservation/${reservationId}`);
+    if (res) pushNotification(res.userId, "PAYMENT", "Paiement réussi", "Merci pour votre confiance !", `/reservation/${reservationId}`);
   }, [reservations, pushNotification]);
 
-  const refundPayment = useCallback((paymentId: string) => {
-    setPayments(prev => prev.map(p => p.id === paymentId ? { ...p, status: "REFUNDED" } : p));
-    toast.success("Paiement remboursé avec succès.");
+  const refundPayment = useCallback(async (paymentId: string): Promise<{ ok: boolean; error?: string }> => {
+    const payment = payments.find(p => p.id === paymentId);
+    try {
+      const res = await paymentsAPI.refund(Number(paymentId));
+      const body: any = res.data;
+      const ok = Boolean(body?.success || body?.ok || body?.isSuccess || (res.status >= 200 && res.status < 300));
+      const message: string | undefined = body?.message || body?.data?.message;
+
+      if (!ok) {
+        const errorMsg = message || "Échec du remboursement";
+        toast.error("Remboursement impossible", { description: errorMsg });
+        return { ok: false, error: errorMsg };
+      }
+
+      setPayments(prev => prev.map(p =>
+        p.id === paymentId ? { ...p, status: "REFUNDED" as const, paymentDate: new Date().toISOString() } : p
+      ));
+
+      if (payment?.reservationId) {
+        setReservations(prev => prev.map(r =>
+          r.id === payment.reservationId ? { ...r, status: "CANCELLED" as const } : r
+        ));
+        const res = reservations.find(r => r.id === payment.reservationId);
+        if (res?.carId) {
+          setCars(prev => prev.map(c =>
+            c.id === res.carId ? { ...c, status: "AVAILABLE" as const } : c
+          ));
+        }
+      }
+
+      return { ok: true };
+    } catch (err: any) {
+      const detail = err?.response?.data?.message || err?.message || "Erreur réseau";
+      toast.error("Remboursement échoué", { description: detail });
+      return { ok: false, error: detail };
+    }
+  }, [payments, reservations]);
+
+  const addReview = useCallback(async (r: Omit<Review, "id" | "date">) => {
+    try {
+      const res = await reviewsAPI.create({
+        reservationId: Number(r.reservationId),
+        rating: r.rating,
+        comment: r.comment,
+      });
+      if (res.data.success) {
+        const newReview = mapReviewFromApi(res.data.data);
+        setReviews(prev => [newReview, ...prev]);
+      } else {
+        toast.error(res.data.message);
+      }
+    } catch (err) {
+      toast.error("Erreur lors de la publication de l'avis");
+    }
   }, []);
 
-  const addReview = useCallback((r: Omit<Review, "id" | "date">) => {
-    setReviews(prev => [{ ...r, id: nextId("rev"), date: new Date().toISOString() }, ...prev]);
-  }, []);
-
-  const markNotificationRead = useCallback((id: string) => {
+  const markNotificationRead = useCallback(async (id: string) => {
+    // Optimistic update
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    
+    try {
+      // Extract the server id (remove "server-" prefix if exists)
+      const serverId = id.startsWith("server-") ? id.replace("server-", "") : id;
+      await notificationsAPI.markAsRead(serverId);
+    } catch (err) {
+      // Revert on error
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: false } : n));
+    }
   }, []);
-  const markAllRead = useCallback(() => {
+  
+  const markAllRead = useCallback(async () => {
+    // Optimistic update
     setNotifications(prev => prev.map(n => currentUser && n.userId === currentUser.id ? { ...n, read: true } : n));
-  }, [currentUser]);
+
+    try {
+      await notificationsAPI.markAllAsRead();
+    } catch (err) {
+      // Revert on error
+      loadNotifications();
+    }
+  }, [currentUser, loadNotifications]);
+
+  const deleteNotification = useCallback(async (id: string) => {
+    // Optimistic update
+    setNotifications(prev => prev.filter(n => n.id !== id));
+
+    try {
+      // Extract server id (remove "server-" prefix if present)
+      const serverId = id.startsWith("server-") ? id.replace("server-", "") : id;
+      await notificationsAPI.deleteNotification(serverId);
+    } catch (err) {
+      // Revert on error
+      loadNotifications();
+    }
+  }, [loadNotifications]);
 
   const toggleUserActive = useCallback((id: string) => {
     setUsers(prev => prev.map(u => u.id === id ? { ...u, active: !u.active } : u));
@@ -490,12 +1092,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const value: AppContextValue = {
     currentUser, users, cars, categories, reservations, contracts, payments, reviews, notifications,
-    login, register, logout, getProfile, updateProfile, changePassword,
+    dashboardStats, dashboardRevenue, dashboardTopCars, calendarReservations,
+    login, register, logout, getProfile, updateProfile, changePassword, showWelcomeToast,
     createReservation, updateReservationStatus,
-    signContract, cancelContract, payReservation, refundPayment, addReview,
-    markNotificationRead, markAllRead, toggleUserActive, changeUserRole,
+    signContract, cancelContract, payReservation, refundPayment, addOrUpdatePayment, addReview,
+    markNotificationRead, markAllRead, deleteNotification, toggleUserActive, changeUserRole,
     saveCar, deleteCar, saveCategory, deleteCategory,
-    carsLoading, carsError, loadCars, loadCategories, loadReservations,  // ✅ AJOUTÉ
+    carsLoading, carsError, loadCars, loadCategories, loadReservations, loadPayments, loadUsers, loadReviews, loadContracts, setContracts, loadDashboardStats, loadNotifications, loadDashboardRevenue, loadDashboardTopCars, loadCalendarReservations,
     getCar, getUser, getContractByReservation, getPaymentByReservation, getCarRating,
   };
 

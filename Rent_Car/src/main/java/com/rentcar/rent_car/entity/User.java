@@ -40,9 +40,17 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    @Column(name = "is_active", nullable = false, columnDefinition = "boolean default true")
     private Boolean isActive = true;
 
     private LocalDateTime createdAt;
+    @Column(name = "email_verified", nullable = false, columnDefinition = "boolean default false")
+    private Boolean emailVerified = false;
+    @Column(name = "verification_token")
+    private String verificationToken;
+
+    @Column(name = "verification_token_expiry")
+    private LocalDateTime verificationTokenExpiry;
 
     private LocalDateTime updatedAt;
     @OneToMany(mappedBy = "client")
@@ -62,5 +70,15 @@ public class User {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    @PostLoad
+    protected void postLoad() {
+        if (emailVerified == null) {
+            emailVerified = false;
+        }
+        if (isActive == null) {
+            isActive = true;
+        }
     }
 }

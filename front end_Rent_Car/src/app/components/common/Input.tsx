@@ -6,11 +6,12 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   leftIcon?: ReactNode;
+  rightIcon?: ReactNode;
   hint?: string;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { label, error, leftIcon, hint, type = "text", className, id, ...props },
+  { label, error, leftIcon, rightIcon, hint, type = "text", className, id, ...props },
   ref,
 ) {
   const [show, setShow] = useState(false);
@@ -40,13 +41,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
             "placeholder:text-muted-foreground/70",
             "focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary",
             leftIcon && "pl-10",
-            isPassword && "pr-10",
+            (isPassword || rightIcon) && "pr-10",
             error ? "border-destructive focus:ring-destructive/30 focus:border-destructive" : "border-border",
             className,
           )}
           {...props}
         />
-        {isPassword && (
+        {isPassword && !rightIcon && (
           <button
             type="button"
             onClick={() => setShow((s) => !s)}
@@ -56,6 +57,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           >
             {show ? <EyeOff className="size-4.5" /> : <Eye className="size-4.5" />}
           </button>
+        )}
+        {rightIcon && (
+          <span className="absolute right-3 top-1/2 -translate-y-1/2">
+            {rightIcon}
+          </span>
         )}
       </div>
       {error ? (

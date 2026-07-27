@@ -22,4 +22,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // Trouver les utilisateurs actifs
     List<User> findByIsActiveTrue();
+    Optional<User> findByVerificationToken(String token);
+
+    Optional<User> findByEmailAndEmailVerifiedTrue(String email);
+
+    Optional<User> findByPhoneNumber(String phoneNumber);
+
+    Boolean existsByPhoneNumber(String phoneNumber);
 }

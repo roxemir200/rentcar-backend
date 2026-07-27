@@ -159,8 +159,18 @@ export default function ReservationDetail({ admin }: { admin?: boolean }) {
           <Card className="p-6 mb-6">
             <h3 className="text-foreground mb-4">État des lieux</h3>
             <div className="grid sm:grid-cols-2 gap-4">
-              <Inspection title="Départ" data={reservation.startInspection ? { mileage: reservation.mileageStart, fuel: reservation.fuelLevelStart, damages: reservation.damagesAtStart } : null} />
-              <Inspection title="Retour" data={reservation.endInspection ? { mileage: reservation.mileageEnd, fuel: reservation.fuelLevelEnd, damages: reservation.damagesAtEnd } : null} />
+              <Inspection 
+                title="Départ" 
+                data={reservation.mileageStart || reservation.fuelLevelStart || reservation.damagesAtStart 
+                  ? { mileage: reservation.mileageStart, fuel: reservation.fuelLevelStart, damages: reservation.damagesAtStart } 
+                  : null} 
+              />
+              <Inspection 
+                title="Retour" 
+                data={reservation.mileageEnd || reservation.fuelLevelEnd || reservation.damagesAtEnd 
+                  ? { mileage: reservation.mileageEnd, fuel: reservation.fuelLevelEnd, damages: reservation.damagesAtEnd } 
+                  : null} 
+              />
             </div>
           </Card>
         )}
@@ -219,9 +229,22 @@ function Inspection({ title, data }: { title: string; data?: { mileage?: number;
       <p className="font-medium text-foreground mb-2">{title}</p>
       {data ? (
         <dl className="space-y-1 text-sm">
-          <div className="flex justify-between"><dt className="text-muted-foreground">Kilométrage</dt><dd className="text-foreground">{data.mileage?.toLocaleString("fr-FR")} km</dd></div>
-          <div className="flex justify-between"><dt className="text-muted-foreground">Carburant</dt><dd className="text-foreground">{data.fuel}</dd></div>
-          <div className="flex justify-between"><dt className="text-muted-foreground">Dégâts</dt><dd className="text-foreground text-right max-w-[60%]">{data.damages || "Aucun"}</dd></div>
+          {data.mileage !== undefined && (
+            <div className="flex justify-between">
+              <dt className="text-muted-foreground">Kilométrage</dt>
+              <dd className="text-foreground">{data.mileage.toLocaleString("fr-FR")} km</dd>
+            </div>
+          )}
+          {data.fuel && (
+            <div className="flex justify-between">
+              <dt className="text-muted-foreground">Carburant</dt>
+              <dd className="text-foreground">{data.fuel}</dd>
+            </div>
+          )}
+          <div className="flex justify-between">
+            <dt className="text-muted-foreground">Dégâts</dt>
+            <dd className="text-foreground text-right max-w-[60%]">{data.damages || "Aucun"}</dd>
+          </div>
         </dl>
       ) : <p className="text-sm text-muted-foreground">Non renseigné.</p>}
     </div>

@@ -4,11 +4,13 @@ import com.rentcar.rent_car.dto.request.CreatePaymentRequest;
 import com.rentcar.rent_car.dto.response.MessageResponse;
 import com.rentcar.rent_car.dto.response.PaymentIntentResponse;
 import com.rentcar.rent_car.dto.response.PaymentResponse;
+import com.rentcar.rent_car.security.UserDetailsImpl;
 import com.rentcar.rent_car.service.PaymentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -39,6 +41,16 @@ public class PaymentController {
     @GetMapping("/payments/reservation/{reservationId}")
     public ResponseEntity<PaymentResponse> getPaymentByReservation(@PathVariable Long reservationId) {
         return ResponseEntity.ok(paymentService.getPaymentByReservation(reservationId));
+    }
+
+    /**
+     * Voir mes paiements (Client connecté)
+     */
+    @GetMapping("/payments/my-payments")
+    @PreAuthorize("hasRole('CLIENT')")
+    public ResponseEntity<List<PaymentResponse>> getMyPayments(
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return ResponseEntity.ok(paymentService.getPaymentsByCurrentUser(userDetails.getEmail()));
     }
 
     /**

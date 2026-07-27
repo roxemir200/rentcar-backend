@@ -8,8 +8,8 @@ import { useApp } from "../../context/AppContext";
 import { formatDate } from "../../lib/format";
 
 export default function MyReviews() {
-  const { currentUser, reviews, getCar } = useApp();
-  const mine = reviews.filter((r) => r.userId === currentUser!.id).sort((a, b) => +new Date(b.date) - +new Date(a.date));
+  const { reviews, getCar } = useApp();
+  const mine = reviews.sort((a, b) => +new Date(b.date) - +new Date(a.date));
 
   return (
     <PageTransition>
