@@ -6,24 +6,56 @@ import { CarCardSkeleton, EmptyState, PageTransition } from "../../components/co
 import { Input, Select } from "../../components/common/Input";
 import { Button } from "../../components/common/Button";
 import { useApp } from "../../context/AppContext";
+import { usePrefs } from "../../context/PrefsContext";
 import { cn } from "../../components/ui/utils";
+import type { TranslationKey } from "../../i18n/translations";
 
-const fuelOptions = [
-  { value: "", label: "Carburant" },
-  { value: "Essence", label: "Essence" },
-  { value: "Diesel", label: "Diesel" },
-  { value: "Hybride", label: "Hybride" },
-  { value: "Électrique", label: "Électrique" },
-];
+const FUEL_KEYS: Record<string, TranslationKey> = {
+  Essence: "fuel.Essence",
+  Diesel: "fuel.Diesel",
+  Hybride: "fuel.Hybride",
+  "Électrique": "fuel.Électrique",
+};
 
-const transmissionOptions = [
-  { value: "", label: "Transmission" },
-  { value: "Manuelle", label: "Manuelle" },
-  { value: "Automatique", label: "Automatique" },
-];
+const TRANS_KEYS: Record<string, TranslationKey> = {
+  Manuelle: "trans.Manuelle",
+  Automatique: "trans.Automatique",
+};
+
+const CATEGORY_KEYS: Record<string, TranslationKey> = {
+  "SUV / Spacieux": "categ.SUV / Spacieux",
+  "Berline / Confort": "categ.Berline / Confort",
+  "ÉCONOMIQUE": "categ.ÉCONOMIQUE",
+  "Économique": "categ.Economique",
+  Citadine: "categ.Citadine",
+  Utilitaire: "categ.Utilitaire",
+  Luxe: "categ.Luxe",
+  Cabriolet: "categ.Cabriolet",
+  "Hybride / Electrique": "categ.Hybride / Electrique",
+  "Hybride / Électrique": "categ.Hybride / Electrique",
+  Familiale: "categ.Familiale",
+  Sport: "categ.Sport",
+  "Pick-up": "categ.Pickup",
+  "Pickup": "categ.Pickup",
+  Autre: "categ.Autre",
+};
+
+export function trCategory(t: (k: TranslationKey) => string, raw: string): string {
+  const k = CATEGORY_KEYS[raw];
+  return k ? t(k) : raw;
+}
+export function trFuel(t: (k: TranslationKey) => string, raw: string): string {
+  const k = FUEL_KEYS[raw];
+  return k ? t(k) : raw;
+}
+export function trTransmission(t: (k: TranslationKey) => string, raw: string): string {
+  const k = TRANS_KEYS[raw];
+  return k ? t(k) : raw;
+}
 
 export default function CarsList() {
   const { cars, categories, carsLoading, carsError, loadCars, getCarRating, showWelcomeToast } = useApp();
+  const { t } = usePrefs();
   const [params, setParams] = useSearchParams();
   const [brand, setBrand] = useState("");
   const [fuel, setFuel] = useState("");
@@ -32,16 +64,28 @@ export default function CarsList() {
   const [maxPrice, setMaxPrice] = useState("");
   const [category, setCategory] = useState(params.get("category") ?? "");
 
+  const fuelOptions = useMemo(() => ([
+    { value: "", label: t("cars.fuelLabel") },
+    { value: "Essence", label: t("fuel.Essence") },
+    { value: "Diesel", label: t("fuel.Diesel") },
+    { value: "Hybride", label: t("fuel.Hybride") },
+    { value: "Électrique", label: t("fuel.Électrique") },
+  ]), [t]);
+
+  const transmissionOptions = useMemo(() => ([
+    { value: "", label: t("cars.transmissionLabel") },
+    { value: "Manuelle", label: t("trans.Manuelle") },
+    { value: "Automatique", label: t("trans.Automatique") },
+  ]), [t]);
+
   useEffect(() => {
     showWelcomeToast();
   }, [showWelcomeToast]);
 
-  // Filtrage sur les propriétés front du Car
   const filtered = useMemo(
     () =>
       cars.filter((c) => {
         if (brand && !`${c.brand} ${c.model}`.toLowerCase().includes(brand.toLowerCase())) return false;
-        // Utilise la version backend du type carburant (c.fuel) mappée si nécessaire
         if (fuel && c.fuel !== fuel) return false;
         if (transmission && c.transmission !== transmission) return false;
         if (minPrice && c.pricePerDay < Number(minPrice)) return false;
@@ -59,7 +103,6 @@ export default function CarsList() {
     else setParams({});
   };
 
-  // Réinitialiser les filtres
   const resetFilters = () => {
     setBrand("");
     setFuel("");
@@ -73,21 +116,21 @@ export default function CarsList() {
   return (
     <PageTransition>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <div className="mb-6">
+
+        <div className="mb-5">
           <h1 className="text-foreground" style={{ fontSize: "1.75rem", fontWeight: 700 }}>
-            Nos voitures disponibles
+            {t("cars.pageTitle")}
           </h1>
           <p className="mt-1 text-muted-foreground">
-            Trouvez le véhicule idéal parmi notre flotte premium.
+            {t("cars.pageSubtitle")}
           </p>
         </div>
 
-        {/* Filtres */}
         <div className="bg-card border border-border rounded-2xl p-4 sm:p-5 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
             <div className="lg:col-span-2">
               <Input
-                placeholder="Marque ou modèle..."
+                placeholder={t("cars.searchPlaceholder")}
                 leftIcon={<Search className="size-4.5" />}
                 value={brand}
                 onChange={(e) => setBrand(e.target.value)}
@@ -106,23 +149,22 @@ export default function CarsList() {
             <div className="grid grid-cols-2 gap-2">
               <Input
                 type="number"
-                placeholder="Prix min"
+                placeholder={t("cars.minPrice")}
                 value={minPrice}
                 onChange={(e) => setMinPrice(e.target.value)}
               />
               <Input
                 type="number"
-                placeholder="Prix max"
+                placeholder={t("cars.maxPrice")}
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(e.target.value)}
               />
             </div>
           </div>
 
-          {/* Catégories depuis l'API */}
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <span className="text-sm text-muted-foreground flex items-center gap-1.5">
-              <SlidersHorizontal className="size-4" /> Catégories :
+              <SlidersHorizontal className="size-4" /> {t("cars.categories")}
             </span>
             {categories.map((cat) => (
               <button
@@ -135,18 +177,17 @@ export default function CarsList() {
                     : "bg-white text-muted-foreground border-border hover:border-primary hover:text-primary"
                 )}
               >
-                {cat.name}
+                {trCategory(t, cat.name)}
               </button>
             ))}
             {(brand || fuel || transmission || minPrice || maxPrice || category) && (
               <Button size="sm" variant="ghost" onClick={resetFilters}>
-                Réinitialiser
+                {t("cars.resetFilters")}
               </Button>
             )}
           </div>
         </div>
 
-        {/* Affichage conditionnel */}
         {carsLoading ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -156,27 +197,25 @@ export default function CarsList() {
         ) : carsError ? (
           <div className="bg-card border border-border rounded-2xl p-8 text-center">
             <AlertCircle className="size-12 mx-auto text-destructive mb-4" />
-            <p className="text-lg font-medium text-foreground mb-2">
-              Erreur lors du chargement des voitures
-            </p>
-            <p className="text-muted-foreground mb-4">{carsError}</p>
+            <p className="text-lg font-medium text-foreground mb-4">{carsError}</p>
             <Button onClick={loadCars} variant="outline">
-              <RefreshCw className="size-4 mr-2" /> Réessayer
+              <RefreshCw className="size-4 mr-2" /> {t("action.today") === t("action.today") ? "Réessayer" : "Retry"}
             </Button>
           </div>
         ) : filtered.length === 0 ? (
           <div className="bg-card border border-border rounded-2xl">
             <EmptyState
               icon={<CarFront className="size-8" />}
-              title="Aucune voiture trouvée"
-              description="Essayez d'ajuster vos filtres de recherche."
+              title={t("cars.noResult")}
+              description={t("cars.tryBroaden")}
             />
           </div>
         ) : (
           <>
             <p className="text-sm text-muted-foreground mb-4">
-              {filtered.length} véhicule{filtered.length > 1 ? "s" : ""} trouvé
-              {filtered.length > 1 ? "s" : ""}
+              {filtered.length === 1
+                ? t("cars.foundCount_one", { count: 1 } as never)
+                : t("cars.foundCount_other", { count: filtered.length } as never)}
             </p>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {filtered.map((car) => (

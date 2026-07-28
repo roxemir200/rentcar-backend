@@ -21,6 +21,7 @@ import com.rentcar.rent_car.enums.ReservationStatus;
 import com.rentcar.rent_car.repository.CarRepository;
 import com.rentcar.rent_car.repository.ReservationRepository;
 import com.rentcar.rent_car.repository.UserRepository;
+import com.rentcar.rent_car.service.RecommendationService;
 import com.rentcar.rent_car.service.ReservationService;
 import com.rentcar.rent_car.service.ContractService;
 import com.rentcar.rent_car.service.SseService;
@@ -40,6 +41,7 @@ public class ReservationServiceImpl implements ReservationService {
     private final ReservationMapper reservationMapper;
     private final com.rentcar.rent_car.dto.mapper.CarMapper carMapper;
     private final ContractService contractService;
+    private final RecommendationService recommendationService;
 
     private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
@@ -277,6 +279,8 @@ public class ReservationServiceImpl implements ReservationService {
                 "Location terminée ✅",
                 "Merci pour votre confiance ! Donnez votre avis sur " + reservation.getCar().getBrand() + " " + reservation.getCar().getModel() + " ⭐",
                 "RESERVATION");
+
+        recommendationService.triggerRetrainAsync();
 
         return MessageResponse.success("Location terminée avec succès");
     }

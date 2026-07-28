@@ -1,6 +1,8 @@
 import React, { Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 import { Toaster } from "sonner";
+import { I18nextProvider } from "react-i18next";
+import i18n, { applyDocumentLang, type I18nLang } from "./locales";
 import { AppProvider } from "./context/AppContext";
 import { PrefsProvider } from "./context/PrefsContext";
 import { ClientLayout } from "./components/layout/ClientLayout";
@@ -18,6 +20,7 @@ const VerifyEmail = React.lazy(() => import("./pages/auth/VerifyEmail"));
 
 const Home = React.lazy(() => import("./pages/client/Home"));
 const CarsList = React.lazy(() => import("./pages/client/CarsList"));
+const Recommendations = React.lazy(() => import("./pages/client/Recommendations"));
 const CarDetail = React.lazy(() => import("./pages/client/CarDetail"));
 const MyReservations = React.lazy(() => import("./pages/client/MyReservations"));
 const ReservationDetail = React.lazy(() => import("./pages/client/ReservationDetail"));
@@ -51,8 +54,17 @@ function PageLoader() {
   );
 }
 
+// Initialisation document.lang/dir avant le premier render (évite FOUC RTL)
+try {
+  const saved = localStorage.getItem('rentcar-lang') as I18nLang | null;
+  if (saved && ['fr','en','ar'].includes(saved)) {
+    applyDocumentLang(saved);
+  }
+} catch { /* ignore */ }
+
 export default function App() {
   return (
+    <I18nextProvider i18n={i18n}>
      <Elements stripe={stripePromise}>
     <PrefsProvider>
     <AppProvider>
@@ -71,6 +83,7 @@ export default function App() {
               <Route path="/" element={<Home />} />
               <Route path="/home" element={<Home />} />
               <Route path="/cars" element={<CarsList />} />
+              <Route path="/recommendations" element={<Recommendations />} />
               <Route path="/cars/:id" element={<CarDetail />} />
               <Route path="/my-reservations" element={<RequireAuth role="CLIENT"><MyReservations /></RequireAuth>} />
               <Route path="/reservation/:id" element={<RequireAuth role="CLIENT"><ReservationDetail /></RequireAuth>} />
@@ -111,5 +124,6 @@ export default function App() {
     </AppProvider>
     </PrefsProvider>
     </Elements>
+    </I18nextProvider>
   );
 }

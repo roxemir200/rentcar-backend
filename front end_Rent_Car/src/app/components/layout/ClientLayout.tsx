@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link, NavLink, Outlet, useNavigate } from "react-router";
-import { Car, Bell, Menu, X, LogOut, Calendar, Star, LayoutDashboard, CreditCard, MapPin, Mail, Phone, Facebook, Instagram, Twitter, User, FileText, KeyRound } from "lucide-react";
+import { Link, NavLink, Outlet, useNavigate, useLocation } from "react-router";
+import { Car, Bell, Menu, X, LogOut, Calendar, Star, LayoutDashboard, CreditCard, MapPin, Mail, Phone, Facebook, Instagram, Twitter, User, FileText, KeyRound, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useApp } from "../../context/AppContext";
 import { usePrefs } from "../../context/PrefsContext";
@@ -9,9 +9,10 @@ import { SupportChat } from "../common/SupportChat";
 import { cn } from "../ui/utils";
 import type { TranslationKey } from "../../i18n/translations";
 
-const navItems: { to: string; key: TranslationKey; end?: boolean; auth?: boolean }[] = [
+const navItems: { to: string; key: TranslationKey; end?: boolean; auth?: boolean; icon?: React.ComponentType<{ className?: string }> }[] = [
   { to: "/", key: "nav.home", end: true },
   { to: "/cars", key: "nav.cars" },
+  { to: "/recommendations", key: "nav.recommendations", icon: Sparkles },
   { to: "/my-reservations", key: "nav.reservations", auth: true },
   { to: "/payments", key: "nav.payments", auth: true },
   { to: "/my-reviews", key: "nav.reviews", auth: true },
@@ -21,6 +22,7 @@ export function ClientLayout() {
   const { currentUser, notifications, logout } = useApp();
   const { t } = usePrefs();
   const navigate = useNavigate();
+  const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
 
@@ -38,15 +40,25 @@ export function ClientLayout() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">
-            {navItems.filter((i) => !i.auth || currentUser).map((item) => (
-              <NavLink key={item.to} to={item.to} end={item.end}
-                className={({ isActive }) => cn(
-                  "px-3.5 py-2 rounded-lg text-sm font-medium transition-colors",
-                  isActive ? "bg-accent text-primary" : "text-muted-foreground hover:text-foreground hover:bg-secondary",
-                )}>
-                {t(item.key)}
-              </NavLink>
-            ))}
+            {navItems.filter((i) => !i.auth || currentUser).map((item) => {
+              const Icon = item.icon;
+              const pathIsActive = item.end
+                ? location.pathname === "/"
+                : location.pathname === item.to || location.pathname.startsWith(item.to + "/");
+              return (
+                <button
+                  key={item.to}
+                  onClick={() => navigate(item.to)}
+                  className={cn(
+                    "px-3.5 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-1.5",
+                    pathIsActive ? "bg-accent text-primary" : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+                  )}
+                >
+                  {Icon && <Icon className="size-4" />}
+                  {t(item.key)}
+                </button>
+              );
+            })}
             {currentUser?.role === "ADMIN" && (
               <NavLink to="/admin/dashboard" className="px-3.5 py-2 rounded-lg text-sm font-medium text-primary hover:bg-accent flex items-center gap-1.5">
                 <LayoutDashboard className="size-4" /> {t("nav.admin")}
@@ -122,12 +134,25 @@ export function ClientLayout() {
                 <button onClick={() => setMenuOpen(false)} className="p-1"><X className="size-5" /></button>
               </div>
               <nav className="flex flex-col gap-1">
-                {navItems.filter((i) => !i.auth || currentUser).map((item) => (
-                  <NavLink key={item.to} to={item.to} end={item.end} onClick={() => setMenuOpen(false)}
-                    className={({ isActive }) => cn("px-3 py-2.5 rounded-lg text-sm font-medium", isActive ? "bg-accent text-primary" : "text-foreground hover:bg-secondary")}>
-                    {t(item.key)}
-                  </NavLink>
-                ))}
+                {navItems.filter((i) => !i.auth || currentUser).map((item) => {
+                  const Icon = item.icon;
+                  const isActive = item.end
+                    ? location.pathname === "/"
+                    : location.pathname === item.to || location.pathname.startsWith(item.to + "/");
+                  return (
+                    <button
+                      key={item.to}
+                      onClick={() => { navigate(item.to); setMenuOpen(false); }}
+                      className={cn(
+                        "px-3 py-2.5 rounded-lg text-sm font-medium text-left inline-flex items-center gap-2",
+                        isActive ? "bg-accent text-primary" : "text-foreground hover:bg-secondary",
+                      )}
+                    >
+                      {Icon && <Icon className="size-4" />}
+                      {t(item.key)}
+                    </button>
+                  );
+                })}
                 {currentUser && (
                   <>
                     <NavLink to="/my-documents" onClick={() => setMenuOpen(false)} className="px-3 py-2.5 rounded-lg text-sm font-medium text-foreground hover:bg-secondary">{t("nav.documents")}</NavLink>

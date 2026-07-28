@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Star } from "lucide-react";
 import { cn } from "../ui/utils";
+import { usePrefs } from "../../context/PrefsContext";
 
 export function StarRating({
   value, onChange, size = 18, readOnly = true, showValue = false, count,
@@ -14,6 +15,7 @@ export function StarRating({
 }) {
   const [hover, setHover] = useState(0);
   const display = hover || value;
+  const { t } = usePrefs();
 
   return (
     <div className="inline-flex items-center gap-1.5">
@@ -29,7 +31,6 @@ export function StarRating({
               onClick={() => onChange?.(i)}
               onMouseEnter={() => !readOnly && setHover(i)}
               className={cn("relative", !readOnly && "cursor-pointer transition-transform hover:scale-110")}
-              aria-label={`${i} étoile${i > 1 ? "s" : ""}`}
             >
               <Star style={{ width: size, height: size }} className="text-slate-200" fill="currentColor" strokeWidth={0} />
               {(filled || half) && (
@@ -43,7 +44,7 @@ export function StarRating({
         })}
       </div>
       {showValue && value > 0 && <span className="text-sm text-foreground">{value.toFixed(1)}</span>}
-      {count !== undefined && <span className="text-sm text-muted-foreground">({count} avis)</span>}
+      {count !== undefined && <span className="text-sm text-muted-foreground">({count === 1 ? t("car.reviewsCount_one", { count: 1 } as never) : t("car.reviewsCount_other", { count } as never)})</span>}
     </div>
   );
 }
