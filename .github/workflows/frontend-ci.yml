@@ -1,0 +1,75 @@
+name: frontend-ci
+
+on:
+  # Ce workflow s'exécute uniquement après le succès du backend-ci.
+  workflow_run:
+    workflows: ["backend-ci"]
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-ci-${{ github.event.workflow_run.head_sha }}
+  cancel-in-progress: true
+
+jobs:
+  build-analyze-package:
+    name: Build, SonarCloud and artifact
+    runs-on: ubuntu-latest
+
+    # On ne démarre le frontend que si le backend a bien réussi.
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    defaults:
+      run:
+        working-directory: "front end_Rent_Car"
+
+    steps:
+      # Checkout du commit exact qui a déclenché le backend pour garder les deux pipelines alignés.
+      - name: Checkout triggering commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      # Node.js 20 avec cache npm basé sur le lockfile présent dans le frontend.
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: "front end_Rent_Car/package-lock.json"
+
+      # Installation reproductible des dépendances.
+      - name: Install dependencies
+        run: npm ci
+
+      # Build Vite du frontend React.
+      - name: Build React app
+        run: npm run build
+
+      # Analyse SonarCloud côté frontend.
+      - name: SonarCloud analysis
+        uses: SonarSource/sonarcloud-github-action@v2
+        with:
+          # projectBaseDir fixe la racine d'analyse à front end_Rent_Car.
+          # sonar.sources=src équivaut donc à front end_Rent_Car/src.
+          projectBaseDir: front end_Rent_Car
+          args: >
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+            -Dsonar.sources=src
+            -Dsonar.exclusions=**/node_modules/**,**/dist/**
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      # Upload du dossier dist généré par Vite.
+      - name: Upload frontend build
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: "front end_Rent_Car/dist"
+          if-no-files-found: error
+          retention-days: 14

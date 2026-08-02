@@ -1,0 +1,71 @@
+name: backend-ci
+
+on:
+  # CI backend déclenchée à chaque push du dépôt et à la demande.
+  # En monorepo, cela garantit que le backend s'exécute avant le frontend.
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-analyze-package:
+    name: Build, SonarCloud and artifact
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout complet pour fournir à SonarCloud l'historique nécessaire.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Java 17 correspond à la configuration Maven du backend Spring Boot.
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      # Cache SonarCloud pour accélérer les scans successifs.
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar-backend-${{ hashFiles('Rent_Car/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-sonar-backend-
+
+      # Build Maven sans tests, conformément à la stratégie CI demandée.
+      - name: Build Spring Boot application
+        run: mvn -B -ntp -f Rent_Car/pom.xml clean package -DskipTests
+
+      # Analyse SonarCloud sur le backend.
+      - name: SonarCloud analysis
+        run: >
+          mvn -B -ntp -f Rent_Car/pom.xml sonar:sonar
+          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+          -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+          -Dsonar.host.url=https://sonarcloud.io
+          -Dsonar.sources=Rent_Car/src/main/java
+          -Dsonar.tests=Rent_Car/src/test/java
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Publication du JAR produit par Maven pour le réutiliser dans une étape de déploiement.
+      - name: Upload backend JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar
+          path: |
+            Rent_Car/target/*.jar
+            !Rent_Car/target/*original.jar
+          if-no-files-found: error
+          retention-days: 14
