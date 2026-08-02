@@ -1,11 +1,11 @@
 name: frontend-ci
 
 on:
-  # Ce workflow s'exécute uniquement après le succès du backend-ci.
   workflow_run:
     workflows: ["backend-ci"]
     types:
       - completed
+  workflow_dispatch:    # ← Même niveau que workflow_run
 
 permissions:
   contents: read
