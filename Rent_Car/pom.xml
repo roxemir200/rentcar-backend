@@ -30,7 +30,7 @@
     <properties>
         <java.version>17</java.version>
         
-        <!-- ⚠️ AJOUT : Configuration SonarCloud -->
+        <!-- ⚠️ CONFIGURATION SONARCLOUD -->
         <sonar.projectKey>rentcar-backend</sonar.projectKey>
         <sonar.organization>roxemir200</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
@@ -44,7 +44,7 @@
         <sonar.branch.name>global</sonar.branch.name>
         <sonar.branch.target>global</sonar.branch.target>
         <sonar.branch.long-lived>true</sonar.branch.long-lived>
-        <!-- FIN DE L'AJOUT -->
+        <!-- FIN DE LA CONFIGURATION -->
         
     </properties>
     
