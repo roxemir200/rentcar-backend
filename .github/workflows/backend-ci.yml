@@ -57,7 +57,9 @@ jobs:
           -Dsonar.sources=src/main/java
           -Dsonar.tests=src/test/java
           -Dsonar.java.coveragePlugin=jacoco
-          -Dsonar.coverage.jacoco.xmlReportPaths=Rent_Car/target/site/jacoco/jacoco.xml
+          -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+          -Dsonar.java.binaries=target/classes
+          -Dsonar.java.test.binaries=target/test-classes
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
