@@ -52,7 +52,16 @@ jobs:
           distribution: temurin
           java-version: "21"
 
-      # ✅ AJOUT : Créer un alias sans espace
+      # Installer le SonarScanner CLI officiel pour exécuter l'analyse localement sur Java 21.
+      - name: Install SonarScanner CLI
+        working-directory: ${{ github.workspace }}
+        run: |
+          SCANNER_VERSION=6.2.1.4610
+          curl -sSLo sonar-scanner.zip "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SCANNER_VERSION}-linux-x64.zip"
+          unzip -q sonar-scanner.zip
+          echo "$PWD/sonar-scanner-${SCANNER_VERSION}-linux-x64/bin" >> "$GITHUB_PATH"
+
+      # L'alias sans espace est toujours créé à la racine du workspace pour éviter les problèmes de chemin.
       - name: Create alias for frontend
         working-directory: ${{ github.workspace }}
         run: |
@@ -61,18 +70,19 @@ jobs:
           cp -a "front end_Rent_Car/." frontend/
           ls -la frontend
 
-      # ✅ MODIFICATION : SonarCloud avec Java 21
+      # Analyse SonarCloud via le CLI local, ce qui garantit l'exécution sur Java 21.
       - name: SonarCloud analysis
-        uses: SonarSource/sonarcloud-github-action@v2
-        with:
-          projectBaseDir: frontend
-          args: >
-            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
-            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
-            -Dsonar.sources=src
-            -Dsonar.exclusions=**/node_modules/**,**/dist/**
+        working-directory: ${{ github.workspace }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: >
+          sonar-scanner
+          -Dsonar.host.url=https://sonarcloud.io
+          -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+          -Dsonar.projectBaseDir=frontend
+          -Dsonar.sources=src
+          -Dsonar.exclusions=**/node_modules/**,**/dist/**
 
       - name: Upload frontend build
         uses: actions/upload-artifact@v4
