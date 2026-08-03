@@ -54,8 +54,11 @@ jobs:
 
       # ✅ AJOUT : Créer un alias sans espace
       - name: Create alias for frontend
+        working-directory: ${{ github.workspace }}
         run: |
-          ln -sf "$PWD/front end_Rent_Car" frontend
+          rm -rf frontend
+          mkdir -p frontend
+          cp -a "front end_Rent_Car/." frontend/
           ls -la frontend
 
       # ✅ MODIFICATION : SonarCloud avec Java 21
