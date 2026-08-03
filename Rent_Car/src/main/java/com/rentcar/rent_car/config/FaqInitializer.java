@@ -4,12 +4,14 @@ import com.rentcar.rent_car.entity.Faq;
 import com.rentcar.rent_car.repository.FaqRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Component
+@Profile("!test")
 @RequiredArgsConstructor
 public class FaqInitializer implements CommandLineRunner {
     private final FaqRepository faqRepository;

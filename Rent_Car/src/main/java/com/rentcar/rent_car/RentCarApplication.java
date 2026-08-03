@@ -4,6 +4,7 @@ import com.rentcar.rent_car.entity.User;
 import com.rentcar.rent_car.enums.Role;
 import com.rentcar.rent_car.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -22,6 +23,7 @@ public class RentCarApplication {
 
     // Créer l'admin par défaut au démarrage si il n'existe pas
     @Bean
+    @Profile("!test")
     CommandLineRunner initAdmin(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         return args -> {
             String adminEmail = "admin@rentcar.com";

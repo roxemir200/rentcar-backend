@@ -42,9 +42,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-sonar-backend-
 
-      # Build Maven sans tests, conformément à la stratégie CI demandée.
-      - name: Build Spring Boot application
-        run: mvn -B -ntp -f Rent_Car/pom.xml clean package -DskipTests
+      # Exécution des tests backend puis construction du JAR dans la pipeline CI.
+      - name: Run backend tests and package application
+        run: mvn -B -ntp -f Rent_Car/pom.xml clean verify -DskipTests=false
 
       # Analyse SonarCloud sur le backend.
       - name: SonarCloud analysis
