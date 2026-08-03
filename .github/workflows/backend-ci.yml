@@ -1,8 +1,6 @@
 name: backend-ci
 
 on:
-  # CI backend déclenchée à chaque push du dépôt et à la demande.
-  # En monorepo, cela garantit que le backend s'exécute avant le frontend.
   push:
   workflow_dispatch:
 
@@ -19,13 +17,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout complet pour fournir à SonarCloud l'historique nécessaire.
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # Java 17 correspond à la configuration Maven du backend Spring Boot.
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -33,7 +29,6 @@ jobs:
           java-version: "17"
           cache: maven
 
-      # Cache SonarCloud pour accélérer les scans successifs.
       - name: Cache SonarCloud packages
         uses: actions/cache@v4
         with:
@@ -42,32 +37,32 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-sonar-backend-
 
-      # Exécution des tests backend puis construction du JAR dans la pipeline CI.
       - name: Run backend tests and package application
         run: mvn -B -ntp -f Rent_Car/pom.xml clean verify -DskipTests=false
 
-      # Vérification explicite du rapport JaCoCo avant l'analyse SonarCloud.
       - name: Check JaCoCo report
         run: |
           ls -la Rent_Car/target/site/jacoco/
           python - <<'PY'
           import xml.etree.ElementTree as ET
-
           report = ET.parse('Rent_Car/target/site/jacoco/jacoco.xml').getroot()
           for counter in report.findall('counter'):
               print(f"{counter.attrib['type']}: missed={counter.attrib['missed']}, covered={counter.attrib['covered']}")
           PY
 
-      # Analyse SonarCloud sur le backend.
       - name: SonarCloud analysis
-  run: >
-    mvn -B -ntp -f Rent_Car/pom.xml
-    org.sonarsource.scanner.maven:sonar-maven-plugin:5.0.0.4389:sonar
-  env:
-    SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          mvn -B -ntp -f Rent_Car/pom.xml
+          org.sonarsource.scanner.maven:sonar-maven-plugin:5.0.0.4389:sonar
+          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+          -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+          -Dsonar.host.url=https://sonarcloud.io
+          -Dsonar.sources=src/main/java
+          -Dsonar.tests=src/test/java
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Publication du JAR produit par Maven pour le réutiliser dans une étape de déploiement.
       - name: Upload backend JAR
         uses: actions/upload-artifact@v4
         with:
