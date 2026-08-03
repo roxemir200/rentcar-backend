@@ -5,7 +5,7 @@ on:
     workflows: ["backend-ci"]
     types:
       - completed
-  workflow_dispatch:    # ← Même niveau que workflow_run
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -19,7 +19,6 @@ jobs:
     name: Build, SonarCloud and artifact
     runs-on: ubuntu-latest
 
-    # On ne démarre le frontend que si le backend a bien réussi.
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     defaults:
@@ -27,14 +26,12 @@ jobs:
         working-directory: "front end_Rent_Car"
 
     steps:
-      # Checkout du commit exact qui a déclenché le backend pour garder les deux pipelines alignés.
       - name: Checkout triggering commit
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
 
-      # Node.js 20 avec cache npm basé sur le lockfile présent dans le frontend.
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
@@ -42,26 +39,29 @@ jobs:
           cache: npm
           cache-dependency-path: "front end_Rent_Car/package-lock.json"
 
-      # Installation reproductible des dépendances.
       - name: Install dependencies
         run: npm ci
 
-      # Build Vite du frontend React.
       - name: Build React app
         run: npm run build
 
-      # SonarCloud ne gère pas proprement les chemins contenant des espaces dans projectBaseDir.
-      # On crée donc un alias sans espace vers le dossier frontend pour l'analyse.
-      - name: Create frontend alias for SonarCloud
-        working-directory: ${{ github.workspace }}
-        run: ln -s "front end_Rent_Car" frontend
+      # ✅ AJOUT : Configurer Java 21 pour SonarCloud
+      - name: Set up Java 21 for SonarCloud
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
 
-      # Analyse SonarCloud côté frontend.
+      # ✅ AJOUT : Créer un alias sans espace
+      - name: Create alias for frontend
+        run: |
+          ln -sf "$PWD/front end_Rent_Car" frontend
+          ls -la frontend
+
+      # ✅ MODIFICATION : SonarCloud avec Java 21
       - name: SonarCloud analysis
         uses: SonarSource/sonarcloud-github-action@v2
         with:
-          # projectBaseDir fixe la racine d'analyse à front end_Rent_Car.
-          # On passe par l'alias frontend pour éviter le bug de parsing lié à l'espace.
           projectBaseDir: frontend
           args: >
             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
@@ -71,7 +71,6 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-      # Upload du dossier dist généré par Vite.
       - name: Upload frontend build
         uses: actions/upload-artifact@v4
         with:
