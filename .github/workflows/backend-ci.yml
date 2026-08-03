@@ -54,19 +54,6 @@ jobs:
         run: >
           mvn -B -ntp -X -f Rent_Car/pom.xml
           org.sonarsource.scanner.maven:sonar-maven-plugin:5.0.0.4389:sonar
-          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
-          -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
-          -Dsonar.host.url=https://sonarcloud.io
-          -Dsonar.projectBaseDir=Rent_Car
-          -Dsonar.sources=src/main/java
-          -Dsonar.tests=src/test/java
-          -Dsonar.java.coveragePlugin=jacoco
-          -Dsonar.coverage.jacoco.xmlReportPaths=${{ github.workspace }}/Rent_Car/target/site/jacoco/jacoco.xml
-          -Dsonar.java.binaries=target/classes
-          -Dsonar.java.test.binaries=target/test-classes
-          -Dsonar.branch.name=global
-          -Dsonar.branch.target=global
-          -Dsonar.branch.long-lived=true
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
