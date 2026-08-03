@@ -53,6 +53,7 @@ jobs:
       # SonarCloud ne gère pas proprement les chemins contenant des espaces dans projectBaseDir.
       # On crée donc un alias sans espace vers le dossier frontend pour l'analyse.
       - name: Create frontend alias for SonarCloud
+        working-directory: ${{ github.workspace }}
         run: ln -s "front end_Rent_Car" frontend
 
       # Analyse SonarCloud côté frontend.
