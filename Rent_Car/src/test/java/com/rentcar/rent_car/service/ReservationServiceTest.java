@@ -14,7 +14,7 @@ import com.rentcar.rent_car.enums.Role;
 import com.rentcar.rent_car.repository.CarRepository;
 import com.rentcar.rent_car.repository.ReservationRepository;
 import com.rentcar.rent_car.repository.UserRepository;
-import com.rentcar.rent_car.service.impl.ReservationServiceImpl;
+import com.rentcar.rent_car.service.imp.ReservationServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

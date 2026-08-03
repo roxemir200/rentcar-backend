@@ -1,5 +1,5 @@
-// service/impl/CalendarServiceImpl.java
-package com.rentcar.rent_car.service.impl;
+// service/imp/CalendarServiceImpl.java
+package com.rentcar.rent_car.service.imp;
 
 import com.rentcar.rent_car.dto.response.CalendarReservationResponse;
 import com.rentcar.rent_car.entity.Reservation;

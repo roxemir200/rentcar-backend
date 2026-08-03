@@ -10,7 +10,7 @@ import com.rentcar.rent_car.entity.CarImage;
 import com.rentcar.rent_car.enums.CarStatus;
 import com.rentcar.rent_car.repository.CarImageRepository;
 import com.rentcar.rent_car.repository.CarRepository;
-import com.rentcar.rent_car.service.impl.CarServiceImpl;
+import com.rentcar.rent_car.service.imp.CarServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

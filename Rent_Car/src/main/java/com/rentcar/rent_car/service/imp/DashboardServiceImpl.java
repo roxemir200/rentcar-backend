@@ -1,4 +1,4 @@
-package com.rentcar.rent_car.service.impl;
+package com.rentcar.rent_car.service.imp;
 
 import com.rentcar.rent_car.dto.response.DashboardResponse;
 import com.rentcar.rent_car.dto.response.RevenueResponse;
