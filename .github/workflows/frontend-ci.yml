@@ -50,13 +50,18 @@ jobs:
       - name: Build React app
         run: npm run build
 
+      # SonarCloud ne gère pas proprement les chemins contenant des espaces dans projectBaseDir.
+      # On crée donc un alias sans espace vers le dossier frontend pour l'analyse.
+      - name: Create frontend alias for SonarCloud
+        run: ln -s "front end_Rent_Car" frontend
+
       # Analyse SonarCloud côté frontend.
       - name: SonarCloud analysis
         uses: SonarSource/sonarcloud-github-action@v2
         with:
           # projectBaseDir fixe la racine d'analyse à front end_Rent_Car.
-          # sonar.sources=src équivaut donc à front end_Rent_Car/src.
-          projectBaseDir: front end_Rent_Car
+          # On passe par l'alias frontend pour éviter le bug de parsing lié à l'espace.
+          projectBaseDir: frontend
           args: >
             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
