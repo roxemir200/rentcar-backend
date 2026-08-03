@@ -46,6 +46,18 @@ jobs:
       - name: Run backend tests and package application
         run: mvn -B -ntp -f Rent_Car/pom.xml clean verify -DskipTests=false
 
+      # Vérification explicite du rapport JaCoCo avant l'analyse SonarCloud.
+      - name: Check JaCoCo report
+        run: |
+          ls -la Rent_Car/target/site/jacoco/
+          python - <<'PY'
+          import xml.etree.ElementTree as ET
+
+          report = ET.parse('Rent_Car/target/site/jacoco/jacoco.xml').getroot()
+          for counter in report.findall('counter'):
+              print(f"{counter.attrib['type']}: missed={counter.attrib['missed']}, covered={counter.attrib['covered']}")
+          PY
+
       # Analyse SonarCloud sur le backend.
       - name: SonarCloud analysis
         run: >
@@ -56,10 +68,6 @@ jobs:
           -Dsonar.host.url=https://sonarcloud.io
           -Dsonar.sources=src/main/java
           -Dsonar.tests=src/test/java
-          -Dsonar.java.coveragePlugin=jacoco
-          -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
-          -Dsonar.java.binaries=target/classes
-          -Dsonar.java.test.binaries=target/test-classes
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
