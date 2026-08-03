@@ -52,7 +52,7 @@ jobs:
 
       - name: SonarCloud analysis
         run: >
-          mvn -B -ntp -f Rent_Car/pom.xml
+          mvn -B -ntp -X -f Rent_Car/pom.xml
           org.sonarsource.scanner.maven:sonar-maven-plugin:5.0.0.4389:sonar
           -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
           -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
