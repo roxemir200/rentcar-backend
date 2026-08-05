@@ -64,10 +64,14 @@ jobs:
       - name: Inspect JaCoCo XML content
         if: always()
         run: |
-          echo "=== Premières classes listées dans jacoco.xml ==="
-          grep -o '<class name="[^"]*"' Rent_Car/target/site/jacoco/jacoco.xml | head -20
-          echo "=== Structure du dossier target/classes ==="
-          find Rent_Car/target/classes -name "*.class" | head -20
+          echo "=== Compteur global de couverture (racine du rapport) ==="
+          grep -A 2 '<counter type="LINE"' Rent_Car/target/site/jacoco/jacoco.xml | tail -6
+          echo ""
+          echo "=== Exemple de sourcefile avec ses lignes ==="
+          grep -B 2 -A 5 '<sourcefile name="CarServiceImpl.java"' Rent_Car/target/site/jacoco/jacoco.xml | head -20
+          echo ""
+          echo "=== Structure des packages dans le XML ==="
+          grep -o '<package name="[^"]*"' Rent_Car/target/site/jacoco/jacoco.xml | head -10
 
       - name: Upload backend JAR
         uses: actions/upload-artifact@v4
