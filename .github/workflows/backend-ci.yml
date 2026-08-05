@@ -61,6 +61,13 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Inspect JaCoCo XML content
+        if: always()
+        run: |
+          echo "=== Premières classes listées dans jacoco.xml ==="
+          grep -o '<class name="[^"]*"' Rent_Car/target/site/jacoco/jacoco.xml | head -20
+          echo "=== Structure du dossier target/classes ==="
+          find Rent_Car/target/classes -name "*.class" | head -20
 
       - name: Upload backend JAR
         uses: actions/upload-artifact@v4
