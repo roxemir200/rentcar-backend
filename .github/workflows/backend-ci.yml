@@ -37,11 +37,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-sonar-backend-
 
-      - name: Build, test and SonarCloud analysis
-        run: mvn -B -ntp -f Rent_Car/pom.xml clean verify sonar:sonar
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build, test and package
+        run: mvn -B -ntp -f Rent_Car/pom.xml clean verify -DskipTests=false
 
       - name: Check JaCoCo report
         if: always()
@@ -59,6 +56,25 @@ jobs:
               print(f"Error parsing JaCoCo report: {e}")
               sys.exit(0)
           PY
+
+      - name: SonarCloud analysis
+        run: >
+          mvn -B -ntp -f Rent_Car/pom.xml
+          org.sonarsource.scanner.maven:sonar-maven-plugin:5.0.0.4389:sonar
+          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+          -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+          -Dsonar.host.url=https://sonarcloud.io
+          -Dsonar.sources=src/main/java
+          -Dsonar.tests=src/test/java
+          -Dsonar.java.binaries=target/classes
+          -Dsonar.java.test.binaries=target/test-classes
+          -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+          -Dsonar.branch.name=global
+          -Dsonar.branch.target=global
+          -Dsonar.branch.long-lived=true
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload backend JAR
         uses: actions/upload-artifact@v4
