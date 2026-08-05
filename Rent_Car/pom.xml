@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+******<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
@@ -17,10 +17,13 @@
     <properties>
         <java.version>17</java.version>
 
-        <!-- SonarCloud : uniquement l'identification -->
+        <!-- SonarCloud -->
         <sonar.projectKey>rentcar-backend</sonar.projectKey>
         <sonar.organization>roxemir200</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        
+        <!-- ⚠️ AJOUT : Chemin du rapport JaCoCo -->
+        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
     </properties>
 
     <dependencies>
