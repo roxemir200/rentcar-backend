@@ -68,7 +68,7 @@ jobs:
           -Dsonar.tests=src/test/java
           -Dsonar.java.binaries=target/classes
           -Dsonar.java.test.binaries=target/test-classes
-          -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+          -Dsonar.coverage.jacoco.xmlReportPaths=${{ github.workspace }}/Rent_Car/target/site/jacoco/jacoco.xml
           -Dsonar.branch.name=global
           -Dsonar.branch.target=global
           -Dsonar.branch.long-lived=true
