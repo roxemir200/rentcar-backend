@@ -37,39 +37,28 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-sonar-backend-
 
-      - name: Run backend tests and package application
-        run: mvn -B -ntp -f Rent_Car/pom.xml clean verify -DskipTests=false
-
-      - name: Check JaCoCo report
-        run: |
-          ls -la Rent_Car/target/site/jacoco/
-          python - <<'PY'
-          import xml.etree.ElementTree as ET
-          report = ET.parse('Rent_Car/target/site/jacoco/jacoco.xml').getroot()
-          for counter in report.findall('counter'):
-              print(f"{counter.attrib['type']}: missed={counter.attrib['missed']}, covered={counter.attrib['covered']}")
-          PY
-
-      - name: SonarCloud analysis
-        run: >
-          mvn -B -ntp -X -f Rent_Car/pom.xml
-          org.sonarsource.scanner.maven:sonar-maven-plugin:5.0.0.4389:sonar
-          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
-          -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
-          -Dsonar.host.url=https://sonarcloud.io
-          -Dsonar.projectBaseDir=Rent_Car
-          -Dsonar.sources=src/main/java
-          -Dsonar.tests=src/test/java
-          -Dsonar.java.coveragePlugin=jacoco
-          -Dsonar.coverage.jacoco.xmlReportPaths=${{ github.workspace }}/Rent_Car/target/site/jacoco/jacoco.xml
-          -Dsonar.java.binaries=${{ github.workspace }}/Rent_Car/target/classes
-          -Dsonar.java.test.binaries=${{ github.workspace }}/Rent_Car/target/test-classes
-          -Dsonar.branch.name=global
-          -Dsonar.branch.target=global
-          -Dsonar.branch.long-lived=true
+      - name: Build, test and SonarCloud analysis
+        run: mvn -B -ntp -f Rent_Car/pom.xml clean verify sonar:sonar
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check JaCoCo report
+        if: always()
+        run: |
+          echo "=== JaCoCo files ==="
+          ls -la Rent_Car/target/site/jacoco/ || echo "No JaCoCo report found"
+          echo "=== Coverage summary ==="
+          python3 - <<'PY'
+          import sys, xml.etree.ElementTree as ET
+          try:
+              report = ET.parse('Rent_Car/target/site/jacoco/jacoco.xml').getroot()
+              for counter in report.findall('counter'):
+                  print(f"{counter.attrib['type']}: missed={counter.attrib['missed']}, covered={counter.attrib['covered']}")
+          except Exception as e:
+              print(f"Error parsing JaCoCo report: {e}")
+              sys.exit(0)
+          PY
 
       - name: Upload backend JAR
         uses: actions/upload-artifact@v4
