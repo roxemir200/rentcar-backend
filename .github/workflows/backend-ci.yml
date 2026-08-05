@@ -51,6 +51,7 @@ jobs:
           mvn -B -ntp -f Rent_Car/pom.xml
           clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:5.0.0.4389:sonar
           -DskipTests=false
+          -Dsonar.verbose=true
           -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
           -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
           -Dsonar.host.url=https://sonarcloud.io
