@@ -43,32 +43,17 @@ jobs:
       - name: Check JaCoCo report
         if: always()
         run: |
-          echo "=== JaCoCo files ==="
-          ls -la Rent_Car/target/site/jacoco/ || echo "No JaCoCo report found"
-          echo "=== Coverage summary ==="
-          python3 - <<'PY'
-          import sys, xml.etree.ElementTree as ET
-          try:
-              report = ET.parse('Rent_Car/target/site/jacoco/jacoco.xml').getroot()
-              for counter in report.findall('counter'):
-                  print(f"{counter.attrib['type']}: missed={counter.attrib['missed']}, covered={counter.attrib['covered']}")
-          except Exception as e:
-              print(f"Error parsing JaCoCo report: {e}")
-              sys.exit(0)
-          PY
+          echo "=== Recherche de jacoco.xml dans tout le repo ==="
+          find . -name "jacoco.xml" -exec ls -la {} \;
 
-      - name: SonarCloud analysis
+      - name: Build, test, package and analyze
         run: >
           mvn -B -ntp -f Rent_Car/pom.xml
-          org.sonarsource.scanner.maven:sonar-maven-plugin:5.0.0.4389:sonar
+          clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:5.0.0.4389:sonar
+          -DskipTests=false
           -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
           -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
           -Dsonar.host.url=https://sonarcloud.io
-          -Dsonar.sources=src/main/java
-          -Dsonar.tests=src/test/java
-          -Dsonar.java.binaries=target/classes
-          -Dsonar.java.test.binaries=target/test-classes
-          -Dsonar.coverage.jacoco.xmlReportPaths=${{ github.workspace }}/Rent_Car/target/site/jacoco/jacoco.xml
           -Dsonar.branch.name=global
           -Dsonar.branch.target=global
           -Dsonar.branch.long-lived=true
