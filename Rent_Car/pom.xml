@@ -17,10 +17,13 @@
     <properties>
         <java.version>17</java.version>
 
-        <!-- SonarCloud : uniquement l'identification du projet -->
+        <!-- SonarCloud -->
         <sonar.projectKey>rentcar-backend</sonar.projectKey>
         <sonar.organization>roxemir200</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        
+        <!-- Forçage explicite du rapport JaCoCo -->
+        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
     </properties>
 
     <dependencies>
@@ -138,7 +141,6 @@
                 </executions>
             </plugin>
 
-            <!-- PLUGIN SONAR AJOUTÉ ICI -->
             <plugin>
                 <groupId>org.sonarsource.scanner.maven</groupId>
                 <artifactId>sonar-maven-plugin</artifactId>
