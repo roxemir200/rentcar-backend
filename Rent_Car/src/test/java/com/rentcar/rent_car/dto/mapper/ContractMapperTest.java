@@ -2,17 +2,16 @@ package com.rentcar.rent_car.dto.mapper;
 
 import com.rentcar.rent_car.dto.response.ContractResponse;
 import com.rentcar.rent_car.entity.Car;
-import com.rentcar.rent_car.entity.Client;
 import com.rentcar.rent_car.entity.Contract;
 import com.rentcar.rent_car.entity.Reservation;
-import com.rentcar.rent_car.entity.enums.FuelType;
-import com.rentcar.rent_car.entity.enums.TransmissionType;
+import com.rentcar.rent_car.entity.User; // ← Changé: Client → User
+import com.rentcar.rent_car.entity.FuelType; // ← Changé: enums.FuelType → FuelType directement
+import com.rentcar.rent_car.entity.TransmissionType; // ← Changé: enums.TransmissionType → TransmissionType directement
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -43,7 +42,7 @@ class ContractMapperTest {
         Contract contract = new Contract();
         contract.setId(1L);
         contract.setContractNumber("CT-2024-001");
-        contract.setReservation(null); // ← Reservation null
+        contract.setReservation(null);
 
         // When
         ContractResponse result = mapper.toResponse(contract);
@@ -55,7 +54,7 @@ class ContractMapperTest {
         assertThat(result.getClientFirstName()).isNull();
         assertThat(result.getCarBrand()).isNull();
         assertThat(result.getStartDate()).isNull();
-        assertThat(result.getDurationDays()).isNull(); // ← Condition non couverte
+        assertThat(result.getDurationDays()).isNull();
     }
 
     @Test
@@ -67,9 +66,9 @@ class ContractMapperTest {
 
         Reservation reservation = new Reservation();
         reservation.setId(100L);
-        reservation.setStartDate(null); // ← StartDate null
-        reservation.setEndDate(null);   // ← EndDate null
-        reservation.setClient(new Client());
+        reservation.setStartDate(null);
+        reservation.setEndDate(null);
+        reservation.setClient(new User()); // ← Changé: Client → User
         reservation.setCar(new Car());
 
         contract.setReservation(reservation);
@@ -81,7 +80,7 @@ class ContractMapperTest {
         assertThat(result).isNotNull();
         assertThat(result.getStartDate()).isNull();
         assertThat(result.getEndDate()).isNull();
-        assertThat(result.getDurationDays()).isNull(); // ← Vérifie que durationDays est null
+        assertThat(result.getDurationDays()).isNull();
     }
 
     @Test
@@ -93,8 +92,8 @@ class ContractMapperTest {
 
         Reservation reservation = new Reservation();
         reservation.setId(100L);
-        reservation.setCar(null); // ← Car null
-        reservation.setClient(new Client());
+        reservation.setCar(null);
+        reservation.setClient(new User()); // ← Changé: Client → User
         reservation.setStartDate(LocalDateTime.now());
         reservation.setEndDate(LocalDateTime.now().plusDays(3));
 
@@ -125,11 +124,11 @@ class ContractMapperTest {
         Car car = new Car();
         car.setBrand("Renault");
         car.setModel("Clio");
-        car.setFuelType(null); // ← FuelType null
-        car.setTransmission(null); // ← Transmission null
+        car.setFuelType(null);
+        car.setTransmission(null);
 
         reservation.setCar(car);
-        reservation.setClient(new Client());
+        reservation.setClient(new User()); // ← Changé: Client → User
         contract.setReservation(reservation);
 
         // When
@@ -153,7 +152,7 @@ class ContractMapperTest {
         LocalDateTime endDate = LocalDateTime.of(2024, 1, 8, 10, 0);
         reservation.setStartDate(startDate);
         reservation.setEndDate(endDate);
-        reservation.setClient(new Client());
+        reservation.setClient(new User()); // ← Changé: Client → User
         reservation.setCar(new Car());
 
         contract.setReservation(reservation);
@@ -163,7 +162,7 @@ class ContractMapperTest {
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getDurationDays()).isEqualTo(7L); // 8 jours - 1 = 7 jours
+        assertThat(result.getDurationDays()).isEqualTo(7L);
     }
 
     @Test
@@ -177,7 +176,7 @@ class ContractMapperTest {
         contract.setStatus("SIGNED");
         contract.setSignedAt(LocalDateTime.now().minusDays(2));
 
-        Client client = new Client();
+        User client = new User(); // ← Changé: Client → User
         client.setId(10L);
         client.setFirstName("Jean");
         client.setLastName("Dupont");
@@ -236,7 +235,7 @@ class ContractMapperTest {
 
         Reservation reservation = new Reservation();
         reservation.setId(100L);
-        reservation.setClient(null); // ← Client null
+        reservation.setClient(null);
         reservation.setCar(new Car());
         reservation.setStartDate(LocalDateTime.now());
         reservation.setEndDate(LocalDateTime.now().plusDays(3));
@@ -261,8 +260,8 @@ class ContractMapperTest {
 
         Reservation reservation = new Reservation();
         reservation.setId(100L);
-        reservation.setClient(new Client());
-        reservation.setCar(new Car()); // Car vide
+        reservation.setClient(new User()); // ← Changé: Client → User
+        reservation.setCar(new Car());
         reservation.setStartDate(LocalDateTime.now());
         reservation.setEndDate(LocalDateTime.now().plusDays(3));
 

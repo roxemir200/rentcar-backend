@@ -2,9 +2,9 @@ package com.rentcar.rent_car.dto.mapper;
 
 import com.rentcar.rent_car.dto.response.CalendarReservationResponse;
 import com.rentcar.rent_car.entity.Car;
-import com.rentcar.rent_car.entity.Client;
 import com.rentcar.rent_car.entity.Reservation;
-import com.rentcar.rent_car.entity.enums.ReservationStatus;
+import com.rentcar.rent_car.entity.User; // ← Changé: Client → User
+import com.rentcar.rent_car.entity.ReservationStatus; // ← Changé: enums.ReservationStatus → ReservationStatus directement
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -39,7 +39,7 @@ class CalendarReservationMapperTest {
         // Given
         Reservation reservation = new Reservation();
         reservation.setId(1L);
-        reservation.setStatus(null); // ← Condition non couverte !
+        reservation.setStatus(null);
         reservation.setStartDate(LocalDateTime.now());
         reservation.setEndDate(LocalDateTime.now().plusDays(3));
 
@@ -49,7 +49,7 @@ class CalendarReservationMapperTest {
         car.setModel("Corolla");
         reservation.setCar(car);
 
-        Client client = new Client();
+        User client = new User(); // ← Changé: Client → User
         client.setId(20L);
         client.setFirstName("Jean");
         client.setLastName("Dupont");
@@ -63,7 +63,7 @@ class CalendarReservationMapperTest {
         // Then
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(1L);
-        assertThat(result.getStatus()).isNull(); // Vérifie que status est null
+        assertThat(result.getStatus()).isNull();
         assertThat(result.getCarBrand()).isEqualTo("Toyota");
         assertThat(result.getClientFirstName()).isEqualTo("Jean");
     }
@@ -76,8 +76,8 @@ class CalendarReservationMapperTest {
         reservation.setStatus(ReservationStatus.CONFIRMED);
         reservation.setStartDate(LocalDateTime.now());
         reservation.setEndDate(LocalDateTime.now().plusDays(3));
-        reservation.setCar(null); // ← Car null
-        reservation.setClient(null); // ← Client null
+        reservation.setCar(null);
+        reservation.setClient(null);
         reservation.setTotalAmount(BigDecimal.valueOf(150.00));
 
         // When
@@ -104,15 +104,15 @@ class CalendarReservationMapperTest {
         reservation.setStartDate(LocalDateTime.now());
         reservation.setEndDate(LocalDateTime.now().plusDays(3));
         reservation.setCar(new Car());
-        reservation.setClient(new Client());
-        reservation.setTotalAmount(null); // ← TotalAmount null
+        reservation.setClient(new User()); // ← Changé: Client → User
+        reservation.setTotalAmount(null);
 
         // When
         CalendarReservationResponse result = mapper.mapToResponse(reservation);
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getTotalAmount()).isNull(); // Vérifie que totalAmount est null
+        assertThat(result.getTotalAmount()).isNull();
     }
 
     @Test
@@ -130,7 +130,7 @@ class CalendarReservationMapperTest {
         car.setModel("Model 3");
         reservation.setCar(car);
 
-        Client client = new Client();
+        User client = new User(); // ← Changé: Client → User
         client.setId(20L);
         client.setFirstName("Marie");
         client.setLastName("Martin");
