@@ -72,8 +72,27 @@ class ContractMapperTest {
         assertThat(response.getClientFirstName()).isEqualTo("Jean");
         assertThat(response.getCarBrand()).isEqualTo("Audi");
         assertThat(response.getCarFuelType()).isEqualTo("DIESEL");
+        assertThat(response.getCarTransmission()).isEqualTo("AUTOMATIC");
         assertThat(response.getDurationDays()).isEqualTo(5L);
         assertThat(response.getDailyRate()).isEqualTo(new BigDecimal("90.00"));
+    }
+
+    @Test
+    void shouldToResponse_withCarHavingNullFuelAndTransmission() {
+        Car car = new Car();
+        car.setBrand("Audi");
+
+        Reservation reservation = new Reservation();
+        reservation.setCar(car);
+
+        Contract contract = new Contract();
+        contract.setReservation(reservation);
+
+        ContractResponse response = mapper.toResponse(contract);
+
+        assertThat(response.getCarBrand()).isEqualTo("Audi");
+        assertThat(response.getCarFuelType()).isNull();
+        assertThat(response.getCarTransmission()).isNull();
     }
 
     @Test

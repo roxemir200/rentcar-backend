@@ -104,11 +104,34 @@ class CarMapperTest {
         assertThat(response.getId()).isEqualTo(10L);
         assertThat(response.getImages()).containsExactly("primary.jpg", "sec.jpg");
         assertThat(response.getPrimaryImage()).isEqualTo("primary.jpg");
+        assertThat(response.getCategoryName()).isEqualTo("SUV");
+        assertThat(response.getCategoryId()).isEqualTo(1L);
         assertThat(response.getReviewCount()).isEqualTo(1);
     }
 
     @Test
-    void shouldToResponse_withNullImagesAndNullReviews() {
+    void shouldToResponse_withImagesListHavingNoPrimaryImage() {
+        Car car = new Car();
+        car.setId(10L);
+
+        CarImage img1 = new CarImage();
+        img1.setImageUrl("sec.jpg");
+        img1.setIsPrimary(false);
+
+        CarImage img2 = new CarImage();
+        img2.setImageUrl("null-primary.jpg");
+        img2.setIsPrimary(null);
+
+        car.setImages(List.of(img1, img2));
+
+        CarResponse response = carMapper.toResponse(car);
+
+        assertThat(response.getImages()).containsExactly("sec.jpg", "null-primary.jpg");
+        assertThat(response.getPrimaryImage()).isNull();
+    }
+
+    @Test
+    void shouldToResponse_withNullImagesAndNullReviewsAndNullCategory() {
         Car car = new Car();
         car.setId(10L);
 
@@ -116,11 +139,13 @@ class CarMapperTest {
 
         assertThat(response.getImages()).isEmpty();
         assertThat(response.getPrimaryImage()).isNull();
+        assertThat(response.getCategoryName()).isNull();
+        assertThat(response.getCategoryId()).isNull();
         assertThat(response.getReviewCount()).isEqualTo(0);
     }
 
     @Test
-    void shouldUpdateEntity_withCategoryId() {
+    void shouldUpdateEntity_withValidCategoryId() {
         Car car = new Car();
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
 
@@ -138,5 +163,15 @@ class CarMapperTest {
         carMapper.updateEntity(car, request);
 
         assertThat(car.getBrand()).isEqualTo("BMW");
+    }
+
+    @Test
+    void shouldThrow_whenCategoryNotFoundInUpdateEntity() {
+        Car car = new Car();
+        when(categoryRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> carMapper.updateEntity(car, request))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Catégorie non trouvée");
     }
 }

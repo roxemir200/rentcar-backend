@@ -97,7 +97,7 @@ class ReservationMapperTest {
     }
 
     @Test
-    void shouldToResponse() {
+    void shouldToResponse_withFullDetails() {
         LocalDateTime now = LocalDateTime.now();
         Reservation reservation = new Reservation();
         reservation.setId(100L);
@@ -128,5 +128,23 @@ class ReservationMapperTest {
         assertThat(response.getClientLastName()).isEqualTo("Dupont");
         assertThat(response.getMileageStart()).isEqualTo(10000);
         assertThat(response.getDamagesAtEnd()).isEqualTo("Rayure");
+    }
+
+    @Test
+    void shouldToResponse_withNullCarAndNullClient() {
+        Reservation reservation = new Reservation();
+        reservation.setId(101L);
+
+        ReservationResponse response = reservationMapper.toResponse(reservation);
+
+        assertThat(response.getId()).isEqualTo(101L);
+        assertThat(response.getCarBrand()).isNull();
+        assertThat(response.getCarModel()).isNull();
+        assertThat(response.getCarRegistrationNumber()).isNull();
+        assertThat(response.getCarId()).isNull();
+        assertThat(response.getClientFirstName()).isNull();
+        assertThat(response.getClientLastName()).isNull();
+        assertThat(response.getClientEmail()).isNull();
+        assertThat(response.getClientId()).isNull();
     }
 }

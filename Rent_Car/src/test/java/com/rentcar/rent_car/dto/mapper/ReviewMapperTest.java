@@ -37,10 +37,12 @@ class ReviewMapperTest {
         User client = new User();
         client.setId(1L);
         client.setFirstName("Jean");
+        client.setLastName("Dupont");
 
         Car car = new Car();
         car.setId(10L);
         car.setBrand("BMW");
+        car.setModel("X5");
 
         reservation = new Reservation();
         reservation.setId(100L);
@@ -79,7 +81,7 @@ class ReviewMapperTest {
     }
 
     @Test
-    void shouldToResponse() {
+    void shouldToResponse_withFullDetails() {
         LocalDateTime now = LocalDateTime.now();
         Review review = new Review();
         review.setId(5L);
@@ -94,6 +96,25 @@ class ReviewMapperTest {
 
         assertThat(response.getId()).isEqualTo(5L);
         assertThat(response.getRating()).isEqualTo(5);
+        assertThat(response.getClientFirstName()).isEqualTo("Jean");
+        assertThat(response.getCarBrand()).isEqualTo("BMW");
         assertThat(response.getReservationId()).isEqualTo(100L);
+    }
+
+    @Test
+    void shouldToResponse_withNullClientAndNullCarAndNullReservation() {
+        Review review = new Review();
+        review.setId(6L);
+
+        ReviewResponse response = reviewMapper.toResponse(review);
+
+        assertThat(response.getId()).isEqualTo(6L);
+        assertThat(response.getClientFirstName()).isNull();
+        assertThat(response.getClientLastName()).isNull();
+        assertThat(response.getClientId()).isNull();
+        assertThat(response.getCarBrand()).isNull();
+        assertThat(response.getCarModel()).isNull();
+        assertThat(response.getCarId()).isNull();
+        assertThat(response.getReservationId()).isNull();
     }
 }

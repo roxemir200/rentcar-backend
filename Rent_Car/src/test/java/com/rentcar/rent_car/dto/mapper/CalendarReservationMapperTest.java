@@ -60,7 +60,6 @@ class CalendarReservationMapperTest {
     void shouldMapToResponse_withNullFields() {
         Reservation reservation = new Reservation();
         reservation.setId(101L);
-        reservation.setStatus(ReservationStatus.PENDING);
 
         CalendarReservationResponse response = mapper.mapToResponse(reservation);
 

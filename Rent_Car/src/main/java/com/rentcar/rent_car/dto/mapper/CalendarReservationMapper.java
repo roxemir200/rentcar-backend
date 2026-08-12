@@ -17,7 +17,7 @@ public class CalendarReservationMapper {
                 .clientLastName(r.getClient() != null ? r.getClient().getLastName() : null)
                 .startDate(r.getStartDate())
                 .endDate(r.getEndDate())
-                .status(r.getStatus().name())
+                .status(r.getStatus() != null ? r.getStatus().name() : null)
                 .carId(r.getCar() != null ? r.getCar().getId() : null)
                 .clientId(r.getClient() != null ? r.getClient().getId() : null)
                 .totalAmount(r.getTotalAmount() != null ? r.getTotalAmount().doubleValue() : null)
