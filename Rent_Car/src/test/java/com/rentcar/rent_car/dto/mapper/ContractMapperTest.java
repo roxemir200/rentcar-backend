@@ -170,4 +170,168 @@ class ContractMapperTest {
         assertThat(response.getCarTransmission()).isEqualTo("AUTOMATIC");
         assertThat(response.getDurationDays()).isEqualTo(5L);
     }
+
+    @Test
+    void toResponse_shouldReturnNullDurationDays_whenStartDateIsNull() {
+        // Given
+        Contract contract = new Contract();
+        contract.setId(1L);
+        contract.setContractNumber("CT-2024-001");
+
+        Reservation reservation = new Reservation();
+        reservation.setId(100L);
+        reservation.setStartDate(null); // ← StartDate null !
+        reservation.setEndDate(LocalDateTime.now().plusDays(5));
+        reservation.setClient(new User());
+        reservation.setCar(new Car());
+
+        contract.setReservation(reservation);
+
+        // When
+        ContractResponse result = mapper.toResponse(contract);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getStartDate()).isNull();
+        assertThat(result.getEndDate()).isNotNull();
+        assertThat(result.getDurationDays()).isNull(); // ← Cette condition sera couverte !
+    }
+
+    @Test
+    void toResponse_shouldReturnNullDurationDays_whenEndDateIsNull() {
+        // Given
+        Contract contract = new Contract();
+        contract.setId(1L);
+        contract.setContractNumber("CT-2024-001");
+
+        Reservation reservation = new Reservation();
+        reservation.setId(100L);
+        reservation.setStartDate(LocalDateTime.now());
+        reservation.setEndDate(null); // ← EndDate null !
+        reservation.setClient(new User());
+        reservation.setCar(new Car());
+
+        contract.setReservation(reservation);
+
+        // When
+        ContractResponse result = mapper.toResponse(contract);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getStartDate()).isNotNull();
+        assertThat(result.getEndDate()).isNull();
+        assertThat(result.getDurationDays()).isNull(); // ← Cette condition sera couverte !
+    }
+
+    @Test
+    void toResponse_shouldReturnNullDurationDays_whenBothDatesAreNull() {
+        // Given
+        Contract contract = new Contract();
+        contract.setId(1L);
+        contract.setContractNumber("CT-2024-001");
+
+        Reservation reservation = new Reservation();
+        reservation.setId(100L);
+        reservation.setStartDate(null); // ← StartDate null
+        reservation.setEndDate(null); // ← EndDate null
+        reservation.setClient(new User());
+        reservation.setCar(new Car());
+
+        contract.setReservation(reservation);
+
+        // When
+        ContractResponse result = mapper.toResponse(contract);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getStartDate()).isNull();
+        assertThat(result.getEndDate()).isNull();
+        assertThat(result.getDurationDays()).isNull(); // ← Cette condition sera couverte !
+    }
+
+    @Test
+    void toResponse_shouldCalculateDurationDays_whenBothDatesArePresent() {
+        // Given
+        Contract contract = new Contract();
+        contract.setId(1L);
+        contract.setContractNumber("CT-2024-001");
+
+        Reservation reservation = new Reservation();
+        reservation.setId(100L);
+        LocalDateTime startDate = LocalDateTime.of(2024, 1, 1, 10, 0);
+        LocalDateTime endDate = LocalDateTime.of(2024, 1, 8, 10, 0);
+        reservation.setStartDate(startDate);
+        reservation.setEndDate(endDate);
+        reservation.setClient(new User());
+        reservation.setCar(new Car());
+
+        contract.setReservation(reservation);
+
+        // When
+        ContractResponse result = mapper.toResponse(contract);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getDurationDays()).isEqualTo(7L); // 8 - 1 = 7 jours
+    }
+
+    @Test
+    void toResponse_shouldHandleReservationWithCarButNullFuelType() {
+        // Given
+        Contract contract = new Contract();
+        contract.setId(1L);
+
+        Reservation reservation = new Reservation();
+        reservation.setId(100L);
+        reservation.setStartDate(LocalDateTime.now());
+        reservation.setEndDate(LocalDateTime.now().plusDays(3));
+
+        Car car = new Car();
+        car.setBrand("Renault");
+        car.setModel("Clio");
+        car.setFuelType(null); // ← FuelType null
+        car.setTransmission(TransmissionType.MANUAL);
+
+        reservation.setCar(car);
+        reservation.setClient(new User());
+        contract.setReservation(reservation);
+
+        // When
+        ContractResponse result = mapper.toResponse(contract);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getCarFuelType()).isNull();
+        assertThat(result.getCarTransmission()).isEqualTo("MANUAL");
+    }
+
+    @Test
+    void toResponse_shouldHandleReservationWithCarButNullTransmission() {
+        // Given
+        Contract contract = new Contract();
+        contract.setId(1L);
+
+        Reservation reservation = new Reservation();
+        reservation.setId(100L);
+        reservation.setStartDate(LocalDateTime.now());
+        reservation.setEndDate(LocalDateTime.now().plusDays(3));
+
+        Car car = new Car();
+        car.setBrand("Renault");
+        car.setModel("Clio");
+        car.setFuelType(FuelType.DIESEL);
+        car.setTransmission(null); // ← Transmission null
+
+        reservation.setCar(car);
+        reservation.setClient(new User());
+        contract.setReservation(reservation);
+
+        // When
+        ContractResponse result = mapper.toResponse(contract);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getCarFuelType()).isEqualTo("DIESEL");
+        assertThat(result.getCarTransmission()).isNull();
+    }
 }

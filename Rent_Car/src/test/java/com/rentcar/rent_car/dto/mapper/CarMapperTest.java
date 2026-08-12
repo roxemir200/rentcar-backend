@@ -188,4 +188,117 @@ class CarMapperTest {
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Catégorie non trouvée");
     }
+
+    @Test
+    void toResponse_shouldReturnNullPrimaryImage_whenNoImageIsPrimary() {
+        // Given
+        Car car = new Car();
+        car.setId(1L);
+        car.setBrand("Toyota");
+        car.setModel("RAV4");
+        car.setCategory(category);
+
+        // Créer des images où AUCUNE n'est primaire
+        CarImage image1 = new CarImage();
+        image1.setImageUrl("image1.jpg");
+        image1.setIsPrimary(false); // ← Pas primaire
+
+        CarImage image2 = new CarImage();
+        image2.setImageUrl("image2.jpg");
+        image2.setIsPrimary(false); // ← Pas primaire
+
+        car.setImages(List.of(image1, image2));
+
+        // When
+        CarResponse result = carMapper.toResponse(car);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getImages()).containsExactly("image1.jpg", "image2.jpg");
+        assertThat(result.getPrimaryImage()).isNull(); // ← Cette condition sera couverte !
+    }
+
+    @Test
+    void toResponse_shouldReturnNullPrimaryImage_whenIsPrimaryIsNull() {
+        // Given
+        Car car = new Car();
+        car.setId(1L);
+        car.setBrand("Toyota");
+        car.setModel("RAV4");
+        car.setCategory(category);
+
+        // Créer des images où isPrimary est null
+        CarImage image1 = new CarImage();
+        image1.setImageUrl("image1.jpg");
+        image1.setIsPrimary(null); // ← isPrimary null
+
+        CarImage image2 = new CarImage();
+        image2.setImageUrl("image2.jpg");
+        image2.setIsPrimary(null); // ← isPrimary null
+
+        car.setImages(List.of(image1, image2));
+
+        // When
+        CarResponse result = carMapper.toResponse(car);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getImages()).containsExactly("image1.jpg", "image2.jpg");
+        assertThat(result.getPrimaryImage()).isNull(); // ← Cette condition sera couverte !
+    }
+
+    @Test
+    void toResponse_shouldFindPrimaryImage_whenOneExists() {
+        // Given
+        Car car = new Car();
+        car.setId(1L);
+        car.setBrand("Toyota");
+        car.setModel("RAV4");
+        car.setCategory(category);
+
+        CarImage image1 = new CarImage();
+        image1.setImageUrl("image1.jpg");
+        image1.setIsPrimary(false);
+
+        CarImage image2 = new CarImage();
+        image2.setImageUrl("image2.jpg");
+        image2.setIsPrimary(true); // ← Une image primaire
+
+        car.setImages(List.of(image1, image2));
+
+        // When
+        CarResponse result = carMapper.toResponse(car);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getImages()).containsExactly("image1.jpg", "image2.jpg");
+        assertThat(result.getPrimaryImage()).isEqualTo("image2.jpg");
+    }
+
+    @Test
+    void toResponse_shouldHandleMixedPrimaryAndNull() {
+        // Given
+        Car car = new Car();
+        car.setId(1L);
+        car.setBrand("Toyota");
+        car.setModel("RAV4");
+        car.setCategory(category);
+
+        CarImage image1 = new CarImage();
+        image1.setImageUrl("image1.jpg");
+        image1.setIsPrimary(null); // ← isPrimary null
+
+        CarImage image2 = new CarImage();
+        image2.setImageUrl("image2.jpg");
+        image2.setIsPrimary(true); // ← Une image primaire
+
+        car.setImages(List.of(image1, image2));
+
+        // When
+        CarResponse result = carMapper.toResponse(car);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getPrimaryImage()).isEqualTo("image2.jpg");
+    }
 }
