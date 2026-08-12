@@ -70,4 +70,16 @@ class PaymentMapperTest {
         assertThat(response.getClientName()).isNull();
         assertThat(response.getCarInfo()).isNull();
     }
+
+    @Test
+    void toResponse_shouldReturnNull_whenPaymentIsNull() {
+        // Given
+        Payment payment = null;
+
+        // When
+        PaymentResponse result = mapper.toResponse(payment);
+
+        // Then
+        assertThat(result).isNull(); // ← Cette ligne sera couverte !
+    }
 }

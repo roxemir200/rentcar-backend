@@ -39,4 +39,16 @@ class NotificationMapperTest {
         assertThat(response.getIsRead()).isFalse();
         assertThat(response.getCreatedAt()).isEqualTo(now);
     }
+
+    @Test
+    void toResponse_shouldReturnNull_whenNotificationIsNull() {
+        // Given
+        Notification notification = null;
+
+        // When
+        NotificationResponse result = mapper.toResponse(notification);
+
+        // Then
+        assertThat(result).isNull(); // ← Cette ligne sera couverte !
+    }
 }

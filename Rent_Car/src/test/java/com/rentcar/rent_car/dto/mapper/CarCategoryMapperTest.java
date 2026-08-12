@@ -63,4 +63,56 @@ class CarCategoryMapperTest {
         assertThat(category.getName()).isEqualTo("Nouveau");
         assertThat(category.getDescription()).isEqualTo("Nouvelle desc");
     }
+
+    @Test
+    void toEntity_shouldReturnNull_whenRequestIsNull() {
+        // Given
+        CarCategoryRequest request = null;
+
+        // When
+        CarCategory result = mapper.toEntity(request);
+
+        // Then
+        assertThat(result).isNull(); // ← Cette ligne sera couverte !
+    }
+
+    @Test
+    void toResponse_shouldReturnNull_whenCategoryIsNull() {
+        // Given
+        CarCategory category = null;
+
+        // When
+        CarCategoryResponse result = mapper.toResponse(category);
+
+        // Then
+        assertThat(result).isNull(); // ← Cette ligne sera couverte !
+    }
+
+    @Test
+    void updateEntity_shouldDoNothing_whenCategoryIsNull() {
+        // Given
+        CarCategory category = null;
+        CarCategoryRequest request = new CarCategoryRequest();
+        request.setName("Nouveau");
+
+        // When
+        mapper.updateEntity(category, request);
+
+        // Then
+        assertThat(category).isNull(); // ← Cette ligne sera couverte !
+    }
+
+    @Test
+    void updateEntity_shouldDoNothing_whenRequestIsNull() {
+        // Given
+        CarCategory category = new CarCategory();
+        category.setName("Ancien");
+        CarCategoryRequest request = null;
+
+        // When
+        mapper.updateEntity(category, request);
+
+        // Then
+        assertThat(category.getName()).isEqualTo("Ancien"); // Non modifié
+    }
 }

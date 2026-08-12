@@ -64,4 +64,28 @@ class UserMapperTest {
         assertThat(response.getIsActive()).isTrue();
         assertThat(response.getCreatedAt()).isEqualTo(now);
     }
+
+    @Test
+    void toEntity_shouldReturnNull_whenRequestIsNull() {
+        // Given
+        RegisterRequest request = null;
+
+        // When
+        User result = mapper.toEntity(request);
+
+        // Then
+        assertThat(result).isNull(); // ← Cette ligne sera couverte !
+    }
+
+    @Test
+    void toResponse_shouldReturnNull_whenUserIsNull() {
+        // Given
+        User user = null;
+
+        // When
+        UserResponse result = mapper.toResponse(user);
+
+        // Then
+        assertThat(result).isNull(); // ← Cette ligne sera couverte !
+    }
 }
