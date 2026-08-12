@@ -62,8 +62,8 @@ public class JwtUtils {
                     .build()
                     .parseSignedClaims(token);
             return true;
-        } catch (JwtException e) {
-            // Token invalide, expiré, ou mal formé
+        } catch (Exception e) {
+            // Token invalide, expiré, vide ou mal formé
             return false;
         }
     }

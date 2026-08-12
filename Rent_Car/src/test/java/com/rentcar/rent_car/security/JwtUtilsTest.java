@@ -30,5 +30,14 @@ class JwtUtilsTest {
     @Test
     void shouldRejectInvalidToken() {
         assertThat(jwtUtils.validateToken("invalid-token")).isFalse();
+        assertThat(jwtUtils.validateToken("")).isFalse();
+    }
+
+    @Test
+    void shouldRejectExpiredToken() {
+        ReflectionTestUtils.setField(jwtUtils, "jwtExpiration", -1000);
+        String expiredToken = jwtUtils.generateToken("client@test.com", "CLIENT");
+
+        assertThat(jwtUtils.validateToken(expiredToken)).isFalse();
     }
 }
