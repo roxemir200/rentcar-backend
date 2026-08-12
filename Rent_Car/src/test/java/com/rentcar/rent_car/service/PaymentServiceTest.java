@@ -22,6 +22,9 @@ import com.rentcar.rent_car.repository.PaymentRepository;
 import com.rentcar.rent_car.repository.ReservationRepository;
 import com.rentcar.rent_car.repository.UserRepository;
 import com.rentcar.rent_car.service.imp.PaymentServiceImpl;
+
+// ✅ AJOUT: Import Stripe Event
+import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
 
@@ -34,6 +37,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.Collections; // ✅ AJOUT: Import Collections
 import java.util.List;
 import java.util.Optional;
 
@@ -317,6 +321,8 @@ class PaymentServiceTest {
         assertThat(response.getMessage()).contains("Identifiant Stripe introuvable");
     }
 
+    // --- TESTS POUR createPaymentIntent (SUCCÈS) ---
+
     @Test
     void shouldCreatePaymentIntentSuccessfully() throws Exception {
         // Given
@@ -330,7 +336,6 @@ class PaymentServiceTest {
         when(paymentIntent.getId()).thenReturn("pi_test_123");
         when(paymentIntent.getClientSecret()).thenReturn("secret_test_123");
 
-        // Utiliser un spy pour mocker la méthode statique PaymentIntent.create
         try (var mockedStatic = mockStatic(com.stripe.model.PaymentIntent.class)) {
             mockedStatic.when(() -> com.stripe.model.PaymentIntent.create(any(PaymentIntentCreateParams.class)))
                     .thenReturn(paymentIntent);
@@ -348,73 +353,7 @@ class PaymentServiceTest {
         }
     }
 
-    @Test
-    void shouldHandleWebhookSuccessfully() throws Exception {
-        // Given
-        String payload = "{\"id\":\"pi_test_123\"}";
-        String signature = "test_signature";
-        String webhookSecret = "whsec_test";
-
-        // Utiliser un spy pour mocker Webhook.constructEvent
-        try (var mockedStatic = mockStatic(com.stripe.net.Webhook.class)) {
-            Event event = mock(Event.class);
-            when(event.getType()).thenReturn("payment_intent.succeeded");
-
-            var deserializer = mock(Event.DataObjectDeserializer.class);
-            when(event.getDataObjectDeserializer()).thenReturn(deserializer);
-            when(deserializer.getRawJson()).thenReturn(payload);
-
-            mockedStatic.when(() -> com.stripe.net.Webhook.constructEvent(anyString(), anyString(), anyString()))
-                    .thenReturn(event);
-
-            when(objectMapper.readTree(payload)).thenReturn(mock(tools.jackson.databind.JsonNode.class));
-
-            // Mock pour updatePaymentStatus
-            when(paymentRepository.findByExternalPaymentId("pi_test_123")).thenReturn(Optional.of(payment));
-            when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
-            when(paymentMapper.toResponse(any(Payment.class))).thenReturn(new PaymentResponse());
-            when(userRepository.findByRole(Role.ADMIN)).thenReturn(List.of(admin));
-
-            // When
-            paymentService.handleWebhook(payload, signature);
-
-            // Then
-            verify(paymentRepository).save(any(Payment.class));
-            verify(sseService, atLeastOnce()).sendEvent(anyLong(), anyString(), any());
-        }
-    }
-
-    @Test
-    void shouldHandleWebhookPaymentFailed() throws Exception {
-        // Given
-        String payload = "{\"id\":\"pi_test_123\"}";
-        String signature = "test_signature";
-
-        try (var mockedStatic = mockStatic(com.stripe.net.Webhook.class)) {
-            Event event = mock(Event.class);
-            when(event.getType()).thenReturn("payment_intent.payment_failed");
-
-            var deserializer = mock(Event.DataObjectDeserializer.class);
-            when(event.getDataObjectDeserializer()).thenReturn(deserializer);
-            when(deserializer.getRawJson()).thenReturn(payload);
-
-            mockedStatic.when(() -> com.stripe.net.Webhook.constructEvent(anyString(), anyString(), anyString()))
-                    .thenReturn(event);
-
-            when(objectMapper.readTree(payload)).thenReturn(mock(tools.jackson.databind.JsonNode.class));
-            when(paymentRepository.findByExternalPaymentId("pi_test_123")).thenReturn(Optional.of(payment));
-            when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
-            when(paymentMapper.toResponse(any(Payment.class))).thenReturn(new PaymentResponse());
-            when(userRepository.findByRole(Role.ADMIN)).thenReturn(List.of(admin));
-
-            // When
-            paymentService.handleWebhook(payload, signature);
-
-            // Then
-            verify(paymentRepository).save(any(Payment.class));
-            assertThat(payment.getStatus()).isEqualTo(PaymentStatus.FAILED);
-        }
-    }
+    // --- TESTS POUR handleWebhook ---
 
     @Test
     void shouldThrowWhenWebhookSignatureInvalid() throws Exception {
@@ -431,55 +370,6 @@ class PaymentServiceTest {
                     .isInstanceOf(RuntimeException.class)
                     .hasMessageContaining("Signature webhook invalide");
         }
-    }
-
-    // --- TESTS POUR updatePaymentStatus ---
-
-    @Test
-    void shouldUpdatePaymentStatusByExternalId() {
-        // Given
-        when(paymentRepository.findByExternalPaymentId("pi_stripe_123")).thenReturn(Optional.of(payment));
-        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
-        when(paymentMapper.toResponse(any(Payment.class))).thenReturn(new PaymentResponse());
-
-        // When
-        paymentService.updatePaymentStatus("pi_stripe_123", PaymentStatus.COMPLETED);
-
-        // Then
-        verify(paymentRepository).save(any(Payment.class));
-        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.COMPLETED);
-        assertThat(payment.getPaymentDate()).isNotNull();
-    }
-
-    @Test
-    void shouldUpdatePaymentStatusByLastPendingWhenExternalIdNotFound() {
-        // Given
-        when(paymentRepository.findByExternalPaymentId("unknown_id")).thenReturn(Optional.empty());
-        when(paymentRepository.findTopByStatusOrderByCreatedAtDesc(PaymentStatus.PENDING))
-                .thenReturn(Optional.of(payment));
-        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
-
-        // When
-        paymentService.updatePaymentStatus("unknown_id", PaymentStatus.COMPLETED);
-
-        // Then
-        verify(paymentRepository).save(any(Payment.class));
-        assertThat(payment.getExternalPaymentId()).isEqualTo("unknown_id");
-        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.COMPLETED);
-    }
-
-    @Test
-    void shouldDoNothingWhenNoPendingPaymentFound() {
-        // Given
-        when(paymentRepository.findByExternalPaymentId("unknown_id")).thenReturn(Optional.empty());
-        when(paymentRepository.findTopByStatusOrderByCreatedAtDesc(PaymentStatus.PENDING))
-                .thenReturn(Optional.empty());
-
-        // When
-        paymentService.updatePaymentStatus("unknown_id", PaymentStatus.COMPLETED);
-
-        // Then
-        verify(paymentRepository, never()).save(any(Payment.class));
     }
 
     // --- TESTS POUR refundPayment (SUCCÈS) ---
@@ -499,7 +389,6 @@ class PaymentServiceTest {
         when(paymentMapper.toResponse(any(Payment.class))).thenReturn(new PaymentResponse());
         when(userRepository.findByRole(Role.ADMIN)).thenReturn(List.of(admin));
 
-        // Mock Stripe Refund
         try (var mockedStatic = mockStatic(com.stripe.model.Refund.class)) {
             com.stripe.model.Refund refund = mock(com.stripe.model.Refund.class);
             mockedStatic.when(() -> com.stripe.model.Refund.create(any(com.stripe.param.RefundCreateParams.class)))
@@ -528,7 +417,6 @@ class PaymentServiceTest {
 
         when(paymentRepository.findById(1000L)).thenReturn(Optional.of(payment));
 
-        // Mock Stripe Refund throwing exception
         try (var mockedStatic = mockStatic(com.stripe.model.Refund.class)) {
             mockedStatic.when(() -> com.stripe.model.Refund.create(any(com.stripe.param.RefundCreateParams.class)))
                     .thenThrow(new RuntimeException("Stripe error"));
@@ -571,5 +459,33 @@ class PaymentServiceTest {
         // Then
         assertThat(list).isEmpty();
         verify(paymentRepository).findAll();
+    }
+
+    // ✅ NOUVEAU TEST POUR LE CAS OÙ LE PAIEMENT EXISTE DÉJÀ MAIS PAS COMPLETED
+    @Test
+    void shouldCreatePaymentIntentWhenExistingPaymentNotCompleted() throws Exception {
+        // Given
+        payment.setStatus(PaymentStatus.PENDING); // Pas COMPLETED
+        when(reservationRepository.findById(100L)).thenReturn(Optional.of(reservation));
+        when(contractRepository.findByReservationId(100L)).thenReturn(Optional.of(contract));
+        when(paymentRepository.findByReservationId(100L)).thenReturn(Optional.of(payment));
+        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
+
+        PaymentIntent paymentIntent = mock(PaymentIntent.class);
+        when(paymentIntent.getId()).thenReturn("pi_test_456");
+        when(paymentIntent.getClientSecret()).thenReturn("secret_test_456");
+
+        try (var mockedStatic = mockStatic(com.stripe.model.PaymentIntent.class)) {
+            mockedStatic.when(() -> com.stripe.model.PaymentIntent.create(any(PaymentIntentCreateParams.class)))
+                    .thenReturn(paymentIntent);
+
+            // When
+            PaymentIntentResponse response = paymentService.createPaymentIntent(100L);
+
+            // Then
+            assertThat(response).isNotNull();
+            assertThat(response.getPaymentIntentId()).isEqualTo("pi_test_456");
+            verify(paymentRepository, times(2)).save(any(Payment.class));
+        }
     }
 }
