@@ -161,8 +161,10 @@ class ChatServiceTest {
 
         assertThat(result).hasSize(1);
         ConversationResponse resp = result.get(0);
-        assertThat(resp.getOtherUserId()).isEqualTo(2L);
-        assertThat(resp.getOtherUserName()).isEqualTo("Bob Admin");
-        assertThat(resp.isOnline()).isTrue();
+
+        // ✅ CORRECTION: Utiliser les bons noms de méthodes
+        assertThat(resp.getUserId()).isEqualTo(2L); // Au lieu de getOtherUserId()
+        assertThat(resp.getUserName()).isEqualTo("Bob Admin"); // Au lieu de getOtherUserName()
+        assertThat(resp.getIsActive()).isTrue(); // Au lieu de isOnline()
     }
 }
