@@ -52,7 +52,7 @@ public class CarMapper {
         // Trouver l'image primaire
         String primaryImage = car.getImages() != null ?
                 car.getImages().stream()
-                        .filter(CarImage::getIsPrimary)
+                        .filter(img -> img != null && Boolean.TRUE.equals(img.getIsPrimary()))
                         .findFirst()
                         .map(CarImage::getImageUrl)
                         .orElse(null) :
