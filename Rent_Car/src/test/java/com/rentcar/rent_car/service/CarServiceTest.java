@@ -8,6 +8,8 @@ import com.rentcar.rent_car.entity.Car;
 import com.rentcar.rent_car.entity.CarCategory;
 import com.rentcar.rent_car.entity.CarImage;
 import com.rentcar.rent_car.enums.CarStatus;
+import com.rentcar.rent_car.enums.FuelType;
+import com.rentcar.rent_car.enums.Transmission;
 import com.rentcar.rent_car.repository.CarImageRepository;
 import com.rentcar.rent_car.repository.CarRepository;
 import com.rentcar.rent_car.service.imp.CarServiceImpl;
@@ -19,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -67,7 +70,7 @@ class CarServiceTest {
         request.setSeats(5);
         request.setDailyRate(new BigDecimal("120"));
         request.setCategoryId(2L);
-        request.setImageUrls(List.of("img1.jpg"));
+        request.setImageUrls(List.of("img1.jpg", "img2.jpg"));
     }
 
     @Test
@@ -80,6 +83,17 @@ class CarServiceTest {
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getBrand()).isEqualTo("BMW");
+    }
+
+    @Test
+    void shouldReturnAvailableCars() {
+        CarResponse response = CarResponse.builder().id(1L).brand("BMW").build();
+        when(carRepository.findByStatus(CarStatus.AVAILABLE)).thenReturn(List.of(car));
+        when(carMapper.toResponse(car)).thenReturn(response);
+
+        List<CarResponse> result = carService.getAvailableCars();
+
+        assertThat(result).hasSize(1);
     }
 
     @Test
@@ -104,6 +118,45 @@ class CarServiceTest {
     }
 
     @Test
+    void shouldReturnFilteredCarsByCategory() {
+        CarResponse response = CarResponse.builder().id(1L).brand("BMW").build();
+        when(carRepository.findByCategoryId(2L)).thenReturn(List.of(car));
+        when(carMapper.toResponse(car)).thenReturn(response);
+
+        List<CarResponse> result = carService.getCarsByCategory(2L);
+
+        assertThat(result).hasSize(1);
+    }
+
+    @Test
+    void shouldSearchCarsWithAllParametersProvided() {
+        CarResponse response = CarResponse.builder().id(1L).brand("BMW").build();
+        when(carRepository.searchCars(
+                eq("BMW"),
+                eq(FuelType.DIESEL),
+                eq(Transmission.AUTOMATIC),
+                eq(BigDecimal.valueOf(50.0)),
+                eq(BigDecimal.valueOf(200.0)),
+                eq(CarStatus.AVAILABLE)
+        )).thenReturn(List.of(car));
+        when(carMapper.toResponse(car)).thenReturn(response);
+
+        List<CarResponse> result = carService.searchCars("BMW", "DIESEL", "AUTOMATIC", 50.0, 200.0);
+
+        assertThat(result).hasSize(1);
+    }
+
+    @Test
+    void shouldSearchCarsWithNullParameters() {
+        when(carRepository.searchCars(null, null, null, null, null, CarStatus.AVAILABLE))
+                .thenReturn(Collections.emptyList());
+
+        List<CarResponse> result = carService.searchCars(null, null, null, null, null);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
     void shouldCreateCarAndSaveImages() {
         CarResponse response = CarResponse.builder().id(1L).brand("BMW").build();
         when(carMapper.toEntity(request)).thenReturn(car);
@@ -114,11 +167,25 @@ class CarServiceTest {
 
         assertThat(result.isSuccess()).isTrue();
         verify(carRepository).save(any(Car.class));
-        verify(carImageRepository).save(any(CarImage.class));
+        verify(carImageRepository, times(2)).save(any(CarImage.class));
     }
 
     @Test
-    void shouldUpdateCar_whenCarExists() {
+    void shouldCreateCarWithoutImagesWhenImageUrlsNullOrEmpty() {
+        request.setImageUrls(null);
+        CarResponse response = CarResponse.builder().id(1L).brand("BMW").build();
+        when(carMapper.toEntity(request)).thenReturn(car);
+        when(carRepository.save(any(Car.class))).thenReturn(car);
+        when(carMapper.toResponse(car)).thenReturn(response);
+
+        MessageResponse result = carService.createCar(request);
+
+        assertThat(result.isSuccess()).isTrue();
+        verify(carImageRepository, never()).save(any(CarImage.class));
+    }
+
+    @Test
+    void shouldUpdateCar_whenCarExistsWithImages() {
         CarResponse response = CarResponse.builder().id(1L).brand("BMW").build();
         when(carRepository.findById(1L)).thenReturn(Optional.of(car));
         when(carMapper.toResponse(car)).thenReturn(response);
@@ -126,7 +193,23 @@ class CarServiceTest {
         MessageResponse result = carService.updateCar(1L, request);
 
         assertThat(result.isSuccess()).isTrue();
+        verify(carImageRepository).deleteByCarId(1L);
+        verify(carImageRepository, times(2)).save(any(CarImage.class));
         verify(carRepository).save(car);
+    }
+
+    @Test
+    void shouldUpdateCarWithoutImagesWhenImageUrlsNull() {
+        request.setImageUrls(null);
+        CarResponse response = CarResponse.builder().id(1L).brand("BMW").build();
+        when(carRepository.findById(1L)).thenReturn(Optional.of(car));
+        when(carMapper.toResponse(car)).thenReturn(response);
+
+        MessageResponse result = carService.updateCar(1L, request);
+
+        assertThat(result.isSuccess()).isTrue();
+        verify(carImageRepository, never()).deleteByCarId(anyLong());
+        verify(carImageRepository, never()).save(any(CarImage.class));
     }
 
     @Test
@@ -157,15 +240,5 @@ class CarServiceTest {
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Voiture non trouvée");
     }
-
-    @Test
-    void shouldReturnFilteredCarsByCategory() {
-        CarResponse response = CarResponse.builder().id(1L).brand("BMW").build();
-        when(carRepository.findByCategoryId(2L)).thenReturn(List.of(car));
-        when(carMapper.toResponse(car)).thenReturn(response);
-
-        List<CarResponse> result = carService.getCarsByCategory(2L);
-
-        assertThat(result).hasSize(1);
-    }
 }
+
