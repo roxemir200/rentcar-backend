@@ -147,4 +147,11 @@ class ReservationMapperTest {
         assertThat(response.getClientEmail()).isNull();
         assertThat(response.getClientId()).isNull();
     }
+
+    @Test
+    void shouldReturnNull_whenInputsAreNull() {
+        assertThat(reservationMapper.toEntity(null, "client@test.com")).isNull();
+        assertThat(reservationMapper.toEntity(new ReservationRequest(), null)).isNull();
+        assertThat(reservationMapper.toResponse(null)).isNull();
+    }
 }

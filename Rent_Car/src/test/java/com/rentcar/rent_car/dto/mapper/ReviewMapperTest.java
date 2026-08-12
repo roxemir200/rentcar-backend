@@ -117,4 +117,10 @@ class ReviewMapperTest {
         assertThat(response.getCarId()).isNull();
         assertThat(response.getReservationId()).isNull();
     }
+
+    @Test
+    void shouldReturnNull_whenInputsAreNull() {
+        assertThat(reviewMapper.toEntity(null)).isNull();
+        assertThat(reviewMapper.toResponse(null)).isNull();
+    }
 }

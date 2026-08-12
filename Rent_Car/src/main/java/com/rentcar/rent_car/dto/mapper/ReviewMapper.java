@@ -15,6 +15,9 @@ public class ReviewMapper {
     private final ReservationRepository reservationRepository;
 
     public Review toEntity(ReviewRequest request) {
+        if (request == null) {
+            return null;
+        }
         Reservation reservation = reservationRepository.findById(request.getReservationId())
                 .orElseThrow(() -> new RuntimeException("Réservation non trouvée"));
 
@@ -29,6 +32,9 @@ public class ReviewMapper {
     }
 
     public ReviewResponse toResponse(Review review) {
+        if (review == null) {
+            return null;
+        }
         return ReviewResponse.builder()
                 .id(review.getId())
                 .rating(review.getRating())

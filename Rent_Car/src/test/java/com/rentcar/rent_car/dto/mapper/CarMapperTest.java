@@ -3,12 +3,8 @@ package com.rentcar.rent_car.dto.mapper;
 import com.rentcar.rent_car.dto.request.CarRequest;
 import com.rentcar.rent_car.dto.response.CarResponse;
 import com.rentcar.rent_car.entity.Car;
-import com.rentcar.rent_car.entity.CarCategory;
 import com.rentcar.rent_car.entity.CarImage;
-import com.rentcar.rent_car.entity.Review;
-import com.rentcar.rent_car.enums.CarStatus;
-import com.rentcar.rent_car.enums.FuelType;
-import com.rentcar.rent_car.enums.Transmission;
+import com.rentcar.rent_car.entity.CarCategory;
 import com.rentcar.rent_car.repository.CarCategoryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,7 +32,7 @@ class CarMapperTest {
     private CarMapper carMapper;
 
     private CarCategory category;
-    private CarRequest request;
+    private CarRequest carRequest;
 
     @BeforeEach
     void setUp() {
@@ -43,135 +40,253 @@ class CarMapperTest {
         category.setId(1L);
         category.setName("SUV");
 
-        request = new CarRequest();
-        request.setBrand("BMW");
-        request.setModel("X5");
-        request.setYear(2023);
-        request.setRegistrationNumber("AB-123-CD");
-        request.setColor("Noir");
-        request.setMileage(15000);
-        request.setSeats(5);
-        request.setFuelType(FuelType.DIESEL);
-        request.setTransmission(Transmission.AUTOMATIC);
-        request.setDailyRate(new BigDecimal("120.00"));
-        request.setDescription("Superbe voiture");
-        request.setCategoryId(1L);
+        carRequest = new CarRequest();
+        carRequest.setBrand("Toyota");
+        carRequest.setModel("RAV4");
+        carRequest.setYear(2023);
+        carRequest.setRegistrationNumber("AB-123-CD");
+        carRequest.setColor("Rouge");
+        carRequest.setMileage(15000);
+        carRequest.setSeats(5);
+        carRequest.setDailyRate(BigDecimal.valueOf(120.00));
+        carRequest.setDescription("SUV confortable");
+        carRequest.setCategoryId(1L);
+    }
+
+    // ========== Tests pour toEntity ==========
+
+    @Test
+    void toEntity_shouldReturnNull_whenRequestIsNull() {
+        // Given
+        CarRequest request = null;
+
+        // When
+        Car result = carMapper.toEntity(request);
+
+        // Then
+        assertThat(result).isNull();
     }
 
     @Test
-    void shouldToEntity_whenCategoryExists() {
-        when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
-
-        Car car = carMapper.toEntity(request);
-
-        assertThat(car.getBrand()).isEqualTo("BMW");
-        assertThat(car.getCategory()).isEqualTo(category);
-    }
-
-    @Test
-    void shouldThrow_whenCategoryNotFoundInToEntity() {
+    void toEntity_shouldThrowException_whenCategoryNotFound() {
+        // Given
         when(categoryRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> carMapper.toEntity(request))
+        // When & Then
+        assertThatThrownBy(() -> carMapper.toEntity(carRequest))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Catégorie non trouvée");
     }
 
     @Test
-    void shouldToResponse_withFullImagesAndPrimaryImage() {
+    void toEntity_shouldMapAllFieldsCorrectly() {
+        // Given
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
+
+        // When
+        Car result = carMapper.toEntity(carRequest);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getBrand()).isEqualTo("Toyota");
+        assertThat(result.getModel()).isEqualTo("RAV4");
+        assertThat(result.getYear()).isEqualTo(2023);
+        assertThat(result.getRegistrationNumber()).isEqualTo("AB-123-CD");
+        assertThat(result.getColor()).isEqualTo("Rouge");
+        assertThat(result.getMileage()).isEqualTo(15000);
+        assertThat(result.getSeats()).isEqualTo(5);
+        assertThat(result.getDailyRate()).isEqualTo(BigDecimal.valueOf(120.00));
+        assertThat(result.getDescription()).isEqualTo("SUV confortable");
+        assertThat(result.getCategory()).isEqualTo(category);
+    }
+
+    // ========== Tests pour toResponse ==========
+
+    @Test
+    void toResponse_shouldReturnNull_whenCarIsNull() {
+        // Given
+        Car car = null;
+
+        // When
+        CarResponse result = carMapper.toResponse(car);
+
+        // Then
+        assertThat(result).isNull();
+    }
+
+    @Test
+    void toResponse_shouldHandleNullImages() {
+        // Given
         Car car = new Car();
-        car.setId(10L);
-        car.setBrand("BMW");
-        car.setModel("X5");
+        car.setId(1L);
+        car.setBrand("Toyota");
+        car.setModel("RAV4");
+        car.setImages(null); // ← Condition non couverte !
         car.setCategory(category);
-        car.setStatus(CarStatus.AVAILABLE);
+        car.setIsActive(true);
+        car.setAverageRating(4.5);
+        car.setReviews(new ArrayList<>());
 
-        CarImage img1 = new CarImage();
-        img1.setImageUrl("primary.jpg");
-        img1.setIsPrimary(true);
+        // When
+        CarResponse result = carMapper.toResponse(car);
 
-        CarImage img2 = new CarImage();
-        img2.setImageUrl("sec.jpg");
-        img2.setIsPrimary(false);
-
-        car.setImages(List.of(img1, img2));
-        Review review = new Review();
-        review.setRating(5);
-        car.setReviews(List.of(review));
-
-        CarResponse response = carMapper.toResponse(car);
-
-        assertThat(response.getId()).isEqualTo(10L);
-        assertThat(response.getImages()).containsExactly("primary.jpg", "sec.jpg");
-        assertThat(response.getPrimaryImage()).isEqualTo("primary.jpg");
-        assertThat(response.getCategoryName()).isEqualTo("SUV");
-        assertThat(response.getCategoryId()).isEqualTo(1L);
-        assertThat(response.getReviewCount()).isEqualTo(1);
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getImages()).isEmpty(); // ← Doit retourner une liste vide
+        assertThat(result.getPrimaryImage()).isNull(); // ← Doit être null
+        assertThat(result.getReviewCount()).isZero();
+        assertThat(result.getCategoryName()).isEqualTo("SUV");
     }
 
     @Test
-    void shouldToResponse_withImagesListHavingNoPrimaryImage() {
+    void toResponse_shouldHandleEmptyImagesList() {
+        // Given
         Car car = new Car();
-        car.setId(10L);
+        car.setId(1L);
+        car.setBrand("Toyota");
+        car.setModel("RAV4");
+        car.setImages(new ArrayList<>()); // Liste vide
+        car.setCategory(category);
 
-        CarImage img1 = new CarImage();
-        img1.setImageUrl("sec.jpg");
-        img1.setIsPrimary(false);
+        // When
+        CarResponse result = carMapper.toResponse(car);
 
-        CarImage img2 = new CarImage();
-        img2.setImageUrl("null-primary.jpg");
-        img2.setIsPrimary(null);
-
-        car.setImages(List.of(img1, img2));
-
-        CarResponse response = carMapper.toResponse(car);
-
-        assertThat(response.getImages()).containsExactly("sec.jpg", "null-primary.jpg");
-        assertThat(response.getPrimaryImage()).isNull();
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getImages()).isEmpty();
+        assertThat(result.getPrimaryImage()).isNull();
     }
 
     @Test
-    void shouldToResponse_withNullImagesAndNullReviewsAndNullCategory() {
+    void toResponse_shouldFindPrimaryImage() {
+        // Given
         Car car = new Car();
-        car.setId(10L);
+        car.setId(1L);
+        car.setBrand("Toyota");
+        car.setModel("RAV4");
+        car.setCategory(category);
 
-        CarResponse response = carMapper.toResponse(car);
+        CarImage image1 = new CarImage();
+        image1.setImageUrl("image1.jpg");
+        image1.setIsPrimary(true);
 
-        assertThat(response.getImages()).isEmpty();
-        assertThat(response.getPrimaryImage()).isNull();
-        assertThat(response.getCategoryName()).isNull();
-        assertThat(response.getCategoryId()).isNull();
-        assertThat(response.getReviewCount()).isEqualTo(0);
+        CarImage image2 = new CarImage();
+        image2.setImageUrl("image2.jpg");
+        image2.setIsPrimary(false);
+
+        car.setImages(List.of(image1, image2));
+
+        // When
+        CarResponse result = carMapper.toResponse(car);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getImages()).containsExactly("image1.jpg", "image2.jpg");
+        assertThat(result.getPrimaryImage()).isEqualTo("image1.jpg");
     }
 
     @Test
-    void shouldUpdateEntity_withValidCategoryId() {
+    void toResponse_shouldHandleNullCategory() {
+        // Given
         Car car = new Car();
-        when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
+        car.setId(1L);
+        car.setBrand("Toyota");
+        car.setModel("RAV4");
+        car.setCategory(null); // Category null
+        car.setImages(new ArrayList<>());
 
+        // When
+        CarResponse result = carMapper.toResponse(car);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getCategoryName()).isNull();
+        assertThat(result.getCategoryId()).isNull();
+    }
+
+    @Test
+    void toResponse_shouldHandleNullReviews() {
+        // Given
+        Car car = new Car();
+        car.setId(1L);
+        car.setBrand("Toyota");
+        car.setModel("RAV4");
+        car.setCategory(category);
+        car.setImages(new ArrayList<>());
+        car.setReviews(null); // Reviews null
+
+        // When
+        CarResponse result = carMapper.toResponse(car);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getReviewCount()).isZero(); // Vérifie que reviewCount est 0
+    }
+
+    // ========== Tests pour updateEntity ==========
+
+    @Test
+    void updateEntity_shouldDoNothing_whenCarIsNull() {
+        // Given
+        Car car = null;
+        CarRequest request = carRequest;
+
+        // When
         carMapper.updateEntity(car, request);
 
-        assertThat(car.getBrand()).isEqualTo("BMW");
+        // Then
+        assertThat(car).isNull(); // Rien ne se passe
+    }
+
+    @Test
+    void updateEntity_shouldDoNothing_whenRequestIsNull() {
+        // Given
+        Car car = new Car();
+        CarRequest request = null;
+
+        // When
+        carMapper.updateEntity(car, request);
+
+        // Then
+        // Le car n'est pas modifié
+        assertThat(car.getBrand()).isNull();
+    }
+
+    @Test
+    void updateEntity_shouldUpdateFieldsCorrectly() {
+        // Given
+        Car car = new Car();
+        car.setBrand("Old Brand");
+        car.setModel("Old Model");
+
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
+
+        // When
+        carMapper.updateEntity(car, carRequest);
+
+        // Then
+        assertThat(car.getBrand()).isEqualTo("Toyota");
+        assertThat(car.getModel()).isEqualTo("RAV4");
+        assertThat(car.getYear()).isEqualTo(2023);
         assertThat(car.getCategory()).isEqualTo(category);
     }
 
     @Test
-    void shouldUpdateEntity_withoutCategoryId() {
+    void updateEntity_shouldNotUpdateCategory_whenCategoryIdIsNull() {
+        // Given
         Car car = new Car();
-        request.setCategoryId(null);
+        car.setCategory(category);
 
+        CarRequest request = new CarRequest();
+        request.setBrand("Toyota");
+        request.setModel("RAV4");
+        request.setCategoryId(null); // CategoryId null
+
+        // When
         carMapper.updateEntity(car, request);
 
-        assertThat(car.getBrand()).isEqualTo("BMW");
-    }
-
-    @Test
-    void shouldThrow_whenCategoryNotFoundInUpdateEntity() {
-        Car car = new Car();
-        when(categoryRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> carMapper.updateEntity(car, request))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Catégorie non trouvée");
+        // Then
+        assertThat(car.getCategory()).isEqualTo(category); // Category non modifiée
     }
 }

@@ -11,6 +11,9 @@ public class UserMapper {
 
     // Convertir RegisterRequest → User (Entity)
     public User toEntity(RegisterRequest request) {
+        if (request == null) {
+            return null;
+        }
         User user = new User();
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
@@ -26,6 +29,9 @@ public class UserMapper {
 
     // Convertir User (Entity) → UserResponse (DTO)
     public UserResponse toResponse(User user) {
+        if (user == null) {
+            return null;
+        }
         return UserResponse.builder()
                 .id(user.getId())
                 .firstName(user.getFirstName())

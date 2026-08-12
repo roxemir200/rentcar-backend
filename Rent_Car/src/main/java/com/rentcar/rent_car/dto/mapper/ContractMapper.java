@@ -12,6 +12,9 @@ import java.time.temporal.ChronoUnit;
 public class ContractMapper {
 
     public ContractResponse toResponse(Contract contract) {
+        if (contract == null) {
+            return null;
+        }
         Reservation r = contract.getReservation();
         Car car = r != null ? r.getCar() : null;
 

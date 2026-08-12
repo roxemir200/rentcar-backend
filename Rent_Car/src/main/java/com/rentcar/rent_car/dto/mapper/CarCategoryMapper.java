@@ -9,6 +9,9 @@ import org.springframework.stereotype.Component;
 public class CarCategoryMapper {
 
     public CarCategory toEntity(CarCategoryRequest request) {
+        if (request == null) {
+            return null;
+        }
         CarCategory category = new CarCategory();
         category.setName(request.getName());
         category.setDescription(request.getDescription());
@@ -16,6 +19,9 @@ public class CarCategoryMapper {
     }
 
     public CarCategoryResponse toResponse(CarCategory category) {
+        if (category == null) {
+            return null;
+        }
         return CarCategoryResponse.builder()
                 .id(category.getId())
                 .name(category.getName())
@@ -25,6 +31,9 @@ public class CarCategoryMapper {
     }
 
     public void updateEntity(CarCategory category, CarCategoryRequest request) {
+        if (category == null || request == null) {
+            return;
+        }
         category.setName(request.getName());
         category.setDescription(request.getDescription());
     }

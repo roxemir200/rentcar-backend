@@ -9,6 +9,9 @@ public class CalendarReservationMapper {
 
 
     public CalendarReservationResponse mapToResponse(Reservation r) {
+        if (r == null) {
+            return null;
+        }
         return CalendarReservationResponse.builder()
                 .id(r.getId())
                 .carBrand(r.getCar() != null ? r.getCar().getBrand() : null)

@@ -21,6 +21,9 @@ public class ReservationMapper {
     private final UserRepository userRepository;
 
     public Reservation toEntity(ReservationRequest request, String clientEmail) {
+        if (request == null || clientEmail == null) {
+            return null;
+        }
         User client = userRepository.findByEmail(clientEmail)
                 .orElseThrow(() -> new RuntimeException("Client non trouvé"));
 
@@ -44,6 +47,9 @@ public class ReservationMapper {
     }
 
     public ReservationResponse toResponse(Reservation reservation) {
+        if (reservation == null) {
+            return null;
+        }
         return ReservationResponse.builder()
                 .id(reservation.getId())
                 .startDate(reservation.getStartDate())

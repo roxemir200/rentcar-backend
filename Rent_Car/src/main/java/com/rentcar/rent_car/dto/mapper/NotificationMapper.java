@@ -8,6 +8,9 @@ import org.springframework.stereotype.Component;
 public class NotificationMapper {
 
     public NotificationResponse toResponse(Notification notification) {
+        if (notification == null) {
+            return null;
+        }
         return NotificationResponse.builder()
                 .id(notification.getId())
                 .title(notification.getTitle())

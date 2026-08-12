@@ -20,6 +20,9 @@ public class CarMapper {
     private final CarCategoryRepository categoryRepository;
 
     public Car toEntity(CarRequest request) {
+        if (request == null) {
+            return null;
+        }
         Car car = new Car();
         car.setBrand(request.getBrand());
         car.setModel(request.getModel());
@@ -42,6 +45,9 @@ public class CarMapper {
     }
 
     public CarResponse toResponse(Car car) {
+        if (car == null) {
+            return null;
+        }
         // Extraire les URLs des images
         List<String> imageUrls = car.getImages() != null ?
                 car.getImages().stream()
@@ -84,6 +90,9 @@ public class CarMapper {
     }
 
     public void updateEntity(Car car, CarRequest request) {
+        if (car == null || request == null) {
+            return;
+        }
         car.setBrand(request.getBrand());
         car.setModel(request.getModel());
         car.setYear(request.getYear());
