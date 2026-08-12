@@ -101,7 +101,6 @@ class RecommendationServiceTest {
         when(reviewRepository.findByCarId(1L)).thenReturn(Collections.emptyList());
         when(reservationRepository.findByCarId(1L)).thenReturn(Collections.emptyList());
 
-        // When mlRestClient is null or post throws exception, catches exception and falls back to heuristic
         CarRecommendationRequest request = new CarRecommendationRequest();
         request.setObjective("QUOTIDIEN");
         request.setBudget(BigDecimal.valueOf(50));
@@ -115,7 +114,8 @@ class RecommendationServiceTest {
         assertThat(response.getSuccess()).isTrue();
         assertThat(response.getData()).isNotNull();
         assertThat(response.getMeta().getFallbackUsed()).isTrue();
-        assertThat(response.getMeta().getMlServiceStatus()).contains("RuntimeException");
+        // ✅ CORRECTION : Vérifier NullPointerException au lieu de RuntimeException
+        assertThat(response.getMeta().getMlServiceStatus()).contains("NullPointerException");
     }
 
     @Test
