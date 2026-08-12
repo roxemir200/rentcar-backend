@@ -23,7 +23,6 @@ import com.rentcar.rent_car.repository.ReservationRepository;
 import com.rentcar.rent_car.repository.UserRepository;
 import com.rentcar.rent_car.service.imp.PaymentServiceImpl;
 
-// ✅ AJOUT: Import Stripe Event
 import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
@@ -37,7 +36,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.util.Collections; // ✅ AJOUT: Import Collections
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -329,9 +328,12 @@ class PaymentServiceTest {
         when(reservationRepository.findById(100L)).thenReturn(Optional.of(reservation));
         when(contractRepository.findByReservationId(100L)).thenReturn(Optional.of(contract));
         when(paymentRepository.findByReservationId(100L)).thenReturn(Optional.empty());
-        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
 
-        // Mock Stripe PaymentIntent
+        Payment savedPayment = new Payment();
+        savedPayment.setId(1000L);
+        savedPayment.setExternalPaymentId("pi_test_123");
+        when(paymentRepository.save(any(Payment.class))).thenReturn(savedPayment);
+
         PaymentIntent paymentIntent = mock(PaymentIntent.class);
         when(paymentIntent.getId()).thenReturn("pi_test_123");
         when(paymentIntent.getClientSecret()).thenReturn("secret_test_123");
@@ -349,11 +351,9 @@ class PaymentServiceTest {
             assertThat(response.getPaymentIntentId()).isEqualTo("pi_test_123");
             assertThat(response.getPaymentId()).isEqualTo(1000L);
 
-            verify(paymentRepository).save(any(Payment.class));
+            verify(paymentRepository, times(1)).save(any(Payment.class));
         }
     }
-
-    // --- TESTS POUR handleWebhook ---
 
     @Test
     void shouldThrowWhenWebhookSignatureInvalid() throws Exception {
@@ -435,41 +435,42 @@ class PaymentServiceTest {
 
     @Test
     void shouldGetPaymentsByCurrentUserWithLogging() {
-        // Given
         when(userRepository.findByEmail("client@test.com")).thenReturn(Optional.of(client));
         when(paymentRepository.findByReservationClientId(1L)).thenReturn(List.of(payment));
         when(paymentMapper.toResponse(payment)).thenReturn(new PaymentResponse());
 
-        // When
         List<PaymentResponse> list = paymentService.getPaymentsByCurrentUser("client@test.com");
 
-        // Then
         assertThat(list).hasSize(1);
         verify(paymentRepository).findByReservationClientId(1L);
     }
 
     @Test
     void shouldGetAllPaymentsWithEmptyList() {
-        // Given
         when(paymentRepository.findAll()).thenReturn(Collections.emptyList());
 
-        // When
         List<PaymentResponse> list = paymentService.getAllPayments();
 
-        // Then
         assertThat(list).isEmpty();
         verify(paymentRepository).findAll();
     }
 
-    // ✅ NOUVEAU TEST POUR LE CAS OÙ LE PAIEMENT EXISTE DÉJÀ MAIS PAS COMPLETED
     @Test
     void shouldCreatePaymentIntentWhenExistingPaymentNotCompleted() throws Exception {
         // Given
-        payment.setStatus(PaymentStatus.PENDING); // Pas COMPLETED
+        Payment existingPayment = new Payment();
+        existingPayment.setId(1000L);
+        existingPayment.setStatus(PaymentStatus.PENDING);
+        existingPayment.setReservation(reservation);
+
         when(reservationRepository.findById(100L)).thenReturn(Optional.of(reservation));
         when(contractRepository.findByReservationId(100L)).thenReturn(Optional.of(contract));
-        when(paymentRepository.findByReservationId(100L)).thenReturn(Optional.of(payment));
-        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
+        when(paymentRepository.findByReservationId(100L)).thenReturn(Optional.of(existingPayment));
+
+        Payment savedPayment = new Payment();
+        savedPayment.setId(1000L);
+        savedPayment.setExternalPaymentId("pi_test_456");
+        when(paymentRepository.save(any(Payment.class))).thenReturn(savedPayment);
 
         PaymentIntent paymentIntent = mock(PaymentIntent.class);
         when(paymentIntent.getId()).thenReturn("pi_test_456");
@@ -485,7 +486,7 @@ class PaymentServiceTest {
             // Then
             assertThat(response).isNotNull();
             assertThat(response.getPaymentIntentId()).isEqualTo("pi_test_456");
-            verify(paymentRepository, times(2)).save(any(Payment.class));
+            verify(paymentRepository, times(1)).save(any(Payment.class));
         }
     }
 }
