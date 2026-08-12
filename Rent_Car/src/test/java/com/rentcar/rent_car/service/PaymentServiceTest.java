@@ -362,6 +362,7 @@ class PaymentServiceTest {
         String signature = "invalid_signature";
 
         try (var mockedStatic = mockStatic(com.stripe.net.Webhook.class)) {
+            // ✅ Simuler une exception de signature invalide
             mockedStatic.when(() -> com.stripe.net.Webhook.constructEvent(anyString(), anyString(), anyString()))
                     .thenThrow(new com.stripe.exception.SignatureVerificationException("Invalid signature", null));
 
