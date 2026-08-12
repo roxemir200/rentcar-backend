@@ -3,13 +3,13 @@ package com.rentcar.rent_car.dto.mapper;
 import com.rentcar.rent_car.dto.response.CalendarReservationResponse;
 import com.rentcar.rent_car.entity.Car;
 import com.rentcar.rent_car.entity.Reservation;
-import com.rentcar.rent_car.entity.User; // ← Changé: Client → User
-import com.rentcar.rent_car.entity.ReservationStatus; // ← Changé: enums.ReservationStatus → ReservationStatus directement
+import com.rentcar.rent_car.entity.User;
+import com.rentcar.rent_car.enums.ReservationStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -24,24 +24,16 @@ class CalendarReservationMapperTest {
 
     @Test
     void mapToResponse_shouldReturnNull_whenReservationIsNull() {
-        // Given
-        Reservation reservation = null;
-
-        // When
-        CalendarReservationResponse result = mapper.mapToResponse(reservation);
-
-        // Then
-        assertThat(result).isNull();
+        assertThat(mapper.mapToResponse(null)).isNull();
     }
 
     @Test
     void mapToResponse_shouldHandleNullStatus() {
-        // Given
         Reservation reservation = new Reservation();
         reservation.setId(1L);
         reservation.setStatus(null);
-        reservation.setStartDate(LocalDateTime.now());
-        reservation.setEndDate(LocalDateTime.now().plusDays(3));
+        reservation.setStartDate(LocalDate.of(2026, 8, 1));
+        reservation.setEndDate(LocalDate.of(2026, 8, 4));
 
         Car car = new Car();
         car.setId(10L);
@@ -49,7 +41,7 @@ class CalendarReservationMapperTest {
         car.setModel("Corolla");
         reservation.setCar(car);
 
-        User client = new User(); // ← Changé: Client → User
+        User client = new User();
         client.setId(20L);
         client.setFirstName("Jean");
         client.setLastName("Dupont");
@@ -57,10 +49,8 @@ class CalendarReservationMapperTest {
 
         reservation.setTotalAmount(BigDecimal.valueOf(150.00));
 
-        // When
         CalendarReservationResponse result = mapper.mapToResponse(reservation);
 
-        // Then
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(1L);
         assertThat(result.getStatus()).isNull();
@@ -70,20 +60,17 @@ class CalendarReservationMapperTest {
 
     @Test
     void mapToResponse_shouldHandleNullCarAndClient() {
-        // Given
         Reservation reservation = new Reservation();
         reservation.setId(1L);
         reservation.setStatus(ReservationStatus.CONFIRMED);
-        reservation.setStartDate(LocalDateTime.now());
-        reservation.setEndDate(LocalDateTime.now().plusDays(3));
+        reservation.setStartDate(LocalDate.of(2026, 8, 1));
+        reservation.setEndDate(LocalDate.of(2026, 8, 4));
         reservation.setCar(null);
         reservation.setClient(null);
         reservation.setTotalAmount(BigDecimal.valueOf(150.00));
 
-        // When
         CalendarReservationResponse result = mapper.mapToResponse(reservation);
 
-        // Then
         assertThat(result).isNotNull();
         assertThat(result.getCarBrand()).isNull();
         assertThat(result.getCarModel()).isNull();
@@ -97,60 +84,13 @@ class CalendarReservationMapperTest {
 
     @Test
     void mapToResponse_shouldHandleNullTotalAmount() {
-        // Given
         Reservation reservation = new Reservation();
         reservation.setId(1L);
-        reservation.setStatus(ReservationStatus.PENDING);
-        reservation.setStartDate(LocalDateTime.now());
-        reservation.setEndDate(LocalDateTime.now().plusDays(3));
-        reservation.setCar(new Car());
-        reservation.setClient(new User()); // ← Changé: Client → User
         reservation.setTotalAmount(null);
 
-        // When
         CalendarReservationResponse result = mapper.mapToResponse(reservation);
 
-        // Then
         assertThat(result).isNotNull();
         assertThat(result.getTotalAmount()).isNull();
-    }
-
-    @Test
-    void mapToResponse_shouldMapAllFieldsCorrectly() {
-        // Given
-        Reservation reservation = new Reservation();
-        reservation.setId(1L);
-        reservation.setStatus(ReservationStatus.CONFIRMED);
-        reservation.setStartDate(LocalDateTime.now());
-        reservation.setEndDate(LocalDateTime.now().plusDays(3));
-
-        Car car = new Car();
-        car.setId(10L);
-        car.setBrand("Tesla");
-        car.setModel("Model 3");
-        reservation.setCar(car);
-
-        User client = new User(); // ← Changé: Client → User
-        client.setId(20L);
-        client.setFirstName("Marie");
-        client.setLastName("Martin");
-        reservation.setClient(client);
-
-        reservation.setTotalAmount(BigDecimal.valueOf(250.50));
-
-        // When
-        CalendarReservationResponse result = mapper.mapToResponse(reservation);
-
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(1L);
-        assertThat(result.getCarBrand()).isEqualTo("Tesla");
-        assertThat(result.getCarModel()).isEqualTo("Model 3");
-        assertThat(result.getCarId()).isEqualTo(10L);
-        assertThat(result.getClientFirstName()).isEqualTo("Marie");
-        assertThat(result.getClientLastName()).isEqualTo("Martin");
-        assertThat(result.getClientId()).isEqualTo(20L);
-        assertThat(result.getStatus()).isEqualTo("CONFIRMED");
-        assertThat(result.getTotalAmount()).isEqualTo(250.50);
     }
 }

@@ -1,5 +1,6 @@
 package com.rentcar.rent_car.service;
 
+import com.rentcar.rent_car.dto.response.ConversationResponse;
 import com.rentcar.rent_car.entity.ChatMessage;
 import com.rentcar.rent_car.entity.User;
 import com.rentcar.rent_car.repository.ChatMessageRepository;
@@ -12,8 +13,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
+import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -65,6 +69,8 @@ class ChatServiceTest {
         message.setReceiverId(2L);
         message.setConversationId("conv-1-2");
         message.setMessage("Bonjour, je souhaite réserver.");
+        message.setTimestamp(LocalDateTime.now());
+        message.setIsRead(false);
     }
 
     @Test
@@ -123,5 +129,40 @@ class ChatServiceTest {
 
         assertThat(message.getIsRead()).isTrue();
         verify(chatMessageRepository).saveAll(anyList());
+    }
+
+    @Test
+    void shouldGetUnreadCount() {
+        when(chatMessageRepository.countByReceiverIdAndIsReadFalse(1L)).thenReturn(5L);
+
+        Long count = chatService.getUnreadCount(1L);
+
+        assertThat(count).isEqualTo(5L);
+    }
+
+    @Test
+    void shouldGetConversations_whenEmpty() {
+        when(chatMessageRepository.findBySenderIdOrReceiverIdOrderByTimestampAsc(1L, 1L))
+                .thenReturn(Collections.emptyList());
+
+        List<ConversationResponse> result = chatService.getConversations(1L);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void shouldGetConversations_whenPresent() {
+        when(chatMessageRepository.findBySenderIdOrReceiverIdOrderByTimestampAsc(1L, 1L))
+                .thenReturn(List.of(message));
+        when(userRepository.findAllById(Set.of(2L))).thenReturn(List.of(recipient));
+        when(userConnectionService.isUserOnline(2L)).thenReturn(true);
+
+        List<ConversationResponse> result = chatService.getConversations(1L);
+
+        assertThat(result).hasSize(1);
+        ConversationResponse resp = result.get(0);
+        assertThat(resp.getOtherUserId()).isEqualTo(2L);
+        assertThat(resp.getOtherUserName()).isEqualTo("Bob Admin");
+        assertThat(resp.isOnline()).isTrue();
     }
 }
