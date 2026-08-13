@@ -23,6 +23,8 @@ import com.rentcar.rent_car.repository.ReservationRepository;
 import com.rentcar.rent_car.repository.UserRepository;
 import com.rentcar.rent_car.service.imp.PaymentServiceImpl;
 
+import com.stripe.exception.ApiConnectionException;
+import com.stripe.exception.StripeException;
 import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
@@ -181,24 +183,6 @@ class PaymentServiceTest {
                 .hasMessageContaining("déjà payée");
     }
 
-    @Test
-    void shouldThrowWhenStripeFails() throws Exception {
-        // Given
-        when(reservationRepository.findById(100L)).thenReturn(Optional.of(reservation));
-        when(contractRepository.findByReservationId(100L)).thenReturn(Optional.of(contract));
-        when(paymentRepository.findByReservationId(100L)).thenReturn(Optional.empty());
-
-        try (var mockedStatic = mockStatic(com.stripe.model.PaymentIntent.class)) {
-            mockedStatic.when(() -> com.stripe.model.PaymentIntent.create(any(PaymentIntentCreateParams.class)))
-                    .thenThrow(new com.stripe.exception.StripeException("Stripe error"));
-
-            // When & Then
-            assertThatThrownBy(() -> paymentService.createPaymentIntent(100L))
-                    .isInstanceOf(RuntimeException.class)
-                    .hasMessageContaining("Erreur lors du traitement du paiement");
-        }
-    }
-
     // --- GET PAYMENTS TESTS ---
 
     @Test
@@ -250,26 +234,24 @@ class PaymentServiceTest {
                 .hasMessageContaining("Client non trouvé");
     }
 
+    // ✅ TEST CORRIGÉ: StripeException avec ApiConnectionException (classe concrète)
     @Test
-    void shouldThrowWhenEmailIsNull() {
+    void shouldThrowWhenStripeFails() throws Exception {
         // Given
-        String email = null;
+        when(reservationRepository.findById(100L)).thenReturn(Optional.of(reservation));
+        when(contractRepository.findByReservationId(100L)).thenReturn(Optional.of(contract));
+        when(paymentRepository.findByReservationId(100L)).thenReturn(Optional.empty());
 
-        // When & Then
-        assertThatThrownBy(() -> paymentService.getPaymentsByCurrentUser(email))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Email client invalide");
-    }
+        try (var mockedStatic = mockStatic(com.stripe.model.PaymentIntent.class)) {
+            // ✅ Utilisation d'une sous-classe concrète de StripeException
+            mockedStatic.when(() -> com.stripe.model.PaymentIntent.create(any(PaymentIntentCreateParams.class)))
+                    .thenThrow(new ApiConnectionException("Connection error"));
 
-    @Test
-    void shouldThrowWhenEmailIsBlank() {
-        // Given
-        String email = "   ";
-
-        // When & Then
-        assertThatThrownBy(() -> paymentService.getPaymentsByCurrentUser(email))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Email client invalide");
+            // When & Then
+            assertThatThrownBy(() -> paymentService.createPaymentIntent(100L))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessageContaining("Erreur lors du traitement du paiement");
+        }
     }
 
     // --- REFUND PAYMENT TESTS ---
@@ -421,6 +403,7 @@ class PaymentServiceTest {
 
     // --- TESTS POUR handleWebhook ---
 
+    // ✅ TEST CORRIGÉ: Utilisation de getRawJson() simple
     @Test
     void shouldHandleUnknownWebhookEvent() throws Exception {
         // Given
@@ -430,10 +413,9 @@ class PaymentServiceTest {
         try (var mockedStatic = mockStatic(com.stripe.net.Webhook.class)) {
             Event event = mock(Event.class);
             when(event.getType()).thenReturn("unknown.event.type");
-
-            var deserializer = mock(Event.DataObjectDeserializer.class);
-            when(event.getDataObjectDeserializer()).thenReturn(deserializer);
-            when(deserializer.getRawJson()).thenReturn(payload);
+            
+            // ✅ Utiliser getRawJson() directement
+            when(event.getRawJson()).thenReturn(payload);
 
             mockedStatic.when(() -> com.stripe.net.Webhook.constructEvent(anyString(), anyString(), anyString()))
                     .thenReturn(event);
@@ -576,5 +558,29 @@ class PaymentServiceTest {
             assertThat(response.getPaymentIntentId()).isEqualTo("pi_test_456");
             verify(paymentRepository, times(1)).save(any(Payment.class));
         }
+    }
+
+    // ✅ NOUVEAU TEST: getPaymentsByCurrentUser avec email null
+    @Test
+    void shouldThrowWhenEmailIsNull() {
+        // Given
+        String email = null;
+
+        // When & Then
+        assertThatThrownBy(() -> paymentService.getPaymentsByCurrentUser(email))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Email client invalide");
+    }
+
+    // ✅ NOUVEAU TEST: getPaymentsByCurrentUser avec email vide
+    @Test
+    void shouldThrowWhenEmailIsBlank() {
+        // Given
+        String email = "   ";
+
+        // When & Then
+        assertThatThrownBy(() -> paymentService.getPaymentsByCurrentUser(email))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Email client invalide");
     }
 }
