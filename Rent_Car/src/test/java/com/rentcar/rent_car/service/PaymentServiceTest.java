@@ -24,7 +24,7 @@ import com.rentcar.rent_car.repository.UserRepository;
 import com.rentcar.rent_car.service.imp.PaymentServiceImpl;
 
 import com.stripe.exception.ApiConnectionException;
-import com.stripe.exception.StripeException;
+import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
@@ -234,7 +234,6 @@ class PaymentServiceTest {
                 .hasMessageContaining("Client non trouvé");
     }
 
-    // ✅ TEST CORRIGÉ: StripeException avec ApiConnectionException (classe concrète)
     @Test
     void shouldThrowWhenStripeFails() throws Exception {
         // Given
@@ -243,7 +242,6 @@ class PaymentServiceTest {
         when(paymentRepository.findByReservationId(100L)).thenReturn(Optional.empty());
 
         try (var mockedStatic = mockStatic(com.stripe.model.PaymentIntent.class)) {
-            // ✅ Utilisation d'une sous-classe concrète de StripeException
             mockedStatic.when(() -> com.stripe.model.PaymentIntent.create(any(PaymentIntentCreateParams.class)))
                     .thenThrow(new ApiConnectionException("Connection error"));
 
@@ -403,7 +401,7 @@ class PaymentServiceTest {
 
     // --- TESTS POUR handleWebhook ---
 
-    // ✅ TEST CORRIGÉ: Utilisation de getRawJson() simple
+    // ✅ TEST CORRIGÉ: Suppression de getRawJson()
     @Test
     void shouldHandleUnknownWebhookEvent() throws Exception {
         // Given
@@ -413,14 +411,15 @@ class PaymentServiceTest {
         try (var mockedStatic = mockStatic(com.stripe.net.Webhook.class)) {
             Event event = mock(Event.class);
             when(event.getType()).thenReturn("unknown.event.type");
-            
-            // ✅ Utiliser getRawJson() directement
-            when(event.getRawJson()).thenReturn(payload);
 
             mockedStatic.when(() -> com.stripe.net.Webhook.constructEvent(anyString(), anyString(), anyString()))
                     .thenReturn(event);
 
-            when(objectMapper.readTree(payload)).thenReturn(mock(tools.jackson.databind.JsonNode.class));
+            // ✅ Simuler le JSON parsing avec un mock simple
+            tools.jackson.databind.JsonNode mockNode = mock(tools.jackson.databind.JsonNode.class);
+            when(mockNode.get("id")).thenReturn(mockNode);
+            when(mockNode.asText()).thenReturn("pi_test_123");
+            when(objectMapper.readTree(anyString())).thenReturn(mockNode);
 
             // When
             paymentService.handleWebhook(payload, signature);
@@ -438,7 +437,7 @@ class PaymentServiceTest {
 
         try (var mockedStatic = mockStatic(com.stripe.net.Webhook.class)) {
             mockedStatic.when(() -> com.stripe.net.Webhook.constructEvent(anyString(), anyString(), anyString()))
-                    .thenThrow(new com.stripe.exception.SignatureVerificationException("Invalid signature", null));
+                    .thenThrow(new SignatureVerificationException("Invalid signature", null));
 
             // When & Then
             assertThatThrownBy(() -> paymentService.handleWebhook(payload, signature))
@@ -582,5 +581,69 @@ class PaymentServiceTest {
         assertThatThrownBy(() -> paymentService.getPaymentsByCurrentUser(email))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Email client invalide");
+    }
+
+    // ✅ NOUVEAU TEST: webhook avec paiement succeeded
+    @Test
+    void shouldHandleWebhookPaymentSucceeded() throws Exception {
+        // Given
+        String payload = "{\"id\":\"pi_stripe_123\"}";
+        String signature = "test_signature";
+
+        try (var mockedStatic = mockStatic(com.stripe.net.Webhook.class)) {
+            Event event = mock(Event.class);
+            when(event.getType()).thenReturn("payment_intent.succeeded");
+
+            mockedStatic.when(() -> com.stripe.net.Webhook.constructEvent(anyString(), anyString(), anyString()))
+                    .thenReturn(event);
+
+            tools.jackson.databind.JsonNode mockNode = mock(tools.jackson.databind.JsonNode.class);
+            when(mockNode.get("id")).thenReturn(mockNode);
+            when(mockNode.asText()).thenReturn("pi_stripe_123");
+            when(objectMapper.readTree(anyString())).thenReturn(mockNode);
+
+            when(paymentRepository.findByExternalPaymentId("pi_stripe_123")).thenReturn(Optional.of(payment));
+            when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
+            when(paymentMapper.toResponse(any(Payment.class))).thenReturn(new PaymentResponse());
+            when(userRepository.findByRole(Role.ADMIN)).thenReturn(List.of(admin));
+
+            // When
+            paymentService.handleWebhook(payload, signature);
+
+            // Then
+            verify(paymentRepository).save(any(Payment.class));
+        }
+    }
+
+    // ✅ NOUVEAU TEST: webhook avec paiement failed
+    @Test
+    void shouldHandleWebhookPaymentFailed() throws Exception {
+        // Given
+        String payload = "{\"id\":\"pi_stripe_123\"}";
+        String signature = "test_signature";
+
+        try (var mockedStatic = mockStatic(com.stripe.net.Webhook.class)) {
+            Event event = mock(Event.class);
+            when(event.getType()).thenReturn("payment_intent.payment_failed");
+
+            mockedStatic.when(() -> com.stripe.net.Webhook.constructEvent(anyString(), anyString(), anyString()))
+                    .thenReturn(event);
+
+            tools.jackson.databind.JsonNode mockNode = mock(tools.jackson.databind.JsonNode.class);
+            when(mockNode.get("id")).thenReturn(mockNode);
+            when(mockNode.asText()).thenReturn("pi_stripe_123");
+            when(objectMapper.readTree(anyString())).thenReturn(mockNode);
+
+            when(paymentRepository.findByExternalPaymentId("pi_stripe_123")).thenReturn(Optional.of(payment));
+            when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
+            when(paymentMapper.toResponse(any(Payment.class))).thenReturn(new PaymentResponse());
+            when(userRepository.findByRole(Role.ADMIN)).thenReturn(List.of(admin));
+
+            // When
+            paymentService.handleWebhook(payload, signature);
+
+            // Then
+            verify(paymentRepository).save(any(Payment.class));
+        }
     }
 }
