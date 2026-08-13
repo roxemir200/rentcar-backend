@@ -66,24 +66,27 @@ class SecurityConfigTest {
         verify(authConfig).getAuthenticationManager();
     }
 
-    @Test
-    void shouldThrowWhenAuthenticationManagerIsNull() throws Exception {
-        when(authConfig.getAuthenticationManager()).thenReturn(null);
+   @Test
+void shouldThrowWhenAuthenticationManagerIsNull() throws Exception {
+    when(authConfig.getAuthenticationManager()).thenReturn(null);
 
-        assertThatThrownBy(() -> securityConfig.authenticationManager(authConfig))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("AuthenticationManager non disponible");
-    }
+    // ✅ Correction: S'attendre à IllegalStateException
+    assertThatThrownBy(() -> securityConfig.authenticationManager(authConfig))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("AuthenticationManager non disponible");
+}
 
-    @Test
-    void shouldHandleAuthenticationManagerException() throws Exception {
-        when(authConfig.getAuthenticationManager())
-                .thenThrow(new RuntimeException("Configuration error"));
+@Test
+void shouldHandleAuthenticationManagerException() throws Exception {
+    // ✅ Simuler une autre exception (comme une IOException)
+    when(authConfig.getAuthenticationManager())
+            .thenThrow(new RuntimeException("Configuration error"));
 
-        assertThatThrownBy(() -> securityConfig.authenticationManager(authConfig))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Erreur de configuration de l'authentification");
-    }
+    // ✅ Correction: S'attendre à RuntimeException
+    assertThatThrownBy(() -> securityConfig.authenticationManager(authConfig))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessageContaining("Erreur de configuration de l'authentification");
+}
 
     @Test
     void shouldTestInternalDispatchMatcher() {

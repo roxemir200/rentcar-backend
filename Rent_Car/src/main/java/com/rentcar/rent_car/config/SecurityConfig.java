@@ -222,24 +222,29 @@ public class SecurityConfig {
     /**
      * ✅ AuthenticationManager sécurisé avec validation
      */
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
-        log.info("🔐 Initialisation de AuthenticationManager");
+  @Bean
+public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+    log.info("🔐 Initialisation de AuthenticationManager");
+    
+    try {
+        AuthenticationManager authManager = authConfig.getAuthenticationManager();
         
-        try {
-            AuthenticationManager authManager = authConfig.getAuthenticationManager();
-            
-            if (authManager == null) {
-                log.error("❌ AuthenticationManager non initialisé");
-                throw new IllegalStateException("AuthenticationManager non disponible");
-            }
-            
-            log.info("✅ AuthenticationManager initialisé avec succès");
-            return authManager;
-            
-        } catch (Exception e) {
-            log.error("❌ Erreur lors de l'initialisation de AuthenticationManager: {}", e.getMessage());
-            throw new RuntimeException("Erreur de configuration de l'authentification", e);
+        if (authManager == null) {
+            log.error("❌ AuthenticationManager non initialisé");
+            // ✅ CORRECTION: Lancer IllegalStateException au lieu de RuntimeException
+            throw new IllegalStateException("AuthenticationManager non disponible");
         }
+        
+        log.info("✅ AuthenticationManager initialisé avec succès");
+        return authManager;
+        
+    } catch (IllegalStateException e) {
+        // ✅ Re-lancer l'IllegalStateException
+        throw e;
+    } catch (Exception e) {
+        log.error("❌ Erreur lors de l'initialisation de AuthenticationManager: {}", e.getMessage());
+        // ✅ CORRECTION: Lancer RuntimeException avec le bon message
+        throw new RuntimeException("Erreur de configuration de l'authentification", e);
     }
+}
 }
