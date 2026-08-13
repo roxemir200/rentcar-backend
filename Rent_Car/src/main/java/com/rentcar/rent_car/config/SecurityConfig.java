@@ -22,10 +22,14 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -35,14 +39,30 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
 
+    // ✅ Origines autorisées (à adapter selon l'environnement)
+    private static final List<String> ALLOWED_ORIGINS = Arrays.asList(
+            "http://localhost:5173",
+            "http://localhost:3000"
+            // Ajouter les domaines de production ici
+    );
+
+    // ✅ Méthodes HTTP autorisées
+    private static final List<String> ALLOWED_METHODS = Arrays.asList(
+            "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
+    );
+
+    // ✅ Headers autorisés
+    private static final List<String> ALLOWED_HEADERS = Arrays.asList(
+            "Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"
+    );
+
+    // ✅ Headers exposés
+    private static final List<String> EXPOSED_HEADERS = Arrays.asList(
+            "Authorization", "Content-Disposition"
+    );
+
     /**
-     * RequestMatcher qui ne matche QUE les dispatch types INTERNES à Tomcat/Spring :
-     * ASYNC (SseEmitter finalisation, ...), ERROR, FORWARD.
-     * <p>
-     * Ces dispatchs sont INTERNES : l'authentification / autorisation a déjà été
-     * validée sur la requête REQUEST initiale. Les revalider produit systématiquement
-     * AuthorizationDeniedException sur les flux SSE déconnectés, couplé à
-     * "response is already committed".
+     * RequestMatcher pour les dispatches internes (ASYNC, ERROR, FORWARD)
      */
     private static final RequestMatcher INTERNAL_DISPATCH_MATCHER =
             request -> {
@@ -53,16 +73,11 @@ public class SecurityConfig {
             };
 
     /**
-     * Point d'entrée d'authentification personnalisé.
-     * - Si la réponse est déjà COMMITTÉE (flux SSE en cours) : on log en DEBUG
-     *   (pas ERROR) et on ne touche PAS à la réponse pour éviter
-     *   "Unable to handle ... response is already committed".
-     * - Sinon : réponse JSON REST cohérente 401.
+     * Point d'entrée d'authentification personnalisé
      */
     private final AuthenticationEntryPoint restAuthenticationEntryPoint = (request, response, authException) -> {
         if (response.isCommitted()) {
-            log.debug("Authentication failed but response already committed (SSE stream likely). Silently ignoring. URI={}",
-                    request.getRequestURI());
+            log.debug("Authentication failed but response already committed. URI={}", request.getRequestURI());
             return;
         }
         writeJsonError(response, HttpServletResponse.SC_UNAUTHORIZED,
@@ -70,14 +85,11 @@ public class SecurityConfig {
     };
 
     /**
-     * Handler d'accès refusé personnalisé (même logique que entryPoint).
-     * - Réponse COMMITTÉE (ex: SSE async dispatch) : DEBUG silencieux
-     * - Sinon : JSON REST cohérent 403.
+     * Handler d'accès refusé personnalisé
      */
     private final AccessDeniedHandler restAccessDeniedHandler = (request, response, accessDeniedException) -> {
         if (response.isCommitted()) {
-            log.debug("Access denied but response already committed (SSE async dispatch likely). Silently ignoring. URI={}",
-                    request.getRequestURI());
+            log.debug("Access denied but response already committed. URI={}", request.getRequestURI());
             return;
         }
         writeJsonError(response, HttpServletResponse.SC_FORBIDDEN,
@@ -111,27 +123,34 @@ public class SecurityConfig {
         return sb.toString();
     }
 
+    /**
+     * ✅ Configuration CORS sécurisée
+     */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(ALLOWED_ORIGINS);
+        config.setAllowedMethods(ALLOWED_METHODS);
+        config.setAllowedHeaders(ALLOWED_HEADERS);
+        config.setExposedHeaders(EXPOSED_HEADERS);
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(request -> {
-                    var config = new org.springframework.web.cors.CorsConfiguration();
-                    config.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
-                    config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                    config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
-                    config.setExposedHeaders(Arrays.asList("Authorization"));
-                    config.setAllowCredentials(true);
-                    config.setMaxAge(3600L);
-                    return config;
-                }))
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
-
                 .authorizeHttpRequests(auth -> auth
-                        // ⭐ 1ère règle : autoriser IMMÉDIATEMENT tous les dispatches INTERNES
-                        // ASYNC/ERROR/FORWARD. Empêche AuthorizationDeniedException sur SSE.
+                        // ✅ Dispatches internes
                         .requestMatchers(INTERNAL_DISPATCH_MATCHER).permitAll()
-
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                         // ========== ROUTES PUBLIQUES ==========
                         .requestMatchers("/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
@@ -153,7 +172,6 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/sockjs/**").permitAll()
-
                         .requestMatchers(HttpMethod.PUT, "/api/auth/profile").permitAll()
 
                         // ========== ROUTES ADMIN ==========
@@ -173,7 +191,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/payments/my-payments").hasRole("CLIENT")
                         .requestMatchers("/api/chat/**").authenticated()
 
-                        // ========== ROUTES AUTHENTIFIÉES (Client ou Admin) ==========
+                        // ========== ROUTES AUTHENTIFIÉES ==========
                         .requestMatchers(HttpMethod.GET, "/api/contracts/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/reservations/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/reservations/**").authenticated()
@@ -182,7 +200,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/me").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/auth/change-password").authenticated()
 
-                        // ========== TOUT LE RESTE ==========
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex
@@ -202,8 +219,27 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * ✅ AuthenticationManager sécurisé avec validation
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
-        return authConfig.getAuthenticationManager();
+        log.info("🔐 Initialisation de AuthenticationManager");
+        
+        try {
+            AuthenticationManager authManager = authConfig.getAuthenticationManager();
+            
+            if (authManager == null) {
+                log.error("❌ AuthenticationManager non initialisé");
+                throw new IllegalStateException("AuthenticationManager non disponible");
+            }
+            
+            log.info("✅ AuthenticationManager initialisé avec succès");
+            return authManager;
+            
+        } catch (Exception e) {
+            log.error("❌ Erreur lors de l'initialisation de AuthenticationManager: {}", e.getMessage());
+            throw new RuntimeException("Erreur de configuration de l'authentification", e);
+        }
     }
 }
