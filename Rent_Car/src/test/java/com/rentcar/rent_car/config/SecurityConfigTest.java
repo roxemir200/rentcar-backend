@@ -14,15 +14,21 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.DefaultSecurityFilterChain;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -48,7 +54,6 @@ class SecurityConfigTest {
         assertThat(encoder.encode("password")).isNotBlank();
     }
 
-    // ✅ TEST MODIFIÉ : AuthenticationManager avec validation
     @Test
     void shouldCreateAuthenticationManagerBean() throws Exception {
         AuthenticationManager manager = mock(AuthenticationManager.class);
@@ -61,7 +66,6 @@ class SecurityConfigTest {
         verify(authConfig).getAuthenticationManager();
     }
 
-    // ✅ NOUVEAU TEST : AuthenticationManager null
     @Test
     void shouldThrowWhenAuthenticationManagerIsNull() throws Exception {
         when(authConfig.getAuthenticationManager()).thenReturn(null);
@@ -71,7 +75,6 @@ class SecurityConfigTest {
                 .hasMessageContaining("AuthenticationManager non disponible");
     }
 
-    // ✅ NOUVEAU TEST : AuthenticationManager avec exception
     @Test
     void shouldHandleAuthenticationManagerException() throws Exception {
         when(authConfig.getAuthenticationManager())
@@ -82,34 +85,28 @@ class SecurityConfigTest {
                 .hasMessageContaining("Erreur de configuration de l'authentification");
     }
 
-    // ✅ TEST MODIFIÉ : Test du matcher interne
     @Test
     void shouldTestInternalDispatchMatcher() {
         RequestMatcher matcher = (RequestMatcher) ReflectionTestUtils.getField(
                 SecurityConfig.class, "INTERNAL_DISPATCH_MATCHER");
 
-        // ✅ ASYNC dispatch
         MockHttpServletRequest requestAsync = new MockHttpServletRequest();
         requestAsync.setDispatcherType(DispatcherType.ASYNC);
         assertThat(matcher.matches(requestAsync)).isTrue();
 
-        // ✅ ERROR dispatch
         MockHttpServletRequest requestError = new MockHttpServletRequest();
         requestError.setDispatcherType(DispatcherType.ERROR);
         assertThat(matcher.matches(requestError)).isTrue();
 
-        // ✅ FORWARD dispatch
         MockHttpServletRequest requestForward = new MockHttpServletRequest();
         requestForward.setDispatcherType(DispatcherType.FORWARD);
         assertThat(matcher.matches(requestForward)).isTrue();
 
-        // ✅ NORMAL REQUEST
         MockHttpServletRequest requestNormal = new MockHttpServletRequest();
         requestNormal.setDispatcherType(DispatcherType.REQUEST);
         assertThat(matcher.matches(requestNormal)).isFalse();
     }
 
-    // ✅ TEST MODIFIÉ : EntryPoint - réponse non commitée
     @Test
     void shouldHandleRestAuthenticationEntryPoint_whenResponseIsUncommitted() throws Exception {
         AuthenticationEntryPoint entryPoint = (AuthenticationEntryPoint) ReflectionTestUtils.getField(
@@ -127,7 +124,6 @@ class SecurityConfigTest {
         assertThat(response.getContentAsString()).contains("\"success\":false");
     }
 
-    // ✅ TEST MODIFIÉ : EntryPoint - réponse commitée
     @Test
     void shouldHandleRestAuthenticationEntryPoint_whenResponseIsCommitted() throws Exception {
         AuthenticationEntryPoint entryPoint = (AuthenticationEntryPoint) ReflectionTestUtils.getField(
@@ -144,7 +140,6 @@ class SecurityConfigTest {
         verify(response, never()).getWriter();
     }
 
-    // ✅ TEST MODIFIÉ : AccessDenied - réponse non commitée
     @Test
     void shouldHandleRestAccessDeniedHandler_whenResponseIsUncommitted() throws Exception {
         AccessDeniedHandler accessDeniedHandler = (AccessDeniedHandler) ReflectionTestUtils.getField(
@@ -162,7 +157,6 @@ class SecurityConfigTest {
         assertThat(response.getContentAsString()).contains("\"success\":false");
     }
 
-    // ✅ TEST MODIFIÉ : AccessDenied - réponse commitée
     @Test
     void shouldHandleRestAccessDeniedHandler_whenResponseIsCommitted() throws Exception {
         AccessDeniedHandler accessDeniedHandler = (AccessDeniedHandler) ReflectionTestUtils.getField(
@@ -179,31 +173,33 @@ class SecurityConfigTest {
         verify(response, never()).getWriter();
     }
 
-    // ✅ TEST CONSERVÉ : Escape JSON
     @Test
     void shouldTestEscapeJsonMethod() throws Exception {
         java.lang.reflect.Method escapeMethod = SecurityConfig.class.getDeclaredMethod("escapeJson", String.class);
         escapeMethod.setAccessible(true);
 
-        // Test null
         assertThat(escapeMethod.invoke(null, (Object) null)).isEqualTo("null");
-
-        // Test chaîne avec caractères spéciaux
         assertThat(escapeMethod.invoke(null, "hello \"world\"\n\r\t\\ \u0001"))
                 .isEqualTo("\"hello \\\"world\\\"\\n\\r\\t\\\\ \\u0001\"");
-
-        // Test chaîne normale
         assertThat(escapeMethod.invoke(null, "simple text"))
                 .isEqualTo("\"simple text\"");
     }
 
-    // ✅ NOUVEAU TEST : Configuration CORS
+    // ✅ TEST CORRIGÉ: Configuration CORS
     @Test
     void shouldCreateCorsConfigurationSource() {
         var corsSource = securityConfig.corsConfigurationSource();
         assertThat(corsSource).isNotNull();
+        assertThat(corsSource).isInstanceOf(UrlBasedCorsConfigurationSource.class);
 
-        var corsConfig = corsSource.getCorsConfiguration("/**");
+        UrlBasedCorsConfigurationSource source = (UrlBasedCorsConfigurationSource) corsSource;
+
+        // ✅ Correction: Utiliser getCorsConfigurations() qui retourne un Map
+        var corsConfigs = source.getCorsConfigurations();
+        assertThat(corsConfigs).isNotEmpty();
+
+        // Récupérer la configuration pour le pattern "/**"
+        CorsConfiguration corsConfig = corsConfigs.get("/**");
         assertThat(corsConfig).isNotNull();
         assertThat(corsConfig.getAllowedOrigins()).contains("http://localhost:5173");
         assertThat(corsConfig.getAllowedMethods()).contains("GET", "POST", "PUT", "DELETE", "OPTIONS");
@@ -211,7 +207,6 @@ class SecurityConfigTest {
         assertThat(corsConfig.getAllowCredentials()).isTrue();
     }
 
-    // ✅ NOUVEAU TEST : PasswordEncoder
     @Test
     void shouldEncodePasswordCorrectly() {
         PasswordEncoder encoder = securityConfig.passwordEncoder();
@@ -223,17 +218,30 @@ class SecurityConfigTest {
         assertThat(encoder.matches(rawPassword, encodedPassword)).isTrue();
     }
 
-    // ✅ NOUVEAU TEST : SecurityFilterChain
+    // ✅ TEST CORRIGÉ: SecurityFilterChain
     @Test
-    void shouldBuildSecurityFilterChain() throws Exception {
-        // Ce test vérifie que le filtre peut être construit sans erreur
-        // Note: Dans un test réel, il faudrait utiliser @WebMvcTest ou mock HttpSecurity
-        var http = org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers
-                .springSecurity(org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup())
-                .getSecurityFilterChain();
-        
-        // Vérification simple que la méthode ne lève pas d'exception
-        // Dans un environnement de test complet, on pourrait tester plus en détail
-        assertThat(http).isNotNull();
+    void shouldNotThrowWhenBuildingSecurityFilterChain() throws Exception {
+        // ✅ Correction: Utiliser HttpSecurity mocké avec le bon type de retour
+        HttpSecurity http = mock(HttpSecurity.class);
+
+        // ✅ Mock des méthodes avec le bon chaînage
+        when(http.cors(any())).thenReturn(http);
+        when(http.csrf(any())).thenReturn(http);
+        when(http.authorizeHttpRequests(any())).thenReturn(http);
+        when(http.exceptionHandling(any())).thenReturn(http);
+        when(http.sessionManagement(any())).thenReturn(http);
+        when(http.addFilterBefore(any(), any())).thenReturn(http);
+
+        // ✅ CORRECTION: http.build() retourne DefaultSecurityFilterChain
+        DefaultSecurityFilterChain mockFilterChain = mock(DefaultSecurityFilterChain.class);
+        when(http.build()).thenReturn(mockFilterChain);
+
+        // Appel de la méthode
+        SecurityFilterChain filterChain = securityConfig.filterChain(http);
+
+        // Vérification
+        assertThat(filterChain).isNotNull();
+        assertThat(filterChain).isEqualTo(mockFilterChain);
+        verify(http).build();
     }
 }
