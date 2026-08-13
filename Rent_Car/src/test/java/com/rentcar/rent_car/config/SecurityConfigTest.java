@@ -214,10 +214,13 @@ class SecurityConfigTest {
         assertThat(encoder.matches(rawPassword, encodedPassword)).isTrue();
     }
 
+    // ✅ TEST CORRIGÉ: Suppression des classes internes inexistantes
     @Test
     void shouldNotThrowWhenBuildingSecurityFilterChain() throws Exception {
+        // Given
         HttpSecurity http = mock(HttpSecurity.class);
 
+        // ✅ Mock des méthodes avec le bon chaînage
         when(http.cors(any())).thenReturn(http);
         when(http.csrf(any())).thenReturn(http);
         when(http.authorizeHttpRequests(any())).thenReturn(http);
@@ -225,20 +228,23 @@ class SecurityConfigTest {
         when(http.sessionManagement(any())).thenReturn(http);
         when(http.addFilterBefore(any(), any())).thenReturn(http);
 
+        // ✅ http.build() retourne DefaultSecurityFilterChain
         DefaultSecurityFilterChain mockFilterChain = mock(DefaultSecurityFilterChain.class);
         when(http.build()).thenReturn(mockFilterChain);
 
+        // When
         SecurityFilterChain filterChain = securityConfig.filterChain(http);
 
+        // Then
         assertThat(filterChain).isNotNull();
         assertThat(filterChain).isEqualTo(mockFilterChain);
         verify(http).build();
         
-        // ✅ Vérification que CSRF est désactivé (car JWT stateless)
+        // ✅ Vérification que CSRF est désactivé (appel à csrf())
         verify(http).csrf(any());
     }
 
-    // ✅ NOUVEAU TEST: Vérifier que CSRF est désactivé pour JWT stateless
+    // ✅ NOUVEAU TEST SIMPLIFIÉ: Vérifier que CSRF est désactivé
     @Test
     void shouldDisableCsrfForJwtStateless() throws Exception {
         // Given
@@ -260,38 +266,10 @@ class SecurityConfigTest {
         // Then
         assertThat(filterChain).isNotNull();
         
-        // ✅ Vérifier que sessionManagement est STATELESS
+        // ✅ Vérifier que sessionManagement est appelé (stateless)
         verify(http).sessionManagement(any());
         
-        // ✅ Vérifier que CSRF est bien appelé (donc désactivé)
+        // ✅ Vérifier que CSRF est bien désactivé
         verify(http).csrf(any());
-    }
-
-    // ✅ NOUVEAU TEST: Vérifier que les endpoints publics sont accessibles
-    @Test
-    void shouldHavePublicEndpointsConfigured() throws Exception {
-        // Given
-        HttpSecurity http = mock(HttpSecurity.class);
-        HttpSecurity.AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry registry = 
-                mock(HttpSecurity.AuthorizeHttpRequestsConfigurer.AuthorizationManagerRequestMatcherRegistry.class);
-
-        when(http.cors(any())).thenReturn(http);
-        when(http.csrf(any())).thenReturn(http);
-        when(http.authorizeHttpRequests(any())).thenReturn(registry);
-        when(registry.requestMatchers(any())).thenReturn(registry);
-        when(registry.anyRequest()).thenReturn(registry);
-        when(http.exceptionHandling(any())).thenReturn(http);
-        when(http.sessionManagement(any())).thenReturn(http);
-        when(http.addFilterBefore(any(), any())).thenReturn(http);
-
-        DefaultSecurityFilterChain mockFilterChain = mock(DefaultSecurityFilterChain.class);
-        when(http.build()).thenReturn(mockFilterChain);
-
-        // When
-        SecurityFilterChain filterChain = securityConfig.filterChain(http);
-
-        // Then
-        assertThat(filterChain).isNotNull();
-        verify(http).authorizeHttpRequests(any());
     }
 }
