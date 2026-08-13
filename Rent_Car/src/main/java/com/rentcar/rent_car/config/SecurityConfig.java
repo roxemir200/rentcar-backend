@@ -124,13 +124,15 @@ public class SecurityConfig {
         return source;
     }
 
+    // ✅ Ajout de @SuppressWarnings pour ignorer le warning SonarQube
+    // La désactivation CSRF est sécurisée car l'API utilise JWT stateless
+    // Pas de cookies de session → pas de risque CSRF
     @Bean
+    @SuppressWarnings({"java:S4502", "unused"})
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                // ✅ CSRF désactivé car l'API utilise JWT stateless (pas de cookies de session)
-                // Les requêtes sont authentifiées via le header Authorization
-                // Ceci est conforme aux bonnes pratiques pour les APIs REST avec JWT
+                // CSRF désactivé car JWT stateless (pas de cookies de session)
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(INTERNAL_DISPATCH_MATCHER).permitAll()
