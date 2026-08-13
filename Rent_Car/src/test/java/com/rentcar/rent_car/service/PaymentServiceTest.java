@@ -320,6 +320,8 @@ class PaymentServiceTest {
         assertThat(response.getMessage()).contains("Identifiant Stripe introuvable");
     }
 
+    // --- TESTS POUR refundPayment (SUCCÈS) ---
+
     @Test
     void shouldRefundPaymentSuccessfully() throws Exception {
         // Given
@@ -355,6 +357,7 @@ class PaymentServiceTest {
         }
     }
 
+    // ✅ TEST CORRIGÉ: Erreur Stripe avec message sécurisé
     @Test
     void shouldReturnErrorWhenRefundStripeFails() throws Exception {
         // Given
@@ -372,7 +375,8 @@ class PaymentServiceTest {
 
             // Then
             assertThat(response.isSuccess()).isFalse();
-            assertThat(response.getMessage()).contains("Échec du remboursement Stripe");
+            // ✅ CORRECTION: Message sécurisé générique
+            assertThat(response.getMessage()).contains("Échec du remboursement. Veuillez contacter le support.");
             verify(paymentRepository, never()).save(any(Payment.class));
         }
     }
@@ -401,6 +405,7 @@ class PaymentServiceTest {
         verify(paymentRepository).findAll();
     }
 
+    // ✅ TEST CORRIGÉ: Paiement existant en PENDING
     @Test
     void shouldCreatePaymentIntentWhenExistingPaymentNotCompleted() throws Exception {
         // Given
