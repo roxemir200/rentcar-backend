@@ -39,31 +39,23 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
 
-    // ✅ Origines autorisées (à adapter selon l'environnement)
     private static final List<String> ALLOWED_ORIGINS = Arrays.asList(
             "http://localhost:5173",
             "http://localhost:3000"
-            // Ajouter les domaines de production ici
     );
 
-    // ✅ Méthodes HTTP autorisées
     private static final List<String> ALLOWED_METHODS = Arrays.asList(
             "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
     );
 
-    // ✅ Headers autorisés
     private static final List<String> ALLOWED_HEADERS = Arrays.asList(
             "Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"
     );
 
-    // ✅ Headers exposés
     private static final List<String> EXPOSED_HEADERS = Arrays.asList(
             "Authorization", "Content-Disposition"
     );
 
-    /**
-     * RequestMatcher pour les dispatches internes (ASYNC, ERROR, FORWARD)
-     */
     private static final RequestMatcher INTERNAL_DISPATCH_MATCHER =
             request -> {
                 DispatcherType dt = request.getDispatcherType();
@@ -72,9 +64,6 @@ public class SecurityConfig {
                         || dt == DispatcherType.FORWARD;
             };
 
-    /**
-     * Point d'entrée d'authentification personnalisé
-     */
     private final AuthenticationEntryPoint restAuthenticationEntryPoint = (request, response, authException) -> {
         if (response.isCommitted()) {
             log.debug("Authentication failed but response already committed. URI={}", request.getRequestURI());
@@ -84,9 +73,6 @@ public class SecurityConfig {
                 "Authentification requise. Veuillez vous connecter.");
     };
 
-    /**
-     * Handler d'accès refusé personnalisé
-     */
     private final AccessDeniedHandler restAccessDeniedHandler = (request, response, accessDeniedException) -> {
         if (response.isCommitted()) {
             log.debug("Access denied but response already committed. URI={}", request.getRequestURI());
@@ -123,9 +109,6 @@ public class SecurityConfig {
         return sb.toString();
     }
 
-    /**
-     * ✅ Configuration CORS sécurisée
-     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
@@ -145,9 +128,11 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                // ✅ CSRF désactivé car l'API utilise JWT stateless (pas de cookies de session)
+                // Les requêtes sont authentifiées via le header Authorization
+                // Ceci est conforme aux bonnes pratiques pour les APIs REST avec JWT
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // ✅ Dispatches internes
                         .requestMatchers(INTERNAL_DISPATCH_MATCHER).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
@@ -219,32 +204,26 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * ✅ AuthenticationManager sécurisé avec validation
-     */
-  @Bean
-public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
-    log.info("🔐 Initialisation de AuthenticationManager");
-    
-    try {
-        AuthenticationManager authManager = authConfig.getAuthenticationManager();
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        log.info("🔐 Initialisation de AuthenticationManager");
         
-        if (authManager == null) {
-            log.error("❌ AuthenticationManager non initialisé");
-            // ✅ CORRECTION: Lancer IllegalStateException au lieu de RuntimeException
-            throw new IllegalStateException("AuthenticationManager non disponible");
+        try {
+            AuthenticationManager authManager = authConfig.getAuthenticationManager();
+            
+            if (authManager == null) {
+                log.error("❌ AuthenticationManager non initialisé");
+                throw new IllegalStateException("AuthenticationManager non disponible");
+            }
+            
+            log.info("✅ AuthenticationManager initialisé avec succès");
+            return authManager;
+            
+        } catch (IllegalStateException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("❌ Erreur lors de l'initialisation de AuthenticationManager: {}", e.getMessage());
+            throw new RuntimeException("Erreur de configuration de l'authentification", e);
         }
-        
-        log.info("✅ AuthenticationManager initialisé avec succès");
-        return authManager;
-        
-    } catch (IllegalStateException e) {
-        // ✅ Re-lancer l'IllegalStateException
-        throw e;
-    } catch (Exception e) {
-        log.error("❌ Erreur lors de l'initialisation de AuthenticationManager: {}", e.getMessage());
-        // ✅ CORRECTION: Lancer RuntimeException avec le bon message
-        throw new RuntimeException("Erreur de configuration de l'authentification", e);
     }
-}
 }

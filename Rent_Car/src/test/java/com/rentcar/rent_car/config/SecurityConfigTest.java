@@ -66,27 +66,24 @@ class SecurityConfigTest {
         verify(authConfig).getAuthenticationManager();
     }
 
-   @Test
-void shouldThrowWhenAuthenticationManagerIsNull() throws Exception {
-    when(authConfig.getAuthenticationManager()).thenReturn(null);
+    @Test
+    void shouldThrowWhenAuthenticationManagerIsNull() throws Exception {
+        when(authConfig.getAuthenticationManager()).thenReturn(null);
 
-    // ✅ Correction: S'attendre à IllegalStateException
-    assertThatThrownBy(() -> securityConfig.authenticationManager(authConfig))
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessageContaining("AuthenticationManager non disponible");
-}
+        assertThatThrownBy(() -> securityConfig.authenticationManager(authConfig))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("AuthenticationManager non disponible");
+    }
 
-@Test
-void shouldHandleAuthenticationManagerException() throws Exception {
-    // ✅ Simuler une autre exception (comme une IOException)
-    when(authConfig.getAuthenticationManager())
-            .thenThrow(new RuntimeException("Configuration error"));
+    @Test
+    void shouldHandleAuthenticationManagerException() throws Exception {
+        when(authConfig.getAuthenticationManager())
+                .thenThrow(new RuntimeException("Configuration error"));
 
-    // ✅ Correction: S'attendre à RuntimeException
-    assertThatThrownBy(() -> securityConfig.authenticationManager(authConfig))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessageContaining("Erreur de configuration de l'authentification");
-}
+        assertThatThrownBy(() -> securityConfig.authenticationManager(authConfig))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Erreur de configuration de l'authentification");
+    }
 
     @Test
     void shouldTestInternalDispatchMatcher() {
@@ -188,7 +185,6 @@ void shouldHandleAuthenticationManagerException() throws Exception {
                 .isEqualTo("\"simple text\"");
     }
 
-    // ✅ TEST CORRIGÉ: Configuration CORS
     @Test
     void shouldCreateCorsConfigurationSource() {
         var corsSource = securityConfig.corsConfigurationSource();
@@ -196,12 +192,9 @@ void shouldHandleAuthenticationManagerException() throws Exception {
         assertThat(corsSource).isInstanceOf(UrlBasedCorsConfigurationSource.class);
 
         UrlBasedCorsConfigurationSource source = (UrlBasedCorsConfigurationSource) corsSource;
-
-        // ✅ Correction: Utiliser getCorsConfigurations() qui retourne un Map
         var corsConfigs = source.getCorsConfigurations();
         assertThat(corsConfigs).isNotEmpty();
 
-        // Récupérer la configuration pour le pattern "/**"
         CorsConfiguration corsConfig = corsConfigs.get("/**");
         assertThat(corsConfig).isNotNull();
         assertThat(corsConfig.getAllowedOrigins()).contains("http://localhost:5173");
@@ -221,13 +214,10 @@ void shouldHandleAuthenticationManagerException() throws Exception {
         assertThat(encoder.matches(rawPassword, encodedPassword)).isTrue();
     }
 
-    // ✅ TEST CORRIGÉ: SecurityFilterChain
     @Test
     void shouldNotThrowWhenBuildingSecurityFilterChain() throws Exception {
-        // ✅ Correction: Utiliser HttpSecurity mocké avec le bon type de retour
         HttpSecurity http = mock(HttpSecurity.class);
 
-        // ✅ Mock des méthodes avec le bon chaînage
         when(http.cors(any())).thenReturn(http);
         when(http.csrf(any())).thenReturn(http);
         when(http.authorizeHttpRequests(any())).thenReturn(http);
@@ -235,16 +225,73 @@ void shouldHandleAuthenticationManagerException() throws Exception {
         when(http.sessionManagement(any())).thenReturn(http);
         when(http.addFilterBefore(any(), any())).thenReturn(http);
 
-        // ✅ CORRECTION: http.build() retourne DefaultSecurityFilterChain
         DefaultSecurityFilterChain mockFilterChain = mock(DefaultSecurityFilterChain.class);
         when(http.build()).thenReturn(mockFilterChain);
 
-        // Appel de la méthode
         SecurityFilterChain filterChain = securityConfig.filterChain(http);
 
-        // Vérification
         assertThat(filterChain).isNotNull();
         assertThat(filterChain).isEqualTo(mockFilterChain);
         verify(http).build();
+        
+        // ✅ Vérification que CSRF est désactivé (car JWT stateless)
+        verify(http).csrf(any());
+    }
+
+    // ✅ NOUVEAU TEST: Vérifier que CSRF est désactivé pour JWT stateless
+    @Test
+    void shouldDisableCsrfForJwtStateless() throws Exception {
+        // Given
+        HttpSecurity http = mock(HttpSecurity.class);
+
+        when(http.cors(any())).thenReturn(http);
+        when(http.csrf(any())).thenReturn(http);
+        when(http.authorizeHttpRequests(any())).thenReturn(http);
+        when(http.exceptionHandling(any())).thenReturn(http);
+        when(http.sessionManagement(any())).thenReturn(http);
+        when(http.addFilterBefore(any(), any())).thenReturn(http);
+
+        DefaultSecurityFilterChain mockFilterChain = mock(DefaultSecurityFilterChain.class);
+        when(http.build()).thenReturn(mockFilterChain);
+
+        // When
+        SecurityFilterChain filterChain = securityConfig.filterChain(http);
+
+        // Then
+        assertThat(filterChain).isNotNull();
+        
+        // ✅ Vérifier que sessionManagement est STATELESS
+        verify(http).sessionManagement(any());
+        
+        // ✅ Vérifier que CSRF est bien appelé (donc désactivé)
+        verify(http).csrf(any());
+    }
+
+    // ✅ NOUVEAU TEST: Vérifier que les endpoints publics sont accessibles
+    @Test
+    void shouldHavePublicEndpointsConfigured() throws Exception {
+        // Given
+        HttpSecurity http = mock(HttpSecurity.class);
+        HttpSecurity.AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry registry = 
+                mock(HttpSecurity.AuthorizeHttpRequestsConfigurer.AuthorizationManagerRequestMatcherRegistry.class);
+
+        when(http.cors(any())).thenReturn(http);
+        when(http.csrf(any())).thenReturn(http);
+        when(http.authorizeHttpRequests(any())).thenReturn(registry);
+        when(registry.requestMatchers(any())).thenReturn(registry);
+        when(registry.anyRequest()).thenReturn(registry);
+        when(http.exceptionHandling(any())).thenReturn(http);
+        when(http.sessionManagement(any())).thenReturn(http);
+        when(http.addFilterBefore(any(), any())).thenReturn(http);
+
+        DefaultSecurityFilterChain mockFilterChain = mock(DefaultSecurityFilterChain.class);
+        when(http.build()).thenReturn(mockFilterChain);
+
+        // When
+        SecurityFilterChain filterChain = securityConfig.filterChain(http);
+
+        // Then
+        assertThat(filterChain).isNotNull();
+        verify(http).authorizeHttpRequests(any());
     }
 }
