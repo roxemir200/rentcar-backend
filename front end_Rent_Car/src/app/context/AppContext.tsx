@@ -840,6 +840,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setUsers(prev => prev.map(u => u.id === currentUser.id ? { ...u, password: next } : u));
     return { ok: true };
   }, [currentUser]);
+  // ✅ Génère un nombre aléatoire sécurisé entre min et max
+const secureRandom = (min: number, max: number): number => {
+  const array = new Uint32Array(1);
+  crypto.getRandomValues(array);
+  return min + (array[0] % (max - min + 1));
+};
+
+// ✅ Génère un ID aléatoire sécurisé
+const secureRandomId = (prefix: string, length: number = 10): string => {
+  const array = new Uint8Array(length);
+  crypto.getRandomValues(array);
+  const id = Array.from(array)
+    .map(b => b.toString(36).padStart(2, '0'))
+    .join('')
+    .slice(0, length);
+  return `${prefix}_${id}`;
+};
 
 
 
@@ -853,33 +870,54 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [pushNotification]);
 
   const updateReservationStatus = useCallback((id: string, status: ReservationStatus, inspection?: { start?: Inspection; end?: Inspection }) => {
-    setReservations(prev => prev.map(r => {
-      if (r.id !== id) return r;
-      const updated = { ...r, status };
-      if (inspection?.start) updated.startInspection = inspection.start;
-      if (inspection?.end) updated.endInspection = inspection.end;
-      setCars(cs => cs.map(c => {
-        if (c.id !== r.carId) return c;
-        if (status === "CONFIRMED") return { ...c, status: "RESERVED" };
-        if (status === "IN_PROGRESS") return { ...c, status: "RENTED" };
-        if (status === "COMPLETED" || status === "CANCELLED") return { ...c, status: "AVAILABLE" };
-        return c;
-      }));
-      if (status === "CONFIRMED") {
-        setContracts(cts => cts.some(ct => ct.reservationId === id) ? cts : [
-          ...cts,
-          { id: nextId("ct"), number: `CONT-${new Date().toISOString().slice(0,10).replace(/-/g,"")}-${Math.floor(1000+Math.random()*9000)}`, reservationId: id, status: "DRAFT" },
-        ]);
-        setPayments(ps => ps.some(p => p.reservationId === id) ? ps : [
-          ...ps,
-          { id: nextId("p"), stripeId: `pi_${Math.random().toString(36).slice(2,12)}`, reservationId: id, amount: r.total, status: "PENDING" },
-        ]);
-        pushNotification(r.userId, "RESERVATION", "Réservation confirmée",
-          "Le contrat est prêt à être signé.", `/reservation/${id}`);
-      }
-      return updated;
+  setReservations(prev => prev.map(r => {
+    if (r.id !== id) return r;
+    const updated = { ...r, status };
+    if (inspection?.start) updated.startInspection = inspection.start;
+    if (inspection?.end) updated.endInspection = inspection.end;
+    
+    setCars(cs => cs.map(c => {
+      if (c.id !== r.carId) return c;
+      if (status === "CONFIRMED") return { ...c, status: "RESERVED" };
+      if (status === "IN_PROGRESS") return { ...c, status: "RENTED" };
+      if (status === "COMPLETED" || status === "CANCELLED") return { ...c, status: "AVAILABLE" };
+      return c;
     }));
-  }, [pushNotification]);
+
+    if (status === "CONFIRMED") {
+      // ✅ Numéro de contrat sécurisé
+      const contractNumber = `CONT-${new Date().toISOString().slice(0,10).replace(/-/g,"")}-${secureRandom(1000, 9999)}`;
+      
+      setContracts(cts => cts.some(ct => ct.reservationId === id) ? cts : [
+        ...cts,
+        { 
+          id: nextId("ct"), 
+          number: contractNumber, 
+          reservationId: id, 
+          status: "DRAFT" 
+        },
+      ]);
+
+      // ✅ ID Stripe sécurisé
+      const stripeId = secureRandomId('pi', 10);
+      
+      setPayments(ps => ps.some(p => p.reservationId === id) ? ps : [
+        ...ps,
+        { 
+          id: nextId("p"), 
+          stripeId: stripeId, 
+          reservationId: id, 
+          amount: r.total, 
+          status: "PENDING" 
+        },
+      ]);
+
+      pushNotification(r.userId, "RESERVATION", "Réservation confirmée",
+        "Le contrat est prêt à être signé.", `/reservation/${id}`);
+    }
+    return updated;
+  }));
+}, [pushNotification]);
 
   const signContract = useCallback((reservationId: string) => {
     setContracts(prev => prev.map(c => c.reservationId === reservationId ? { ...c, status: "SIGNED", signedAt: new Date().toISOString() } : c));
