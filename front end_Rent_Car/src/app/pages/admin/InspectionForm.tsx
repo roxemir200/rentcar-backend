@@ -8,7 +8,7 @@ import { Input, Select, Textarea } from "../../components/common/Input";
 import { Button } from "../../components/common/Button";
 import { useApp } from "../../context/AppContext";
 import { reservationsAPI } from "../../api/reservations.api";
-import { FUEL_LEVELS } from "../../data/mockData";
+import { FUEL_LEVELS } from "../../data/constants";
 import { euro, formatDate } from "../../lib/format";
 import type { FuelLevel } from "../../data/types";
 
