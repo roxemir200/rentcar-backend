@@ -15,9 +15,7 @@ import type {
   ReservationStatus, Inspection, Role,
 } from "../data/types";
 import { authAPI, toFrontendUser } from "../api/auth.api";
-import {
-  seedContracts, seedReviews, seedNotifications,  // ✅ seedReservations et seedUsers supprimés
-} from "../data/mockData";
+
 import { api } from "../api/axios";
 
 interface AppContextValue {
@@ -266,10 +264,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [cars, setCars] = useState<Car[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);  // ✅ Plus de seed
-  const [contracts, setContracts] = useState<Contract[]>(seedContracts);
+  const [contracts, setContracts] = useState<Contract[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [reviews, setReviews] = useState<Review[]>(seedReviews);
-  const [notifications, setNotifications] = useState<AppNotification[]>(seedNotifications);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [dashboardStats, setDashboardStats] = useState<any>(null);
   const [dashboardRevenue, setDashboardRevenue] = useState<any[]>([]);
   const [dashboardTopCars, setDashboardTopCars] = useState<any[]>([]);
