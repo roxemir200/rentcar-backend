@@ -1,4 +1,4 @@
-import { forwardRef, useState, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from "react";
+import { forwardRef, useId, useState, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "../ui/utils";
 
@@ -17,7 +17,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   const [show, setShow] = useState(false);
   const isPassword = type === "password";
   const inputType = isPassword ? (show ? "text" : "password") : type;
-  const inputId = id || props.name;
+  // Identifiant de repli : garantit que <label for> reste lié au champ même
+  // quand ni `id` ni `name` ne sont fournis (accessibilité).
+  const fallbackId = useId();
+  const inputId = id || props.name || fallbackId;
 
   return (
     <div className="w-full">
@@ -82,7 +85,8 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
   { label, error, className, id, ...props },
   ref,
 ) {
-  const inputId = id || props.name;
+  const fallbackId = useId();
+  const inputId = id || props.name || fallbackId;
   return (
     <div className="w-full">
       {label && (
@@ -118,7 +122,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
   { label, error, options, placeholder, className, id, ...props },
   ref,
 ) {
-  const inputId = id || props.name;
+  const fallbackId = useId();
+  const inputId = id || props.name || fallbackId;
   return (
     <div className="w-full">
       {label && (

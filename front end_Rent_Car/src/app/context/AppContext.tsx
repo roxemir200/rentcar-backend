@@ -18,7 +18,7 @@ import { authAPI, toFrontendUser } from "../api/auth.api";
 
 import { api } from "../api/axios";
 
-interface AppContextValue {
+export interface AppContextValue {
   currentUser: User | null;
   users: User[];
   cars: Car[];
@@ -89,7 +89,7 @@ interface AppContextValue {
   getCarRating: (carId: string) => { avg: number; count: number };
 }
 
-const AppContext = createContext<AppContextValue | null>(null);
+export const AppContext = createContext<AppContextValue | null>(null);
 
 let idCounter = 1000;
 const nextId = (prefix: string) => `${prefix}${++idCounter}`;

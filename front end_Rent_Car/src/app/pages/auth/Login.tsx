@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { Mail, Lock, AlertCircle } from "lucide-react";
 import { motion } from "motion/react";
+import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { AuthShell } from "./AuthShell";
 import { Input } from "../../components/common/Input";
