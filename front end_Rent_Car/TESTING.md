@@ -114,6 +114,26 @@ Le périmètre mesuré est le code applicatif : `api/`, `components/{common,figm
 vendorisées (`components/ui/`), les dictionnaires de traduction (`locales/`, `i18n/`),
 les types purs (`data/`) et les points d'entrée (`main.tsx`, `App.tsx`).
 
+## Intégration continue et SonarCloud
+
+Le workflow [`.github/workflows/frontend-ci.yml`](../.github/workflows/frontend-ci.yml)
+exécute `npm run test:coverage` **avant** la copie vers l'alias `frontend/`, de sorte
+que `coverage/lcov.info` soit présent au moment de l'analyse. Le scanner reçoit :
+
+| Paramètre | Rôle |
+| --- | --- |
+| `sonar.javascript.lcov.reportPaths=coverage/lcov.info` | sans lui, SonarCloud affiche 0 % de couverture |
+| `sonar.tests` + `sonar.test.inclusions` | déclare les fichiers de test comme tests, pas comme code de production |
+| `sonar.exclusions` (mêmes motifs) | évite l'erreur « file can't be indexed twice » due au chevauchement `sources`/`tests` |
+| `sonar.coverage.exclusions` | aligne le périmètre Sonar sur celui de `vitest.config.ts` (shadcn/ui, locales, types, points d'entrée) |
+
+Les chemins du rapport lcov sont **relatifs** (`src/app/...`) et se résolvent donc
+correctement depuis `sonar.projectBaseDir=frontend`. Le périmètre est aligné au fichier
+près : 68 fichiers mesurés côté Sonar, 68 fichiers présents dans le rapport, aucun écart.
+
+Un échec de test ou une couverture sous les seuils fait échouer le job avant la
+publication de l'artefact.
+
 ## Conventions
 
 1. **Un comportement par test**, nommé en français à la voix active

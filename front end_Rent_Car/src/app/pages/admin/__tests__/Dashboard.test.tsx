@@ -86,7 +86,7 @@ describe('pages/admin/Dashboard · indicateurs', () => {
     await ready()
 
     expect(screen.getByText('12')).toBeInTheDocument()
-    expect(screen.getByText('15 000 DT'.replace(' ', ' '))).toBeInTheDocument()
+    expect(screen.getByText(/^15\s?000 DT$/)).toBeInTheDocument()
     expect(screen.getByText('22')).toBeInTheDocument()
     expect(screen.getByText('4.4/5')).toBeInTheDocument()
   })
@@ -231,7 +231,7 @@ describe('pages/admin/Dashboard · top des voitures', () => {
     expect(screen.getByText('Renault Clio')).toBeInTheDocument()
     expect(screen.getByText('8 locations')).toBeInTheDocument()
     expect(screen.getByText('1 location')).toBeInTheDocument()
-    expect(screen.getByText('3 600 DT'.replace(' ', ' '))).toBeInTheDocument()
+    expect(screen.getByText(/^3\s?600 DT$/)).toBeInTheDocument()
     expect(screen.getByText('🥇')).toBeInTheDocument()
     expect(document.querySelector('img')).toHaveAttribute('src', 'http://localhost:8089/uploads/clio.jpg')
   })
