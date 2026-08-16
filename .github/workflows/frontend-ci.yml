@@ -42,6 +42,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Les tests doivent tourner AVANT la copie vers l'alias "frontend",
+      # afin que coverage/lcov.info soit présent lors de l'analyse Sonar.
+      - name: Run unit tests with coverage
+        run: npm run test:coverage
+
       - name: Build React app
         run: npm run build
 
@@ -80,11 +85,15 @@ jobs:
           -Dsonar.host.url=https://sonarcloud.io
           -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
           -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY_FRONTEND }}
-          -Dsonar.projectBaseDir=frontend
-          -Dsonar.sources=src
-          -Dsonar.exclusions=**/node_modules/**,**/dist/**
           -Dsonar.projectName="RentCar Frontend"
-          
+          -Dsonar.projectBaseDir=frontend
+          -Dsonar.sourceEncoding=UTF-8
+          -Dsonar.sources=src
+          -Dsonar.tests=src
+          -Dsonar.test.inclusions=**/__tests__/**,**/*.test.ts,**/*.test.tsx,src/test/**
+          -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/coverage/**,**/__tests__/**,**/*.test.ts,**/*.test.tsx,src/test/**
+          -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+          -Dsonar.coverage.exclusions=src/main.tsx,src/App.js,src/app/App.tsx,src/app/components/ui/**,src/app/locales/**,src/app/i18n/**,src/app/data/**
 
       - name: Upload frontend build
         uses: actions/upload-artifact@v4

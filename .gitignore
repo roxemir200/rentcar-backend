@@ -17,6 +17,9 @@ Rent_Car/*.iml
 front end_Rent_Car/node_modules/
 front end_Rent_Car/dist/
 
+# Rapports de couverture des tests
+front end_Rent_Car/coverage/
+
 # Environment files
 front end_Rent_Car/.env
 front end_Rent_Car/.env.local
