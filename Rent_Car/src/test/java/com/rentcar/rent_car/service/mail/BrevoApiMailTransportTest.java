@@ -1,6 +1,7 @@
 package com.rentcar.rent_car.service.mail;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
@@ -93,7 +94,38 @@ class BrevoApiMailTransportTest {
         assertThatThrownBy(() -> transport.send("client@test.com", "Objet", "Corps"))
                 .isInstanceOf(MailDeliveryException.class)
                 .hasMessageContaining("MAIL_FROM_EMAIL");
+    }
 
-        assertThat(true).isTrue();
+    /**
+     * Vérifie que <em>Spring</em> sait instancier ce composant.
+     * <p>
+     * Les tests ci-dessus construisent la classe à la main : ils ne disent rien
+     * de la résolution des dépendances par le conteneur. Une première version
+     * de ce transport attendait un bean {@code RestClient.Builder} qui n'existe
+     * pas dans cette application — la panne n'est apparue qu'au démarrage en
+     * production, après un déploiement complet.
+     */
+    @Test
+    void shouldBeInstantiableBySpringWhenBrevoTransportIsSelected() {
+        new ApplicationContextRunner()
+                .withUserConfiguration(BrevoApiMailTransport.class)
+                .withPropertyValues(
+                        "app.mail.transport=brevo",
+                        "app.mail.brevo.api-key=cle",
+                        "app.mail.from.email=no-reply@rentcar.tn")
+                .run(context -> assertThat(context)
+                        .hasNotFailed()
+                        .hasSingleBean(BrevoApiMailTransport.class));
+    }
+
+    /** Le transport Brevo ne doit pas être chargé lorsque le SMTP est retenu. */
+    @Test
+    void shouldNotBeLoadedWhenSmtpTransportIsSelected() {
+        new ApplicationContextRunner()
+                .withUserConfiguration(BrevoApiMailTransport.class)
+                .withPropertyValues("app.mail.transport=smtp")
+                .run(context -> assertThat(context)
+                        .hasNotFailed()
+                        .doesNotHaveBean(BrevoApiMailTransport.class));
     }
 }

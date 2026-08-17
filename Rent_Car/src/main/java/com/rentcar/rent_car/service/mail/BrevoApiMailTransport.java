@@ -1,14 +1,17 @@
 package com.rentcar.rent_car.service.mail;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
+import java.time.Duration;
 import java.util.List;
 
 /**
@@ -35,12 +38,46 @@ public class BrevoApiMailTransport implements MailTransport {
     private final String fromEmail;
     private final String fromName;
 
+    /** Délai d'établissement de la connexion vers l'API Brevo. */
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
+
+    /** Délai de lecture de la réponse. */
+    private static final Duration READ_TIMEOUT = Duration.ofSeconds(10);
+
+    /**
+     * Constructeur utilisé par Spring.
+     * <p>
+     * Le client est construit ici avec la fabrique statique, et non injecté :
+     * {@code RestClient.Builder} n'est pas fourni comme bean dans cette
+     * application. C'est aussi le motif déjà retenu par
+     * {@code MlServiceConfig}, ce qui permet de fixer explicitement les délais
+     * d'expiration — sans eux, un envoi lent immobiliserait un thread.
+     */
+    @Autowired
     public BrevoApiMailTransport(
-            RestClient.Builder restClientBuilder,
             @Value("${app.mail.brevo.api-key:}") String apiKey,
             @Value("${app.mail.brevo.base-url:" + DEFAULT_BASE_URL + "}") String baseUrl,
             @Value("${app.mail.from.email:}") String fromEmail,
             @Value("${app.mail.from.name:RentCar}") String fromName) {
+
+        this(defaultBuilder(), apiKey, baseUrl, fromEmail, fromName);
+    }
+
+    /** Construit le client HTTP avec des délais d'expiration bornés. */
+    private static RestClient.Builder defaultBuilder() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(CONNECT_TIMEOUT);
+        factory.setReadTimeout(READ_TIMEOUT);
+        return RestClient.builder().requestFactory(factory);
+    }
+
+    /** Variante permettant aux tests de fournir un client simulé. */
+    BrevoApiMailTransport(
+            RestClient.Builder restClientBuilder,
+            String apiKey,
+            String baseUrl,
+            String fromEmail,
+            String fromName) {
 
         this.apiKey = apiKey;
         this.fromEmail = fromEmail;
