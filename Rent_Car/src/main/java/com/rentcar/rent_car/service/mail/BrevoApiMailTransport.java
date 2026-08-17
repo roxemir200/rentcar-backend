@@ -8,6 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
@@ -119,9 +120,22 @@ public class BrevoApiMailTransport implements MailTransport {
                     .toBodilessEntity();
 
             log.info("Email envoyé à {} via l'API Brevo", to);
+        } catch (HttpClientErrorException e) {
+            // Brevo distingue deux echecs de configuration tres differents,
+            // que le code HTTP seul ne rend pas evidents. Les nommer ici evite
+            // de chercher dans la mauvaise direction.
+            String diagnostic = switch (e.getStatusCode().value()) {
+                case 401 -> "clé API refusée. Vérifiez BREVO_API_KEY : il faut la clé "
+                        + "API (onglet « API Keys », préfixe xkeysib-), et non la clé SMTP "
+                        + "(préfixe xsmtpsib-), qui n'authentifie pas cette API.";
+                case 400 -> "requête refusée. Cause la plus fréquente : l'adresse "
+                        + "d'expédition « " + fromEmail + " » n'est pas validée dans Brevo "
+                        + "(section « Senders »).";
+                default -> "réponse " + e.getStatusCode() + " de l'API.";
+            };
+            throw new MailDeliveryException(
+                    "Envoi Brevo impossible vers " + to + " — " + diagnostic, e);
         } catch (RestClientException e) {
-            // Le message d'erreur de Brevo est precieux : il distingue une cle
-            // invalide d'une adresse d'expediteur non validee.
             throw new MailDeliveryException("Envoi Brevo impossible vers " + to, e);
         }
     }

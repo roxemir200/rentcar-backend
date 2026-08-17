@@ -60,10 +60,11 @@ class BrevoApiMailTransportTest {
 
     /**
      * Brevo répond 400 lorsque l'adresse d'expédition n'est pas validée dans le
-     * compte. L'échec doit remonter explicitement, et non passer inaperçu.
+     * compte. Le message doit nommer cette cause : le code HTTP seul envoie
+     * chercher dans la mauvaise direction.
      */
     @Test
-    void shouldRaiseWhenBrevoRejectsTheRequest() {
+    void shouldExplainThatSenderIsNotValidatedOnBadRequest() {
         BrevoApiMailTransport transport = transportWith("cle", "non-valide@rentcar.tn");
 
         server.expect(requestTo(BASE_URL + "/v3/smtp/email"))
@@ -73,7 +74,28 @@ class BrevoApiMailTransportTest {
 
         assertThatThrownBy(() -> transport.send("client@test.com", "Objet", "Corps"))
                 .isInstanceOf(MailDeliveryException.class)
-                .hasMessageContaining("client@test.com");
+                .hasMessageContaining("client@test.com")
+                .hasMessageContaining("non-valide@rentcar.tn")
+                .hasMessageContaining("Senders");
+    }
+
+    /**
+     * Un 401 signale presque toujours la confusion entre la clé SMTP et la clé
+     * API. Le message doit le dire, sous peine de faire chercher une panne
+     * réseau là où il s'agit d'une variable mal renseignée.
+     */
+    @Test
+    void shouldExplainApiKeyMixUpOnUnauthorized() {
+        BrevoApiMailTransport transport = transportWith("mauvaise-cle", "no-reply@rentcar.tn");
+
+        server.expect(requestTo(BASE_URL + "/v3/smtp/email"))
+                .andRespond(withStatus(HttpStatus.UNAUTHORIZED));
+
+        assertThatThrownBy(() -> transport.send("client@test.com", "Objet", "Corps"))
+                .isInstanceOf(MailDeliveryException.class)
+                .hasMessageContaining("BREVO_API_KEY")
+                .hasMessageContaining("xkeysib-")
+                .hasMessageContaining("xsmtpsib-");
     }
 
     @Test
