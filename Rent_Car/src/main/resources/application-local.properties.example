@@ -1,0 +1,39 @@
+# ============================================================
+#  MODELE - a copier en application-local.properties
+#
+#      cp application-local.properties.example application-local.properties
+#
+#  Le fichier application-local.properties est ignore par Git :
+#  c'est la seule place ou des secrets reels peuvent figurer sur
+#  ton poste. Ce modele-ci, lui, est commite : il documente les
+#  valeurs attendues sans en reveler aucune.
+#
+#  Le profil "local" est active apres "dev", donc ces valeurs
+#  surchargent celles de application-dev.properties.
+# ============================================================
+
+# ---------- Base de donnees locale ----------
+spring.datasource.username=root
+spring.datasource.password=
+
+# ---------- Securite ----------
+# Generer une cle aleatoire :
+#   openssl rand -base64 48
+# ou, en PowerShell :
+#   $b = New-Object byte[] 48
+#   [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b)
+#   [Convert]::ToBase64String($b)
+app.jwt.secret=REMPLACER_PAR_UNE_CLE_ALEATOIRE_DE_48_OCTETS
+app.jwt.expiration=86400000
+
+# ---------- Stripe (mode test) ----------
+stripe.secret.key=sk_test_REMPLACER
+stripe.webhook.secret=whsec_REMPLACER
+
+# ---------- Mail ----------
+# En developpement comme en production, un service transactionnel
+# (Brevo, Resend...) est preferable a un compte Gmail personnel.
+spring.mail.host=smtp-relay.brevo.com
+spring.mail.port=587
+spring.mail.username=REMPLACER
+spring.mail.password=REMPLACER

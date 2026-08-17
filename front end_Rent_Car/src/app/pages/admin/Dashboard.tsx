@@ -11,6 +11,7 @@ import { ImageWithFallback } from "../../components/figma/ImageWithFallback";
 import { StatCard, Card, PageTransition } from "../../components/common/Misc";
 import { StarRating } from "../../components/common/StarRating";
 import { useApp } from "../../context/AppContext";
+import { resolveImageUrl } from "../../config/env";
 import { euro } from "../../lib/format";
 import { cn } from "../../components/ui/utils";
 
@@ -519,13 +520,8 @@ export default function Dashboard() {
             topCars.map((t:any, i:number) => {
               let car = getCar(t.carId);
               const rating = t.avgRating ? { avg: t.avgRating, count: 1 } : getCarRating(t.carId);
-              let imageUrl = t.imageUrl || car?.images?.[0] || "";
-              
-              // Add base URL if needed
-              if (imageUrl && !imageUrl.startsWith("http") && !imageUrl.startsWith("data:")) {
-                imageUrl = "http://localhost:8089" + imageUrl;
-              }
-              
+              const imageUrl = resolveImageUrl(t.imageUrl || car?.images?.[0] || "");
+
               const brand = t.brand || car?.brand || "";
               const model = t.model || car?.model || "";
               

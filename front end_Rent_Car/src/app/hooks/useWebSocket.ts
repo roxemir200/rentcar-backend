@@ -3,6 +3,7 @@ import { Client, IMessage } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import { useApp } from "../context/AppContext";
 import { api } from "../api/axios";
+import { WS_URL } from "../config/env";
 
 interface ChatMessage {
   id: number;
@@ -101,7 +102,7 @@ export function useWebSocket() {
   useEffect(() => {
     if (!currentUser) return;
 
-    const socket = new SockJS("http://localhost:8089/ws");
+    const socket = new SockJS(WS_URL);
     const client = new Client({
       webSocketFactory: () => socket,
       connectHeaders: {

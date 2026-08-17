@@ -6,6 +6,17 @@ Rent_Car/target/
 Rent_Car/.idea/
 Rent_Car/*.iml
 
+# Secrets locaux : jamais commites.
+# Les modeles .example, eux, sont suivis.
+Rent_Car/src/main/resources/application-local.properties
+
+# ==========================
+# Docker
+# ==========================
+
+# Variables lues par docker compose : contient des secrets.
+.env
+
 # Logs
 *.log
 
@@ -20,9 +31,10 @@ front end_Rent_Car/dist/
 # Rapports de couverture des tests
 front end_Rent_Car/coverage/
 
-# Environment files
+# Environment files (le modele .env.example reste suivi)
 front end_Rent_Car/.env
 front end_Rent_Car/.env.local
+front end_Rent_Car/.env.*.local
 
 
 # ==========================

@@ -1,0 +1,98 @@
+# ============================================================
+#  Verification locale de l'image de production
+#
+#  Ce fichier n'est pas un environnement de developpement : il
+#  fait tourner EXACTEMENT l'image qui partira en production,
+#  avec le profil "prod" et une configuration entierement
+#  fournie par variables d'environnement.
+#
+#  C'est la reponse concrete a "comment garantissez-vous que
+#  ca marche pareil en local et en production ?" — c'est la
+#  meme image, seules les variables changent.
+#
+#  Le frontend n'est pas ici : il est deploye sur Vercel. En
+#  local, `npm run dev` le fait pointer sur ce backend.
+#
+#  Demarrage :  docker compose up --build
+# ============================================================
+
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: rentcar-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpwd}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-rentcar_db}
+    ports:
+      # Expose sur 3307 pour ne pas entrer en conflit avec un
+      # MySQL deja installe sur ta machine (port 3306).
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      # Le backend attend cette sonde : sans elle, il demarrerait
+      # avant que MySQL accepte les connexions et echouerait.
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD:-rootpwd}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  backend:
+    build:
+      context: ./Rent_Car
+      dockerfile: Dockerfile
+    container_name: rentcar-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "8089:8089"
+    environment:
+      # Profil de production : c'est tout l'interet de ce fichier.
+      SPRING_PROFILES_ACTIVE: prod
+      PORT: 8089
+
+      # ---------- Base de donnees ----------
+      # "mysql" est le nom du service : Docker le resout sur le
+      # reseau interne. useSSL=false est acceptable ici car le
+      # trafic ne quitte pas le reseau du compose ; en production,
+      # la base est joignable depuis Internet et SSL est requis.
+      DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-rentcar_db}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      DB_USERNAME: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpwd}
+
+      # ---------- Securite ----------
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-3600000}
+
+      # ---------- Stripe (mode test) ----------
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+
+      # ---------- Mail ----------
+      MAIL_HOST: ${MAIL_HOST:-smtp-relay.brevo.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+
+      # ---------- URLs ----------
+      # Sans barre oblique finale : la comparaison CORS echouerait.
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
+
+      # ---------- Televersement ----------
+      APP_UPLOAD_DIR: /app/uploads
+    volumes:
+      # Reproduit le comportement d'un volume persistant : les
+      # images survivent a un `docker compose down`. Sans volume,
+      # elles disparaitraient — exactement ce qui se produirait
+      # en production sans stockage externe.
+      - uploads-data:/app/uploads
+
+volumes:
+  mysql-data:
+  uploads-data:

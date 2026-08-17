@@ -1,0 +1,42 @@
+# ============================================================
+#  Fichiers exclus du contexte envoye au demon Docker.
+#
+#  Le frontend est deploye sur Vercel, qui ne consomme pas
+#  d'image Docker : ce fichier sert la variante tout-conteneur
+#  (frontend servi par nginx) et le build local de verification.
+#
+#  node_modules represente a lui seul plusieurs centaines de
+#  Mo : sans cette exclusion, chaque build les transfere.
+# ============================================================
+
+# ---------- Dependances et artefacts ----------
+# npm ci les reinstalle proprement dans l'image, a partir du
+# package-lock.json : copier celles de l'hote casserait la
+# reproductibilite (binaires natifs compiles pour Windows).
+node_modules
+dist
+coverage
+
+# ---------- SECRETS ----------
+# .env.example reste inclus : il ne contient aucune valeur reelle.
+.env
+.env.local
+.env.*.local
+
+# ---------- Outils et environnement de developpement ----------
+.git
+.gitignore
+.idea/
+.vscode/
+
+# ---------- Documentation ----------
+README.md
+TESTING.md
+ATTRIBUTIONS.md
+COPILOT_INSTRUCTIONS.md
+guidelines/
+
+# ---------- Systeme ----------
+.DS_Store
+Thumbs.db
+*.log

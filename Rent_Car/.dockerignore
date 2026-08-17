@@ -1,0 +1,42 @@
+# ============================================================
+#  Fichiers exclus du contexte envoye au demon Docker.
+#  Sans ce fichier, target/ part a chaque build : des centaines
+#  de mega-octets transferes pour rien, a chaque fois.
+# ============================================================
+
+# ---------- Artefacts de build ----------
+# Le jar est reconstruit dans l'image : envoyer le target/ local
+# n'apporte rien et risquerait d'y introduire un build perime.
+target/
+
+# ---------- SECRETS : ne doivent jamais entrer dans une image ----------
+# Une image Docker est une archive lisible par quiconque la telecharge.
+# Les valeurs de production arrivent par variables d'environnement.
+src/main/resources/application-local.properties
+*.env
+.env
+
+# ---------- Fichiers televerses ----------
+# Contenu local, sans rapport avec l'image.
+uploads/
+
+# ---------- Outils et environnement de developpement ----------
+.git
+.gitignore
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.mvn/
+mvnw
+mvnw.cmd
+
+# ---------- Documentation ----------
+HELP.md
+README.md
+
+# ---------- Systeme ----------
+.DS_Store
+Thumbs.db
+*.log

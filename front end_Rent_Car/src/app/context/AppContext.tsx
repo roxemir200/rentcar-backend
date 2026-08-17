@@ -15,6 +15,7 @@ import type {
   ReservationStatus, Inspection, Role,
 } from "../data/types";
 import { authAPI, toFrontendUser } from "../api/auth.api";
+import { NOTIFICATIONS_STREAM_URL, resolveImageUrl } from "../config/env";
 
 import { api } from "../api/axios";
 
@@ -124,7 +125,6 @@ const persistAuth = (user: User | null) => {
 };
 
 // ──────────────── MAPPING FUNCTIONS ────────────────
-const API_BASE_URL = 'http://localhost:8089';
 const mapCarFromApi = (apiCar: any): Car => ({
   id: String(apiCar.id),
   brand: apiCar.brand || '',
@@ -153,9 +153,7 @@ const mapCarFromApi = (apiCar: any): Car => ({
   ]
     // Make sure no duplicates and all are full URLs
     .filter((img, index, arr) => img && arr.indexOf(img) === index)
-    .map((img: string) => 
-      img.startsWith('http') || img.startsWith('data:') ? img : `${API_BASE_URL}${img}`
-    ),
+    .map((img: string) => resolveImageUrl(img)),
 });
 
 const mapCarToApi = (car: Car): any => ({
@@ -556,7 +554,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const connectSSE = () => {
       try {
-        const eventSource = new EventSource(`http://localhost:8089/api/notifications/stream?token=${token}`);
+        const eventSource = new EventSource(`${NOTIFICATIONS_STREAM_URL}?token=${token}`);
         eventSourceRef.current = eventSource;
 
         eventSource.onopen = () => {

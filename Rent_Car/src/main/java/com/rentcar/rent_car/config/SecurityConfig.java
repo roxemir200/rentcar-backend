@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -39,10 +40,20 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
 
-    private static final List<String> ALLOWED_ORIGINS = Arrays.asList(
-            "http://localhost:5173",
-            "http://localhost:3000"
-    );
+    /**
+     * Origines autorisees, injectees depuis {@code app.cors.allowed-origins}.
+     * <p>
+     * En developpement, la valeur par defaut couvre Vite et CRA ; en production,
+     * elle vient de la variable d'environnement CORS_ALLOWED_ORIGINS.
+     * <p>
+     * Attention : une origine ne comporte ni chemin ni barre oblique finale.
+     * {@code https://app.vercel.app/} ne correspondra a aucune requete.
+     * <p>
+     * La valeur d'initialisation sert de filet quand la classe est instanciee
+     * hors contexte Spring (tests unitaires) : Spring la remplace a l'injection.
+     */
+    @Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:3000}")
+    private String allowedOrigins = "http://localhost:5173,http://localhost:3000";
 
     private static final List<String> ALLOWED_METHODS = Arrays.asList(
             "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
@@ -109,10 +120,25 @@ public class SecurityConfig {
         return sb.toString();
     }
 
+    /**
+     * Decoupe la liste d'origines et retire les barres obliques finales,
+     * cause d'echec CORS la plus frequente en production.
+     */
+    private List<String> resolveAllowedOrigins() {
+        List<String> origins = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .map(origin -> origin.endsWith("/") ? origin.substring(0, origin.length() - 1) : origin)
+                .toList();
+
+        log.info("🌐 Origines CORS autorisees : {}", origins);
+        return origins;
+    }
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(ALLOWED_ORIGINS);
+        config.setAllowedOrigins(resolveAllowedOrigins());
         config.setAllowedMethods(ALLOWED_METHODS);
         config.setAllowedHeaders(ALLOWED_HEADERS);
         config.setExposedHeaders(EXPOSED_HEADERS);
@@ -138,6 +164,12 @@ public class SecurityConfig {
                         .requestMatchers(INTERNAL_DISPATCH_MATCHER).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
+                        // Sonde de vivacite interrogee par l'hebergeur.
+                        // Volontairement limitee a /actuator/health : ouvrir
+                        // /actuator/** exposerait la configuration complete
+                        // et les variables d'environnement.
+                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+
                         // ========== ROUTES PUBLIQUES ==========
                         .requestMatchers("/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
@@ -159,7 +191,6 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/sockjs/**").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/auth/profile").permitAll()
 
                         // ========== ROUTES ADMIN ==========
                         .requestMatchers(HttpMethod.POST, "/api/admin/upload-image").hasRole("ADMIN")
@@ -186,6 +217,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/notifications/**").authenticated()
                         .requestMatchers("/api/auth/me").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/auth/change-password").authenticated()
+                        // Etait en permitAll() : n'importe qui pouvait modifier un profil
+                        // sans jeton. Le controleur doit en outre verifier que
+                        // l'utilisateur modifie bien le sien.
+                        .requestMatchers(HttpMethod.PUT, "/api/auth/profile").authenticated()
 
                         .anyRequest().authenticated()
                 )

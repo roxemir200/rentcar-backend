@@ -16,6 +16,7 @@ import com.rentcar.rent_car.service.EmailService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,13 @@ public class AuthServiceImpl implements AuthService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;  // ← AJOUTÉ
+
+    /**
+     * Base des liens de verification, pilotee par {@code app.frontend.url}.
+     * La valeur d'initialisation garde la classe utilisable hors contexte Spring.
+     */
+    @Value("${app.frontend.url:http://localhost:5173}")
+    private String frontendUrl = "http://localhost:5173";
 
     // service/imp/AuthServiceImpl.java
 
@@ -68,7 +76,10 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void sendVerificationEmail(User user) {
-        String verificationLink = "http://localhost:5173/verify-email?token=" + user.getVerificationToken();
+        String base = frontendUrl.endsWith("/")
+                ? frontendUrl.substring(0, frontendUrl.length() - 1)
+                : frontendUrl;
+        String verificationLink = base + "/verify-email?token=" + user.getVerificationToken();
 
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(user.getEmail());

@@ -3,12 +3,12 @@ package com.rentcar.rent_car.controller;
 import com.rentcar.rent_car.dto.response.MessageResponse;
 import com.rentcar.rent_car.service.CarImageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -23,6 +23,14 @@ import java.util.UUID;
 public class CarImageController {
 
     private final CarImageService carImageService;
+
+    /**
+     * Racine des fichiers televerses, pilotee par {@code app.upload.dir}.
+     * Le chemin etait auparavant fige sur {@code user.dir}, ce qui interdisait
+     * de le rediriger vers un volume persistant en production.
+     */
+    @Value("${app.upload.dir:uploads}")
+    private String uploadDir = "uploads";
 
     // ✅ Taille max : 5MB (5 * 1024 * 1024 octets)
     private static final long MAX_FILE_SIZE = 5L * 1024 * 1024;
@@ -134,8 +142,7 @@ public class CarImageController {
             String safeFilename = safeBaseName + extension;
 
             // ✅ 6. Définir le dossier d'upload sécurisé
-            String uploadDir = System.getProperty("user.dir") + "/uploads/cars/";
-            Path uploadPath = Paths.get(uploadDir);
+            Path uploadPath = Paths.get(uploadDir, "cars").toAbsolutePath().normalize();
 
             // ✅ 7. Créer le dossier s'il n'existe pas avec les permissions appropriées
             if (!Files.exists(uploadPath)) {
