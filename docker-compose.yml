@@ -90,6 +90,10 @@ services:
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
 
       # ---------- Televersement ----------
+      # Par defaut "local" ici, pour pouvoir tester sans compte Cloudinary.
+      # Passer a "cloudinary" reproduit exactement la production.
+      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-local}
+      CLOUDINARY_URL: ${CLOUDINARY_URL:-}
       APP_UPLOAD_DIR: /app/uploads
     volumes:
       # Reproduit le comportement d'un volume persistant : les

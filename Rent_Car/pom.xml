@@ -122,6 +122,14 @@
             <version>0.12.5</version>
             <scope>runtime</scope>
         </dependency>
+        <!-- Stockage des images hors du conteneur : le disque d'un
+             conteneur est ephemere, tout fichier ecrit disparait au
+             redeploiement. -->
+        <dependency>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-http5</artifactId>
+            <version>2.4.0</version>
+        </dependency>
     </dependencies>
 
     <build>

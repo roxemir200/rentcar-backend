@@ -2,16 +2,15 @@ package com.rentcar.rent_car.controller;
 
 import com.rentcar.rent_car.dto.response.MessageResponse;
 import com.rentcar.rent_car.service.CarImageService;
+import com.rentcar.rent_car.service.storage.ImageStorage;
+import com.rentcar.rent_car.service.storage.ImageStorageException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -20,17 +19,16 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
+@Slf4j
 public class CarImageController {
 
     private final CarImageService carImageService;
 
     /**
-     * Racine des fichiers televerses, pilotee par {@code app.upload.dir}.
-     * Le chemin etait auparavant fige sur {@code user.dir}, ce qui interdisait
-     * de le rediriger vers un volume persistant en production.
+     * Destination des images. Le controleur ne connait ni chemin ni fournisseur :
+     * il valide le fichier, le stockage decide ou il atterrit.
      */
-    @Value("${app.upload.dir:uploads}")
-    private String uploadDir = "uploads";
+    private final ImageStorage imageStorage;
 
     // ✅ Taille max : 5MB (5 * 1024 * 1024 octets)
     private static final long MAX_FILE_SIZE = 5L * 1024 * 1024;
@@ -137,50 +135,23 @@ public class CarImageController {
             }
 
             // ✅ 5. Nettoyer le nom du fichier (éviter les attaques path traversal)
-            // Supprimer les caractères dangereux
             String safeBaseName = originalFilename.substring(0, lastDot).replaceAll("[^a-zA-Z0-9._-]", "_");
             String safeFilename = safeBaseName + extension;
 
-            // ✅ 6. Définir le dossier d'upload sécurisé
-            Path uploadPath = Paths.get(uploadDir, "cars").toAbsolutePath().normalize();
+            // ✅ 6. Générer un nom unique, pour qu'un même nom d'origine n'écrase rien
+            String uniqueFilename = UUID.randomUUID() + "_" + safeFilename;
 
-            // ✅ 7. Créer le dossier s'il n'existe pas avec les permissions appropriées
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
-
-            // ✅ 8. Générer un nom unique (UUID + nom sécurisé)
-            String uniqueFilename = UUID.randomUUID().toString() + "_" + safeFilename;
-            Path targetPath = uploadPath.resolve(uniqueFilename).normalize();
-
-            // ✅ 9. Vérifier que le chemin reste dans le dossier d'upload (protection path traversal)
-            if (!targetPath.startsWith(uploadPath)) {
-                return ResponseEntity.badRequest()
-                        .body(MessageResponse.error("Chemin de fichier invalide"));
-            }
-
-            // ✅ 10. Vérifier que le fichier n'existe pas déjà
-            if (Files.exists(targetPath)) {
-                return ResponseEntity.badRequest()
-                        .body(MessageResponse.error("Un fichier avec ce nom existe déjà"));
-            }
-
-            // ✅ 11. Sauvegarder le fichier
-            file.transferTo(targetPath.toFile());
-
-            // ✅ 12. Vérifier que le fichier a bien été sauvegardé
-            if (!Files.exists(targetPath) || Files.size(targetPath) == 0) {
-                return ResponseEntity.status(500)
-                        .body(MessageResponse.error("Erreur lors de la sauvegarde du fichier"));
-            }
-
-            // Retourner l'URL
-            String imageUrl = "/uploads/cars/" + uniqueFilename;
+            // ✅ 7. Déléguer l'enregistrement au stockage configuré
+            String imageUrl = imageStorage.store(file, uniqueFilename);
             return ResponseEntity.ok(MessageResponse.success("Image uploadée avec succès", imageUrl));
 
+        } catch (ImageStorageException e) {
+            // La cause exacte va dans les journaux ; le client reçoit un message neutre.
+            log.error("Échec de l'enregistrement de l'image", e);
+            return ResponseEntity.status(500)
+                    .body(MessageResponse.error("Erreur lors de l'upload. Veuillez réessayer."));
         } catch (Exception e) {
-            // ✅ 13. Log l'erreur sans exposer les détails internes
-            System.err.println("Erreur lors de l'upload de l'image: " + e.getMessage());
+            log.error("Erreur inattendue lors de l'upload de l'image", e);
             return ResponseEntity.badRequest()
                     .body(MessageResponse.error("Erreur lors de l'upload. Veuillez réessayer."));
         }

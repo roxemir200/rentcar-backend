@@ -4,11 +4,14 @@ import com.rentcar.rent_car.dto.response.MessageResponse;
 import com.rentcar.rent_car.service.CarImageService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import com.rentcar.rent_car.service.storage.ImageStorage;
+import com.rentcar.rent_car.service.storage.ImageStorageException;
 import org.springframework.mock.web.MockMultipartFile;
 
 import java.util.List;
@@ -16,13 +19,16 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CarImageControllerTest {
 
     @Mock
     private CarImageService carImageService;
+
+    @Mock
+    private ImageStorage imageStorage;
 
     @InjectMocks
     private CarImageController carImageController;
@@ -103,10 +109,57 @@ class CarImageControllerTest {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "car.png", "image/png", "dummy-bytes".getBytes()
         );
+        when(imageStorage.store(any(), anyString()))
+                .thenReturn("https://res.cloudinary.com/demo/image/upload/rentcar/cars/abc.png");
 
         ResponseEntity<MessageResponse> response = carImageController.uploadImage(file);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody().isSuccess()).isTrue();
+    }
+
+    /**
+     * Le controleur genere un nom unique : deux televersements du meme fichier
+     * ne doivent pas se recouvrir dans le stockage.
+     */
+    @Test
+    void shouldGenerateUniqueFilenamePreservingExtension() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "ma photo.PNG", "image/png", "dummy-bytes".getBytes()
+        );
+        when(imageStorage.store(any(), anyString())).thenReturn("/uploads/cars/x.png");
+
+        carImageController.uploadImage(file);
+
+        ArgumentCaptor<String> name = ArgumentCaptor.forClass(String.class);
+        verify(imageStorage).store(any(), name.capture());
+        assertThat(name.getValue()).endsWith(".png").contains("ma_photo");
+    }
+
+    /** Une extension non autorisee ne doit jamais atteindre le stockage. */
+    @Test
+    void shouldRejectDisallowedExtensionWithoutTouchingStorage() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "script.svg", "image/png", "dummy".getBytes()
+        );
+
+        ResponseEntity<MessageResponse> response = carImageController.uploadImage(file);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        verifyNoInteractions(imageStorage);
+    }
+
+    /** Un echec de stockage est un probleme serveur, pas une requete invalide. */
+    @Test
+    void shouldReturnServerErrorWhenStorageFails() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "car.png", "image/png", "dummy-bytes".getBytes()
+        );
+        when(imageStorage.store(any(), anyString()))
+                .thenThrow(new ImageStorageException("Cloudinary indisponible"));
+
+        ResponseEntity<MessageResponse> response = carImageController.uploadImage(file);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
