@@ -124,6 +124,29 @@ const persistAuth = (user: User | null) => {
   }
 };
 
+/**
+ * Extrait un tableau d'une réponse d'API, quelle qu'en soit la forme.
+ *
+ * Renvoie un tableau vide plutôt que de laisser passer une valeur sur
+ * laquelle `.map()` échouerait. Ce n'est pas une précaution théorique :
+ * un hébergeur dont l'instance est en veille répond à *toutes* les
+ * requêtes par une page HTML d'attente, avec un statut 200. axios ne
+ * lève alors aucune erreur, `res.data` contient du HTML, et le rendu
+ * plante sur un écran blanc au lieu d'afficher une liste vide.
+ */
+const asArray = <T,>(payload: unknown): T[] => {
+  if (Array.isArray(payload)) return payload as T[];
+
+  if (payload && typeof payload === "object") {
+    const record = payload as Record<string, unknown>;
+    for (const key of ["value", "data", "content"]) {
+      if (Array.isArray(record[key])) return record[key] as T[];
+    }
+  }
+
+  return [];
+};
+
 // ──────────────── MAPPING FUNCTIONS ────────────────
 const mapCarFromApi = (apiCar: any): Car => ({
   id: String(apiCar.id),
@@ -291,7 +314,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCarsError(null);
     try {
       const res = await carsAPI.getAll();
-      const apiData = res.data?.value || res.data || [];
+      const apiData = asArray(res.data);
       const mappedCars = apiData.map(mapCarFromApi);
       setCars(mappedCars);
     } catch (err) {
@@ -306,7 +329,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCategoriesLoading(true);
     try {
       const res = await categoriesAPI.getAll();
-      setCategories(res.data?.value || res.data || []);
+      setCategories(asArray(res.data));
     } catch (err) {
       console.error("Erreur chargement catégories:", err);
     } finally {
@@ -325,7 +348,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const res = currentUser.role === "ADMIN"
         ? await reservationsAPI.getAll()
         : await reservationsAPI.getMyReservations();
-      const apiReservations = res.data?.value || res.data || [];
+      const apiReservations = asArray(res.data);
       setReservations(apiReservations.map(mapReservationFromApi));
     } catch (err) {
       console.error("Erreur chargement réservations:", err);
@@ -344,7 +367,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const res = currentUser.role === "ADMIN"
         ? await paymentsAPI.getAll()
         : await paymentsAPI.getMyPayments();
-      const apiPayments = res.data?.value || res.data || [];
+      const apiPayments = asArray(res.data);
       setPayments(apiPayments.map(mapPaymentFromApi));
     } catch (err) {
       setPayments([]);
@@ -359,7 +382,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     try {
       const res = await usersAPI.getAll();
-      const apiUsers = res.data?.value || res.data || [];
+      const apiUsers = asArray(res.data);
       setUsers(apiUsers.map(mapUserFromApi));
     } catch (err) {
       setUsers([]);
@@ -380,7 +403,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       
       const res = await reviewsAPI.getMyReviews();
-      const apiReviews = res.data?.value || res.data || [];
+      const apiReviews = asArray(res.data);
       setReviews(apiReviews.map(mapReviewFromApi));
     } catch (err) {
       setReviews([]);
@@ -397,12 +420,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       let apiContracts: any[] = [];
       if (currentUser.role === "ADMIN") {
         const res = await contractsAPI.getAll();
-        apiContracts = res.data?.value || res.data || [];
+        apiContracts = asArray(res.data);
       } else {
         // For clients, use getMy() when backend endpoint is available
         // Uncomment these lines once you add the /api/contracts/my endpoint:
         // const res = await contractsAPI.getMy();
-        // apiContracts = res.data?.value || res.data || [];
+        // apiContracts = asArray(res.data);
         apiContracts = [];
       }
       setContracts(apiContracts.map(mapContractFromApi));
@@ -419,7 +442,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     try {
       const res = await notificationsAPI.getMyNotifications();
-      const apiNotifications = res.data?.value || res.data || [];
+      const apiNotifications = asArray(res.data);
       setNotifications(apiNotifications.map((n: any) => mapNotificationFromApi(n, currentUser.id)));
     } catch (err) {
       setNotifications([]);
@@ -446,7 +469,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     try {
       const res = await dashboardAPI.getRevenue(year);
-      const data = res.data?.data || res.data || [];
+      const data = asArray(res.data);
       setDashboardRevenue(data);
       return data;
     } catch (err) {
@@ -461,7 +484,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     try {
       const res = await dashboardAPI.getTopCars(limit);
-      const data = res.data?.data || res.data || [];
+      const data = asArray(res.data);
       setDashboardTopCars(data);
       return data;
     } catch (err) {
@@ -476,7 +499,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     try {
       const res = await calendarAPI.getReservations(year, month);
-      const data = res.data?.data || res.data || [];
+      const data = asArray(res.data);
       
       // Map API response to Reservation type (add carBrand/carModel/clientFirstName/clientLastName as extra fields)
       const mappedReservations = data.map((apiRes: any) => ({
