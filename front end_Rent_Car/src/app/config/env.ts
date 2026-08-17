@@ -16,11 +16,37 @@
 const DEFAULT_ORIGIN = "http://localhost:8089";
 
 /**
+ * Valide qu'une valeur ressemble à une origine HTTP.
+ *
+ * Sans ce contrôle, une variable mal renseignée est utilisée telle quelle
+ * et produit des symptômes indéchiffrables : saisir `VITE_API_URL` dans le
+ * champ *valeur* d'une plateforme de déploiement construit l'URL relative
+ * `VITE_API_URL/api/...`, que le navigateur résout contre le domaine du
+ * frontend. L'hébergeur statique répond alors `405` aux requêtes POST,
+ * sans que rien n'indique l'origine du problème.
+ */
+const looksLikeOrigin = (value?: string): boolean =>
+  !!value && /^https?:\/\/.+/i.test(value);
+
+const configuredOrigin = import.meta.env?.VITE_API_URL?.trim();
+
+if (configuredOrigin && !looksLikeOrigin(configuredOrigin)) {
+  console.error(
+    `[config] VITE_API_URL vaut "${configuredOrigin}", ce qui n'est pas une URL. ` +
+      `Attendu : une origine complète, par exemple https://mon-api.onrender.com. ` +
+      `Repli sur ${DEFAULT_ORIGIN}. Rappel : Vite fige les variables VITE_* au build — ` +
+      `il faut reconstruire après les avoir corrigées.`,
+  );
+}
+
+/**
  * `||` et non `??` : une variable définie mais vide (cas fréquent des
  * plateformes de déploiement) doit retomber sur la valeur par défaut,
  * ce que `??` ne ferait pas.
  */
-const rawOrigin = import.meta.env?.VITE_API_URL?.trim() || DEFAULT_ORIGIN;
+const rawOrigin = looksLikeOrigin(configuredOrigin)
+  ? (configuredOrigin as string)
+  : DEFAULT_ORIGIN;
 
 /**
  * Origine du backend, sans barre oblique finale.
