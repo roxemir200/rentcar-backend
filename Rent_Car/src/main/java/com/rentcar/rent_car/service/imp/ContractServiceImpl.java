@@ -18,6 +18,7 @@ import com.rentcar.rent_car.repository.UserRepository;
 import com.rentcar.rent_car.service.ContractService;
 import com.rentcar.rent_car.service.SseService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ContractServiceImpl implements ContractService {
     private final PaymentService paymentService;  // ← AJOUTER (pas PaymentRepository !)
     private final SseService sseService;
@@ -109,7 +111,10 @@ public class ContractServiceImpl implements ContractService {
         try {
             paymentIntentResponse = paymentService.createPaymentIntent(reservation.getId());
         } catch (RuntimeException e) {
-            // Si un paiement PENDING existe déjà, ce n'est pas grave
+            // La signature reste valide : le paiement pourra etre relance
+            // depuis l'espace client. On journalise pour ne pas perdre la trace.
+            log.warn("Contrat {} signé, mais création de l'intention de paiement impossible : {}",
+                    contract.getContractNumber(), e.getMessage());
         }
 
         // Notifications...

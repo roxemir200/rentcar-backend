@@ -32,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -58,8 +59,23 @@ public class PaymentServiceImpl implements PaymentService {
     @Value("${stripe.webhook.secret}")
     private String webhookSecret;
 
+    /**
+     * Transaction independante de l'appelant, volontairement.
+     * <p>
+     * Avec la propagation par defaut, cette methode rejoignait la transaction
+     * de {@code ContractServiceImpl.signContract}. Un echec Stripe y levait
+     * une exception qui, en franchissant la frontiere transactionnelle,
+     * marquait la transaction entiere « rollback-only ». L'appelant avait beau
+     * rattraper l'exception, le commit final echouait en
+     * {@code UnexpectedRollbackException} : la signature du contrat etait
+     * perdue, et le client recevait un 500 apres un message de succes.
+     * <p>
+     * Signer un contrat et creer une intention de paiement sont deux
+     * operations distinctes : l'indisponibilite du prestataire de paiement ne
+     * doit pas annuler la signature.
+     */
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public PaymentIntentResponse createPaymentIntent(Long reservationId) {
         log.info("Début de createPaymentIntent() pour réservation ID : {}", reservationId);
 
