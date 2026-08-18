@@ -34,18 +34,30 @@ public class CloudinaryImageStorage implements ImageStorage {
     /** Dossier de destination dans la bibliotheque Cloudinary. */
     private static final String FOLDER = "rentcar/cars";
 
+    private static final String CONFIGURATION_MANQUANTE =
+            "Stockage Cloudinary actif mais CLOUDINARY_URL est vide. "
+                    + "Format attendu : cloudinary://cle:secret@nom-du-compte";
+
+    /** {@code null} lorsque la configuration est absente : les televersements echouent alors. */
     private final Cloudinary cloudinary;
 
+    /**
+     * Signale une configuration incomplete sans empecher le demarrage.
+     * <p>
+     * Faire echouer le contexte serait disproportionne : l'application
+     * entiere — connexion, catalogue, reservations — tomberait parce qu'une
+     * seule fonctionnalite est mal configuree. Le probleme reste visible,
+     * puisqu'il est journalise en ERROR au demarrage et que tout
+     * televersement echoue ensuite avec le meme message.
+     */
     @Autowired
     public CloudinaryImageStorage(@Value("${app.storage.cloudinary.url:}") String cloudinaryUrl) {
-        if (!StringUtils.hasText(cloudinaryUrl)) {
-            // Diagnostic au demarrage plutot qu'au premier televersement : sans
-            // cela, la panne ne se decouvre qu'en tentant d'ajouter une voiture.
-            throw new ImageStorageException(
-                    "Stockage Cloudinary actif mais CLOUDINARY_URL est vide. "
-                            + "Format attendu : cloudinary://cle:secret@nom-du-compte");
+        if (StringUtils.hasText(cloudinaryUrl)) {
+            this.cloudinary = new Cloudinary(cloudinaryUrl);
+        } else {
+            this.cloudinary = null;
+            log.error(CONFIGURATION_MANQUANTE);
         }
-        this.cloudinary = new Cloudinary(cloudinaryUrl);
     }
 
     /** Variante permettant aux tests de fournir un client simule. */
@@ -55,6 +67,10 @@ public class CloudinaryImageStorage implements ImageStorage {
 
     @Override
     public String store(MultipartFile file, String filename) {
+        if (cloudinary == null) {
+            throw new ImageStorageException(CONFIGURATION_MANQUANTE);
+        }
+
         try {
             // Le nom est transmis sans extension : Cloudinary la deduit du
             // contenu et l'ajoute a l'URL renvoyee.

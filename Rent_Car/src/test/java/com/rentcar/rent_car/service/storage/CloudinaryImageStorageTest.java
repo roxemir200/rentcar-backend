@@ -75,21 +75,28 @@ class CloudinaryImageStorageTest {
     }
 
     /**
-     * Verifie que Spring sait construire ce bean quand Cloudinary est retenu,
-     * et qu'une configuration incomplete echoue AU DEMARRAGE plutot qu'au
-     * premier televersement.
+     * Une configuration incomplete ne doit pas empecher l'application de
+     * demarrer : faire tomber le catalogue et la connexion parce que le
+     * televersement d'images est mal configure serait disproportionne.
      */
     @Test
-    void shouldFailFastAtStartupWhenCloudinaryUrlIsMissing() {
+    void shouldStartEvenWhenCloudinaryUrlIsMissing() {
         new ApplicationContextRunner()
                 .withUserConfiguration(CloudinaryImageStorage.class)
                 .withPropertyValues("app.storage.provider=cloudinary")
                 .run(context -> assertThat(context)
-                        .hasFailed()
-                        .getFailure()
-                        .rootCause()
-                        .isInstanceOf(ImageStorageException.class)
-                        .hasMessageContaining("CLOUDINARY_URL"));
+                        .hasNotFailed()
+                        .hasSingleBean(CloudinaryImageStorage.class));
+    }
+
+    /** En revanche, tout televersement doit echouer avec un message actionnable. */
+    @Test
+    void shouldRefuseUploadWhenCloudinaryUrlIsMissing() {
+        CloudinaryImageStorage storage = new CloudinaryImageStorage("");
+
+        assertThatThrownBy(() -> storage.store(image(), "abc.png"))
+                .isInstanceOf(ImageStorageException.class)
+                .hasMessageContaining("CLOUDINARY_URL");
     }
 
     @Test
