@@ -1,5 +1,7 @@
 package com.rentcar.rent_car.controller;
 
+import com.rentcar.rent_car.dto.mapper.UserMapper;
+import com.rentcar.rent_car.dto.response.UserResponse;
 import com.rentcar.rent_car.entity.User;
 import com.rentcar.rent_car.enums.Role;
 import com.rentcar.rent_car.repository.UserRepository;
@@ -23,6 +25,9 @@ class UserControllerTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private UserMapper userMapper;
+
     @InjectMocks
     private UserController userController;
 
@@ -33,8 +38,10 @@ class UserControllerTest {
         admin.setRole(Role.ADMIN);
 
         when(userRepository.findByRole(Role.ADMIN)).thenReturn(List.of(admin));
+        when(userMapper.toResponse(admin))
+                .thenReturn(UserResponse.builder().id(1L).role(Role.ADMIN).build());
 
-        ResponseEntity<User> response = userController.getSupportUser();
+        ResponseEntity<UserResponse> response = userController.getSupportUser();
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
@@ -45,8 +52,30 @@ class UserControllerTest {
     void shouldReturnNotFound_whenNoAdminExists() {
         when(userRepository.findByRole(Role.ADMIN)).thenReturn(Collections.emptyList());
 
-        ResponseEntity<User> response = userController.getSupportUser();
+        ResponseEntity<UserResponse> response = userController.getSupportUser();
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    /**
+     * L'endpoint ne doit jamais exposer l'entite : elle porte le mot de passe
+     * hache et des collections qui bouclent a la serialisation.
+     */
+    @Test
+    void shouldReturnDtoWithoutPasswordNorCollections() {
+        User admin = new User();
+        admin.setId(1L);
+        admin.setEmail("admin@rentcar.com");
+        admin.setPassword("$2a$10$hash-qui-ne-doit-pas-sortir");
+        admin.setRole(Role.ADMIN);
+
+        when(userRepository.findByRole(Role.ADMIN)).thenReturn(List.of(admin));
+        when(userMapper.toResponse(admin)).thenReturn(
+                UserResponse.builder().id(1L).email("admin@rentcar.com").role(Role.ADMIN).build());
+
+        ResponseEntity<UserResponse> response = userController.getSupportUser();
+
+        assertThat(response.getBody()).isInstanceOf(UserResponse.class);
+        assertThat(response.getBody().getEmail()).isEqualTo("admin@rentcar.com");
     }
 }

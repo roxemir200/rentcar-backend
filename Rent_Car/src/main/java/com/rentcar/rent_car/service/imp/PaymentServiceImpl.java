@@ -22,6 +22,7 @@ import com.rentcar.rent_car.repository.ReservationRepository;
 import com.rentcar.rent_car.repository.UserRepository;
 import com.rentcar.rent_car.service.PaymentService;
 import com.rentcar.rent_car.service.SseService;
+import com.rentcar.rent_car.exception.ResourceNotFoundException;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Event;
@@ -312,8 +313,8 @@ public class PaymentServiceImpl implements PaymentService {
     public PaymentResponse getPaymentByReservation(Long reservationId) {
         Payment payment = paymentRepository.findByReservationId(reservationId)
                 .orElseThrow(() -> {
-                    log.error("Aucun paiement trouvé pour la réservation : {}", reservationId);
-                    return new RuntimeException("Aucun paiement trouvé pour cette réservation");
+                    log.info("Aucun paiement pour la réservation {} : le client n'a pas encore engagé le règlement", reservationId);
+                    return new ResourceNotFoundException("Aucun paiement trouvé pour cette réservation");
                 });
         return paymentMapper.toResponse(payment);
     }

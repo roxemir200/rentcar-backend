@@ -54,6 +54,16 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Ressource absente : 404, et non 500. Le client peut s'y adapter, par
+     * exemple en proposant de creer le paiement plutot qu'en affichant une
+     * erreur technique.
+     */
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<MessageResponse> handleNotFound(ResourceNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(MessageResponse.error(e.getMessage()));
+    }
+
+    /**
      * Echec de validation d'un {@code @Valid} : on renvoie les champs fautifs,
      * ce qui permet au frontend de les signaler precisement.
      */
