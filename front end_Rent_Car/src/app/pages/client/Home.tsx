@@ -5,6 +5,7 @@ import { Button } from "../../components/common/Button";
 import { CarCard } from "../../components/common/CarCard";
 import { PageTransition } from "../../components/common/Misc";
 import { useApp } from "../../context/AppContext";
+import { usePublicStats } from "../../hooks/usePublicStats";
 
 // Fallback image quand AUCUNE image n'est disponible (ni voiture, ni category stock)
 const FALLBACK_IMG =
@@ -18,9 +19,32 @@ const fallbackImages: Record<string, string> = {
   "Luxe": "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=600&h=400&fit=crop&auto=format",
 };
 
+/** L'enseigne ne compte qu'une agence : ce n'est pas une donnée, c'est un fait. */
+const AGENCY_COUNT = 1;
+
 export default function Home() {
   const { cars, categories, currentUser, getCarRating } = useApp();
   const featured = cars.filter((c) => c.status === "AVAILABLE").slice(0, 3);
+  const { stats } = usePublicStats();
+
+  /**
+   * Vignettes du bandeau d'accueil.
+   *
+   * Elles annonçaient « 500+ véhicules », « 25 agences » et « 4.8★ » — trois
+   * chiffres inventés, dont deux faux par nature : le catalogue en compte
+   * quelques dizaines et l'enseigne n'a qu'une agence.
+   *
+   * La satisfaction disparaît tant qu'aucun avis n'a été publié : afficher
+   * « 0★ » se lirait comme un mécontentement général, alors que personne ne
+   * s'est encore prononcé.
+   */
+  const heroStats = [
+    ...(stats ? [{ value: String(stats.vehicles), label: stats.vehicles > 1 ? "Véhicules" : "Véhicule" }] : []),
+    { value: String(AGENCY_COUNT), label: "Agence" },
+    ...(stats?.averageRating != null
+      ? [{ value: `${stats.averageRating.toFixed(1)}★`, label: "Satisfaction" }]
+      : []),
+  ];
 
   return (
     <PageTransition>
@@ -40,11 +64,15 @@ export default function Home() {
             <Link to="/cars"><Button size="lg" className="bg-white text-primary hover:bg-white/90"><Search className="size-5" /> Voir les voitures</Button></Link>
             <Link to="/register"><Button size="lg" variant="outline" className="border-white/40 text-white hover:bg-white/10">Créer un compte</Button></Link>
           </div>
-          <div className="mt-12 grid grid-cols-3 gap-4 max-w-lg mx-auto">
-            {[["500+", "Véhicules"], ["25", "Agences"], ["4.8★", "Satisfaction"]].map(([n, l]) => (
-              <div key={l}><p className="text-2xl font-bold text-white">{n}</p><p className="text-sm text-white/70">{l}</p></div>
-            ))}
-          </div>
+          {/* Disposition en flex et non en grille fixe : le nombre de vignettes
+              varie selon ce que la base contient reellement. */}
+          {stats && (
+            <div className="mt-12 flex flex-wrap items-start justify-center gap-x-12 gap-y-6">
+              {heroStats.map(({ value, label }) => (
+                <div key={label} className="text-center"><p className="text-2xl font-bold text-white">{value}</p><p className="text-sm text-white/70">{label}</p></div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

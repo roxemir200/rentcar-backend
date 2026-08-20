@@ -20,6 +20,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Trouver tous les utilisateurs par rôle (pour l'admin)
     List<User> findByRole(Role role);
 
+    long countByRole(Role role);
+
     // Trouver les utilisateurs actifs
     List<User> findByIsActiveTrue();
     Optional<User> findByVerificationToken(String token);

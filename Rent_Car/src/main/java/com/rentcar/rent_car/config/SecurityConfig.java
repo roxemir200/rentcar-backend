@@ -184,6 +184,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/cars/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                         .requestMatchers("/api/webhooks/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reviews/car/**").permitAll()
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/swagger-ui.html").permitAll()

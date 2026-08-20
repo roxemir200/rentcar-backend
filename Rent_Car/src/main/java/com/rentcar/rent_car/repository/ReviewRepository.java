@@ -29,4 +29,8 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     // Nombre d'avis d'une voiture
     Long countByCarId(Long carId);
+
+    // Note moyenne toutes voitures confondues (null tant qu'aucun avis n'existe)
+    @Query("SELECT AVG(r.rating) FROM Review r")
+    Double getAverageRating();
 }

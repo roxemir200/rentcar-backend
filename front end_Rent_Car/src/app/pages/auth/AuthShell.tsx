@@ -2,8 +2,26 @@ import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { Car, ShieldCheck, Clock, Star } from "lucide-react";
 import { ImageWithFallback } from "../../components/figma/ImageWithFallback";
+import { usePublicStats } from "../../hooks/usePublicStats";
 
 export function AuthShell({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
+  const { stats } = usePublicStats();
+
+  /**
+   * Argument de confiance, tire du nombre reel de comptes clients.
+   *
+   * La page annoncait « Plus de 10 000 clients satisfaits » a une base qui en
+   * comptait une poignee. Tant que le chiffre n'est pas connu -- ou qu'aucun
+   * client n'est encore inscrit -- on promet le service plutot qu'une
+   * audience, sans jamais avancer de nombre invente.
+   */
+  const clientsLine =
+    stats && stats.clients > 0
+      ? stats.clients > 1
+        ? `${stats.clients} clients nous font déjà confiance`
+        : "1 client nous fait déjà confiance"
+      : "Un accompagnement personnalisé à chaque location";
+
   return (
     <div className="min-h-screen grid lg:grid-cols-2 bg-white">
       {/* Left brand panel */}
@@ -25,7 +43,7 @@ export function AuthShell({ title, subtitle, children }: { title: string; subtit
             {[
               { icon: ShieldCheck, text: "Assurance tous risques incluse" },
               { icon: Clock, text: "Réservation instantanée 24h/24" },
-              { icon: Star, text: "Plus de 10 000 clients satisfaits" },
+              { icon: Star, text: clientsLine },
             ].map(({ icon: Icon, text }) => (
               <div key={text} className="flex items-center gap-3">
                 <span className="size-9 rounded-lg bg-white/15 flex items-center justify-center"><Icon className="size-4.5" /></span>
