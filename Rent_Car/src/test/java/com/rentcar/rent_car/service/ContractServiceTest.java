@@ -3,7 +3,6 @@ package com.rentcar.rent_car.service;
 import com.rentcar.rent_car.dto.mapper.ContractMapper;
 import com.rentcar.rent_car.dto.response.ContractResponse;
 import com.rentcar.rent_car.dto.response.MessageResponse;
-import com.rentcar.rent_car.dto.response.PaymentIntentResponse;
 import com.rentcar.rent_car.entity.Car;
 import com.rentcar.rent_car.entity.Contract;
 import com.rentcar.rent_car.entity.Reservation;
@@ -155,12 +154,9 @@ class ContractServiceTest {
 
     @Test
     void shouldSignContract_successfully() {
-        PaymentIntentResponse paymentResponse = new PaymentIntentResponse("pi_secret", "pi_123", 1L);
-
         when(contractRepository.findById(50L)).thenReturn(Optional.of(contract));
         when(userRepository.findByEmail("client@test.com")).thenReturn(Optional.of(client));
         when(userRepository.findByRole(Role.ADMIN)).thenReturn(List.of(admin));
-        when(paymentService.createPaymentIntent(100L)).thenReturn(paymentResponse);
         when(contractMapper.toResponse(contract)).thenReturn(new ContractResponse());
 
         MessageResponse response = contractService.signContract(50L, "client@test.com");
@@ -171,21 +167,29 @@ class ContractServiceTest {
 
         @SuppressWarnings("unchecked")
         Map<String, Object> data = (Map<String, Object>) response.getData();
-        assertThat(data).containsEntry("clientSecret", "pi_secret");
+        assertThat(data).containsKey("contract");
     }
 
+    /**
+     * La signature ne cree plus l'intention de paiement.
+     * <p>
+     * Elle le faisait dans une transaction REQUIRES_NEW qui relisait le
+     * contrat en base avant que la signature n'y soit commitee : le statut lu
+     * restait DRAFT et la creation echouait a chaque fois. La page de paiement
+     * s'en charge desormais, une fois la signature bel et bien enregistree.
+     */
     @Test
-    void shouldSignContract_whenPaymentIntentThrowsException() {
+    void shouldSignContract_withoutCreatingPaymentIntent() {
         when(contractRepository.findById(50L)).thenReturn(Optional.of(contract));
         when(userRepository.findByEmail("client@test.com")).thenReturn(Optional.of(client));
         when(userRepository.findByRole(Role.ADMIN)).thenReturn(List.of(admin));
-        when(paymentService.createPaymentIntent(100L)).thenThrow(new RuntimeException("Payment pending"));
         when(contractMapper.toResponse(contract)).thenReturn(new ContractResponse());
 
         MessageResponse response = contractService.signContract(50L, "client@test.com");
 
         assertThat(response.isSuccess()).isTrue();
         assertThat(contract.getStatus()).isEqualTo(ContractStatus.SIGNED);
+        verifyNoInteractions(paymentService);
     }
 
     @Test

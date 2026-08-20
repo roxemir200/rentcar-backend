@@ -107,14 +107,22 @@ public class PaymentServiceImpl implements PaymentService {
             throw new RuntimeException("Le contrat doit être signé avant le paiement");
         }
 
-        // 4. Vérifier qu'il n'y a pas déjà un paiement complété
-        paymentRepository.findByReservationId(reservationId).ifPresent(existingPayment -> {
+        // 4. Reprendre le paiement existant plutot que d'en creer un second.
+        //
+        // Une reservation ne porte qu'un paiement. Inserer une ligne neuve a
+        // chaque tentative en laissait plusieurs au statut PENDING pour la
+        // meme reservation ; le repli « dernier PENDING » de
+        // updatePaymentStatus() pouvait alors valider la mauvaise.
+        Payment existingPayment = paymentRepository.findByReservationId(reservationId).orElse(null);
+        if (existingPayment != null) {
             log.info("Paiement existant trouvé, statut : {}", existingPayment.getStatus());
             if (existingPayment.getStatus() == PaymentStatus.COMPLETED) {
                 log.warn("Réservation déjà payée : {}", reservationId);
                 throw new RuntimeException("Cette réservation est déjà payée");
             }
-        });
+            log.info("Reprise du paiement {} : une nouvelle intention Stripe lui sera rattachée",
+                    existingPayment.getId());
+        }
 
         try {
             // 5. Créer le PaymentIntent chez Stripe
@@ -136,7 +144,7 @@ public class PaymentServiceImpl implements PaymentService {
             log.info("PaymentIntent créé avec succès, ID : {}", paymentIntent.getId());
 
             // 6. Sauvegarder le paiement en base
-            Payment payment = new Payment();
+            Payment payment = existingPayment != null ? existingPayment : new Payment();
             payment.setExternalPaymentId(paymentIntent.getId());
             payment.setAmount(reservation.getTotalAmount());
             payment.setCurrency("EUR");
@@ -151,7 +159,7 @@ public class PaymentServiceImpl implements PaymentService {
             PaymentIntentResponse response = PaymentIntentResponse.builder()
                     .clientSecret(paymentIntent.getClientSecret())
                     .paymentIntentId(paymentIntent.getId())
-                    .paymentId(payment.getId())
+                    .paymentId(savedPayment.getId())
                     .build();
             
             log.info("Fin de createPaymentIntent() avec succès pour la réservation : {}", reservationId);

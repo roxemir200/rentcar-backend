@@ -3,8 +3,6 @@ package com.rentcar.rent_car.service.imp;
 import com.rentcar.rent_car.dto.mapper.ContractMapper;
 import com.rentcar.rent_car.dto.response.ContractResponse;
 import com.rentcar.rent_car.dto.response.MessageResponse;
-import com.rentcar.rent_car.dto.response.PaymentIntentResponse;
-import com.rentcar.rent_car.service.PaymentService;
 import com.rentcar.rent_car.entity.Car;
 import com.rentcar.rent_car.entity.Contract;
 import com.rentcar.rent_car.entity.Reservation;
@@ -34,7 +32,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class ContractServiceImpl implements ContractService {
-    private final PaymentService paymentService;  // ← AJOUTER (pas PaymentRepository !)
     private final SseService sseService;
     private final ContractRepository contractRepository;
     private final ReservationRepository reservationRepository;
@@ -105,17 +102,24 @@ public class ContractServiceImpl implements ContractService {
         contract.setSignedAt(LocalDateTime.now());
         contractRepository.save(contract);
 
-        // ✅ CRÉER LE PAIEMENT ET RÉCUPÉRER LE RÉSULTAT
+        // L'intention de paiement n'est PLUS creee ici : elle l'est par la page
+        // de paiement, via POST /api/payments/create-intent.
+        //
+        // L'appel depuis cette methode ne pouvait pas fonctionner.
+        // createPaymentIntent() s'execute en REQUIRES_NEW -- donc sur une
+        // transaction, et une connexion, distinctes -- et commence par relire
+        // le contrat en base pour verifier qu'il est signe. Or le save()
+        // ci-dessus n'est pas encore commite : la transaction independante
+        // lisait invariablement l'ancien statut DRAFT et refusait de creer le
+        // paiement (« Le contrat doit être signé avant le paiement »).
+        //
+        // L'echec etait rattrape et simplement journalise : la signature
+        // paraissait reussie, mais aucun paiement n'existait, et le client
+        // n'avait plus aucun moyen de payer -- re-signer etant refuse.
+        //
+        // Les tests unitaires ne l'ont pas vu : ils substituent PaymentService
+        // par un double, ce qui supprime justement la lecture en base.
         Reservation reservation = contract.getReservation();
-        PaymentIntentResponse paymentIntentResponse = null;
-        try {
-            paymentIntentResponse = paymentService.createPaymentIntent(reservation.getId());
-        } catch (RuntimeException e) {
-            // La signature reste valide : le paiement pourra etre relance
-            // depuis l'espace client. On journalise pour ne pas perdre la trace.
-            log.warn("Contrat {} signé, mais création de l'intention de paiement impossible : {}",
-                    contract.getContractNumber(), e.getMessage());
-        }
 
         // Notifications...
         sseService.createAndSend(reservation.getClient().getId(),
@@ -131,14 +135,8 @@ public class ContractServiceImpl implements ContractService {
                     "CONTRACT");
         }
 
-        // ✅ RETOURNER LE CONTRAT + LE CLIENT SECRET
         Map<String, Object> responseData = new HashMap<>();
         responseData.put("contract", contractMapper.toResponse(contract));
-        if (paymentIntentResponse != null) {
-            responseData.put("clientSecret", paymentIntentResponse.getClientSecret());
-            responseData.put("paymentIntentId", paymentIntentResponse.getPaymentIntentId());
-            responseData.put("paymentId", paymentIntentResponse.getPaymentId());
-        }
 
         return MessageResponse.success(
                 "Contrat signé avec succès ! Vous pouvez maintenant procéder au paiement.",

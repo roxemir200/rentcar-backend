@@ -30,8 +30,6 @@ export default function Contract({ admin }: { admin?: boolean }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ✅ Stocker le clientSecret après signature
-  const [storedClientSecret, setStoredClientSecret] = useState<string | null>(null);
 
   const loadContract = async () => {
     if (!reservationId) return;
@@ -51,19 +49,21 @@ export default function Contract({ admin }: { admin?: boolean }) {
     loadContract();
   }, [reservationId]);
 
-  // ✅ Signer le contrat → stocker le clientSecret
+  /**
+   * Signe le contrat, puis conduit directement au paiement.
+   *
+   * La redirection dependait auparavant d'un `clientSecret` renvoye par la
+   * signature. Celui-ci n'arrivait jamais -- le backend echouait a le creer --
+   * si bien que le bouton « Proceder au paiement » ne s'affichait pas et que
+   * le client restait sur le contrat signe, sans suite possible.
+   */
   const doSign = async () => {
     if (!contract?.id) return;
     setSigning(true);
     try {
       const res = await contractsAPI.sign(contract.id);
       if (res.data.success) {
-        const data = res.data.data;
-        // ✅ Stocker le clientSecret reçu du backend
-        if (data?.clientSecret) {
-          setStoredClientSecret(data.clientSecret);
-        }
-        loadContract();
+        goToPayment();
       } else {
         toast.error(res.data.message);
       }
@@ -75,11 +75,8 @@ export default function Contract({ admin }: { admin?: boolean }) {
     }
   };
 
-  // ✅ Rediriger vers le paiement avec le clientSecret stocké
-  const handleGoToPayment = () => {
-    navigate(`/payment/${contract.reservationId}`, {
-      state: { clientSecret: storedClientSecret },
-    });
+  const goToPayment = () => {
+    navigate(`/payment/${contract?.reservationId ?? reservationId}`);
   };
 
   if (loading) {
@@ -224,10 +221,10 @@ export default function Contract({ admin }: { admin?: boolean }) {
           </div>
         )}
 
-        {/* ✅ Bouton "Procéder au paiement" avec clientSecret stocké */}
-        {!admin && contract.status === "SIGNED" && storedClientSecret && (
+        {/* Un contrat signe donne toujours acces au paiement. */}
+        {!admin && contract.status === "SIGNED" && (
           <div className="mt-6 flex justify-end">
-            <Button size="lg" onClick={handleGoToPayment}>
+            <Button size="lg" onClick={goToPayment}>
               <CreditCard className="size-5 mr-2" /> Procéder au paiement
             </Button>
           </div>

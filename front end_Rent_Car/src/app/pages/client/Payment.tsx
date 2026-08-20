@@ -89,9 +89,13 @@ export default function Payment() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
+  const [preparingPayment, setPreparingPayment] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [createdClientSecret, setCreatedClientSecret] = useState<string | null>(null);
 
   const passedClientSecret = (location.state as any)?.clientSecret;
   const dataLoadedRef = useRef(false);
+  const intentRequestedRef = useRef(false);
 
   // Get payment from AppContext's payments array
   const payment = getPaymentByReservation(reservationId || "") || null;
@@ -151,10 +155,68 @@ export default function Payment() {
   const car = reservation ? getCar(String(reservation.carId)) : undefined;
   const signed = contract?.status === "SIGNED";
   const isPaid = payment?.status === "COMPLETED";
-  const isPending = payment?.status === "PENDING";
   const amount = payment?.amount || reservation?.totalAmount || reservation?.total || 0;
-  const clientSecret = passedClientSecret || payment?.clientSecret;
-  const canPay = isPending && signed && clientSecret;
+  const clientSecret: string | undefined = passedClientSecret || createdClientSecret || undefined;
+  const canPay = signed && !!clientSecret;
+
+  /**
+   * Redemande un clientSecret au backend quand il manque.
+   *
+   * Le secret n'etait transmis qu'une fois, dans l'etat de navigation renvoye
+   * par la signature du contrat, et n'est stocke nulle part : ni en base, ni
+   * dans `PaymentResponse`. Rafraichir la page, y revenir plus tard ou avoir
+   * signe lors d'une session precedente le perdait definitivement. Le client
+   * restait alors bloque sur « Aucun paiement en attente », sans aucun moyen
+   * de payer -- re-signer le contrat etant refuse par le backend.
+   *
+   * L'endpoint existait deja ; il n'etait simplement appele nulle part.
+   */
+  const preparePayment = async () => {
+    if (!reservationId) return;
+    setPreparingPayment(true);
+    setPaymentError(null);
+    try {
+      const res = await paymentsAPI.create({ reservationId });
+      const data = res.data?.value || res.data;
+      if (data?.clientSecret) {
+        setCreatedClientSecret(data.clientSecret);
+        // La reponse porte deja tout ce qu'il faut : inutile de recharger la
+        // page entiere pour retrouver la ligne qui vient d'etre creee.
+        addOrUpdatePayment({
+          id: String(data.paymentId),
+          stripeId: data.paymentIntentId,
+          externalPaymentId: data.paymentIntentId,
+          reservationId: String(reservationId),
+          amount: reservation?.totalAmount ?? amount,
+          currency: "EUR",
+          provider: "STRIPE",
+          status: "PENDING",
+        });
+      } else {
+        setPaymentError("Le serveur n'a pas renvoyé de référence de paiement.");
+      }
+    } catch (err: any) {
+      setPaymentError(
+        err?.response?.data?.message ||
+          "Impossible de préparer le paiement. Réessayez dans un instant.",
+      );
+    } finally {
+      setPreparingPayment(false);
+    }
+  };
+
+  const retryPreparePayment = () => {
+    intentRequestedRef.current = true;
+    preparePayment();
+  };
+
+  useEffect(() => {
+    if (loading || !signed || isPaid || clientSecret) return;
+    if (payment?.status === "REFUNDED" || payment?.status === "FAILED") return;
+    if (intentRequestedRef.current) return;
+    intentRequestedRef.current = true;
+    preparePayment();
+  }, [loading, signed, isPaid, clientSecret, payment?.status]);
 
   // Loading
   if (loading) {
@@ -241,7 +303,9 @@ export default function Payment() {
           <Card className="p-6 text-center">
             <XCircle className="size-14 mx-auto text-destructive mb-3" />
             <h3 className="text-foreground">Paiement échoué ❌</h3>
-            <Button className="mt-5" onClick={() => loadData()}>Réessayer</Button>
+            <Button className="mt-5" onClick={retryPreparePayment} disabled={preparingPayment}>
+              {preparingPayment ? "Préparation..." : "Réessayer"}
+            </Button>
           </Card>
         ) : payment?.status === "REFUNDED" ? (
           <Card className="p-6 text-center">
@@ -263,9 +327,24 @@ export default function Payment() {
             onSuccess={handlePaymentResult}
             stripe={stripe}
           />
+        ) : preparingPayment ? (
+          <Card className="p-6 text-center">
+            <Loader2 className="size-10 mx-auto text-primary animate-spin mb-3" />
+            <p className="text-muted-foreground">Préparation du paiement...</p>
+          </Card>
         ) : (
           <Card className="p-6 text-center">
-            <p className="text-muted-foreground">Aucun paiement en attente.</p>
+            <p className="text-muted-foreground">
+              {paymentError ||
+                (signed
+                  ? "Aucun paiement en attente."
+                  : "Le paiement sera disponible une fois le contrat signé.")}
+            </p>
+            {signed && (
+              <Button className="mt-4" onClick={retryPreparePayment}>
+                Réessayer
+              </Button>
+            )}
           </Card>
         )}
 

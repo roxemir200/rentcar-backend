@@ -21,7 +21,7 @@ vi.mock('@stripe/react-stripe-js', () => ({
 }))
 
 vi.mock('../../../api/payments.api', () => ({
-  paymentsAPI: { getByReservation: vi.fn() },
+  paymentsAPI: { getByReservation: vi.fn(), create: vi.fn() },
 }))
 vi.mock('../../../api/reservations.api', () => ({
   reservationsAPI: { getById: vi.fn() },
@@ -57,6 +57,7 @@ const renderPage = (app = {}, options = {}) =>
 beforeEach(() => {
   vi.mocked(reservationsAPI.getById).mockResolvedValue(axiosResponse(apiReservation()))
   vi.mocked(paymentsAPI.getByReservation).mockResolvedValue(axiosResponse(null))
+  vi.mocked(paymentsAPI.create).mockResolvedValue(axiosResponse({ clientSecret: 'pi_secret_auto' }))
   vi.mocked(contractsAPI.getByReservation).mockResolvedValue(axiosResponse({ status: 'SIGNED' }))
   confirmCardPayment.mockResolvedValue({})
 })
@@ -129,10 +130,17 @@ describe('pages/client/Payment · résumé et états', () => {
     expect(screen.getByRole('link', { name: /Signer le contrat maintenant/ })).toHaveAttribute('href', '/contract/r1')
   })
 
-  it('indique qu’aucun paiement n’est en attente', async () => {
+  it('affiche le refus du backend quand le paiement ne peut être préparé', async () => {
+    vi.mocked(paymentsAPI.create).mockRejectedValue({
+      response: { data: { message: 'La réservation doit être confirmée avant le paiement' } },
+    })
+
     renderPage()
 
-    expect(await screen.findByText('Aucun paiement en attente.')).toBeInTheDocument()
+    expect(
+      await screen.findByText('La réservation doit être confirmée avant le paiement'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Réessayer' })).toBeInTheDocument()
   })
 
   it('affiche la confirmation et l’historique d’un paiement abouti', async () => {
@@ -151,9 +159,11 @@ describe('pages/client/Payment · résumé et états', () => {
 
     expect(await screen.findByRole('heading', { name: 'Paiement échoué ❌' })).toBeInTheDocument()
 
+    expect(paymentsAPI.create).not.toHaveBeenCalled()
+
     await user.click(screen.getByRole('button', { name: 'Réessayer' }))
 
-    await waitFor(() => expect(reservationsAPI.getById).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(paymentsAPI.create).toHaveBeenCalledWith({ reservationId: 'r1' }))
   })
 
   it('signale un paiement remboursé', async () => {
@@ -180,12 +190,19 @@ describe('pages/client/Payment · tunnel Stripe', () => {
       { route: '/payment/r1' },
     )
 
-  it('n’affiche pas le formulaire sans clientSecret', async () => {
+  /**
+   * Le clientSecret ne transitait que par l'etat de navigation laisse par la
+   * signature du contrat. Un rafraichissement, un retour ulterieur ou une
+   * signature datant d'une session precedente le perdaient, et le client se
+   * retrouvait sans aucun moyen de payer.
+   */
+  it('réclame un clientSecret au backend quand il manque', async () => {
+    vi.mocked(paymentsAPI.create).mockResolvedValue(axiosResponse({ clientSecret: 'pi_secret_2' }))
+
     payable()
 
-    await screen.findByText('Renault Clio')
-    expect(screen.queryByTestId('card-element')).not.toBeInTheDocument()
-    expect(screen.getByText('Aucun paiement en attente.')).toBeInTheDocument()
+    expect(await screen.findByTestId('card-element')).toBeInTheDocument()
+    expect(paymentsAPI.create).toHaveBeenCalledWith({ reservationId: 'r1' })
   })
 
   const withSecret = () =>

@@ -162,7 +162,7 @@ describe('pages/client/Contract · signature', () => {
     expect(screen.getByRole('button', { name: /Je signe le contrat/ })).toBeEnabled()
   })
 
-  it('signe le contrat et le recharge', async () => {
+  it('signe le contrat et conduit au paiement', async () => {
     const { user } = renderPage()
     await screen.findByRole('checkbox')
 
@@ -170,25 +170,24 @@ describe('pages/client/Contract · signature', () => {
     await user.click(screen.getByRole('button', { name: /Je signe le contrat/ }))
 
     await waitFor(() => expect(contractsAPI.sign).toHaveBeenCalledWith(12))
-    expect(contractsAPI.getByReservation).toHaveBeenCalledTimes(2)
+    expect(navigate).toHaveBeenCalledWith('/payment/r1')
   })
 
-  it('propose de payer après signature en transmettant le clientSecret', async () => {
-    vi.mocked(contractsAPI.sign).mockResolvedValue(axiosResponse({ success: true, data: { clientSecret: 'pi_secret_1' } }))
-    vi.mocked(contractsAPI.getByReservation)
-      .mockResolvedValueOnce(axiosResponse(apiContract()))
-      .mockResolvedValue(axiosResponse(apiContract({ status: 'SIGNED' })))
+  /**
+   * L'acces au paiement dependait d'un `clientSecret` renvoye par la
+   * signature. Le backend n'arrivait jamais a le produire, donc le bouton ne
+   * s'affichait pas : un contrat signe ne menait plus nulle part.
+   */
+  it('propose de payer devant un contrat déjà signé', async () => {
+    vi.mocked(contractsAPI.getByReservation).mockResolvedValue(
+      axiosResponse(apiContract({ status: 'SIGNED' })),
+    )
 
     const { user } = renderPage()
-    await screen.findByRole('checkbox')
 
-    await user.click(screen.getByRole('checkbox'))
-    await user.click(screen.getByRole('button', { name: /Je signe le contrat/ }))
+    await user.click(await screen.findByRole('button', { name: /Procéder au paiement/ }))
 
-    const payButton = await screen.findByRole('button', { name: /Procéder au paiement/ })
-    await user.click(payButton)
-
-    expect(navigate).toHaveBeenCalledWith('/payment/r1', { state: { clientSecret: 'pi_secret_1' } })
+    expect(navigate).toHaveBeenCalledWith('/payment/r1')
   })
 
   it('affiche le refus métier du backend', async () => {
