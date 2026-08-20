@@ -23,6 +23,7 @@ import com.rentcar.rent_car.repository.UserRepository;
 import com.rentcar.rent_car.service.PaymentService;
 import com.rentcar.rent_car.service.SseService;
 import com.rentcar.rent_car.exception.ResourceNotFoundException;
+import com.stripe.exception.AuthenticationException;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Event;
@@ -165,6 +166,18 @@ public class PaymentServiceImpl implements PaymentService {
             log.info("Fin de createPaymentIntent() avec succès pour la réservation : {}", reservationId);
             return response;
 
+        } catch (AuthenticationException e) {
+            // Panne de configuration, pas incident passager : reessayer ne
+            // changera rien. Le message generique « Veuillez réessayer »
+            // invitait le client a s'acharner sur un bouton sans issue, et
+            // masquait la seule action utile -- renseigner la cle sur
+            // l'hebergeur.
+            log.error("Clé secrète Stripe absente ou invalide : vérifiez STRIPE_SECRET_KEY "
+                    + "sur l'hébergeur (valeur seule, sans nom de variable ni guillemets), "
+                    + "puis redéployez. Réservation concernée : {}", reservationId, e);
+            throw new RuntimeException(
+                    "Le paiement est indisponible : la configuration Stripe du serveur est incomplète. "
+                            + "Contactez l'agence.");
         } catch (StripeException e) {
             // ✅ Log sécurisé (pas de détails d'erreur Stripe)
             log.error("Erreur Stripe lors de la création du PaymentIntent pour la réservation : {}", reservationId, e);

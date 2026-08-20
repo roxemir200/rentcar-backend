@@ -5,9 +5,28 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.util.StringUtils;
 
+/**
+ * Applique la cle Stripe au demarrage.
+ *
+ * <p>{@code @Lazy(false)} n'est pas decoratif. L'hebergeur active
+ * {@code spring.main.lazy-initialization=true} pour accelerer les demarrages a
+ * froid ; or aucun bean ne depend de cette classe, dont l'utilite tient
+ * entierement a l'effet de bord de son {@code @PostConstruct}. En
+ * initialisation paresseuse elle n'etait donc jamais instanciee :
+ * {@code Stripe.apiKey} restait nul et chaque paiement echouait en
+ * « No API key provided », alors meme que STRIPE_SECRET_KEY etait correctement
+ * renseignee. Aucune trace au demarrage, puisque le journal de cette classe ne
+ * s'ecrivait pas davantage.
+ *
+ * <p>L'annotation explicite exclut le bean du traitement paresseux : Spring
+ * Boot ne touche qu'aux definitions dont le caractere paresseux n'a pas ete
+ * fixe.
+ */
 @Configuration
+@Lazy(false)
 @Slf4j
 public class StripeConfig {
 

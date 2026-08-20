@@ -24,6 +24,7 @@ import com.rentcar.rent_car.repository.UserRepository;
 import com.rentcar.rent_car.service.imp.PaymentServiceImpl;
 
 import com.stripe.exception.ApiConnectionException;
+import com.stripe.exception.AuthenticationException;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
 
@@ -423,6 +424,27 @@ class PaymentServiceTest {
             assertThatThrownBy(() -> paymentService.createPaymentIntent(100L))
                     .isInstanceOf(RuntimeException.class)
                     .hasMessageContaining("Erreur lors du traitement du paiement");
+        }
+    }
+
+    /**
+     * Une cle Stripe absente est une panne de configuration, pas un incident
+     * passager : le message ne doit pas inviter le client a reessayer.
+     */
+    @Test
+    void shouldReportConfigurationError_whenStripeKeyMissing() throws Exception {
+        when(reservationRepository.findById(100L)).thenReturn(Optional.of(reservation));
+        when(contractRepository.findByReservationId(100L)).thenReturn(Optional.of(contract));
+        when(paymentRepository.findByReservationId(100L)).thenReturn(Optional.empty());
+
+        try (var mockedStatic = mockStatic(com.stripe.model.PaymentIntent.class)) {
+            mockedStatic.when(() -> com.stripe.model.PaymentIntent.create(any(PaymentIntentCreateParams.class)))
+                    .thenThrow(new AuthenticationException("No API key provided.", null, null, 401));
+
+            assertThatThrownBy(() -> paymentService.createPaymentIntent(100L))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessageContaining("configuration Stripe du serveur est incomplète")
+                    .hasMessageNotContaining("réessayer");
         }
     }
 
