@@ -156,8 +156,23 @@ jobs:
           api "https://api.vercel.com/v2/teams" > /dev/null
           echo "Equipes accessibles avec ce token :"
           jq -r '.teams[]? | "  - \(.name)  id=\(.id)"' /tmp/vercel-body.json
-          echo "(un id affiche *** est masque par GitHub : c'est celui de VERCEL_ORG_ID,"
-          echo " et sa presence dans cette liste prouve que le token y a acces)"
+
+          # Comparaison directe plutot que deduction visuelle. Un identifiant
+          # recopie a la main confond aisement O et 0, l et 1 : l'ecart est
+          # invisible a la lecture, et l'API repond alors 403 — le meme code
+          # que pour un defaut de droits, ce qui envoie chercher au mauvais
+          # endroit. GitHub masque les valeurs de secret dans les journaux :
+          # un identifiant affiche en clair ci-dessus est deja la preuve
+          # qu'il differe de VERCEL_ORG_ID.
+          if jq -e --arg id "$VERCEL_ORG_ID"                '.teams[]? | select(.id == $id)' /tmp/vercel-body.json > /dev/null; then
+            echo "VERCEL_ORG_ID correspond bien a une equipe accessible."
+          else
+            echo "::error::VERCEL_ORG_ID ne correspond a AUCUNE equipe ci-dessus."
+            echo "Le token est valide, mais l'identifiant d'equipe configure n'existe pas."
+            echo "Recopier l'id exact affiche dans la liste (attention aux O/0 et l/1),"
+            echo "ou le relire dans .vercel/project.json apres 'npx vercel link'."
+            exit 1
+          fi
 
           status=$(api "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID?teamId=$VERCEL_ORG_ID")
           case "$status" in
@@ -166,9 +181,10 @@ jobs:
               echo "Root Directory : $(jq -r '.rootDirectory // "(racine du depot)"' /tmp/vercel-body.json)"
               ;;
             403)
-              echo "::error::403 — le token n'a pas acces a cette equipe."
-              echo "Le token a ete cree avec la portee du compte personnel."
-              echo "Recreer le token en choisissant l'equipe proprietaire du projet."
+              echo "::error::403 — acces refuse a ce projet dans cette equipe."
+              echo "Deux causes possibles :"
+              echo "  - le projet appartient a une autre equipe que VERCEL_ORG_ID ;"
+              echo "  - le token a ete cree avec la portee du compte personnel."
               exit 1
               ;;
             404)
