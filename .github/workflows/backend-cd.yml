@@ -100,9 +100,36 @@ jobs:
       # « Deploy an existing image ». Tant que le service se
       # construit depuis Git, l'etape est ignoree plutot que de
       # faire echouer la livraison : l'image, elle, est publiee.
+      # Le code de retour est interprete, et non pris en bloc.
+      #
+      # `curl -f` echouait sur tout code non-2xx, 409 compris. Or 409
+      # signifie « un deploiement est deja en cours » : Render fait
+      # deja ce qu'on lui demande, et repousser la demande n'aurait
+      # aucun sens. Faire echouer la livraison pour ce motif signale
+      # une panne la ou il n'y en a pas — et, a force, apprend a ne
+      # plus regarder les pipelines rouges.
       - name: Trigger Render deployment
         if: env.RENDER_DEPLOY_HOOK != ''
-        run: curl -fsS -X POST "$RENDER_DEPLOY_HOOK"
+        run: |
+          status=$(curl -sS -o /tmp/render-hook.out -w '%{http_code}' \
+                   -X POST "$RENDER_DEPLOY_HOOK")
+          body=$(cat /tmp/render-hook.out)
+
+          case "$status" in
+            2*)
+              echo "Deploiement Render declenche (HTTP $status)."
+              ;;
+            409)
+              echo "::warning::Render a repondu 409 : un deploiement etait deja en cours."
+              echo "L'image publiee sera prise en compte par ce deploiement ou le suivant."
+              echo "Si le service est suspendu, aucun deploiement ne partira : verifier Render."
+              ;;
+            *)
+              echo "::error::Render a repondu $status."
+              echo "$body"
+              exit 1
+              ;;
+          esac
 
       - name: Skipped deployment notice
         if: env.RENDER_DEPLOY_HOOK == ''

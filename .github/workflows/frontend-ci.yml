@@ -1,17 +1,32 @@
+# ============================================================
+#  Integration continue du frontend
+#
+#  Declenchee directement par le push, en parallele de
+#  backend-ci. Elle attendait auparavant la fin de backend-ci,
+#  ce qui avait deux consequences :
+#
+#    - un test Java en echec bloquait toute analyse du frontend,
+#      alors que les deux sont independants ;
+#    - frontend-cd ne se declenchait jamais. GitHub n'emet pas
+#      d'evenement workflow_run pour un workflow lui-meme
+#      declenche par workflow_run : la chaine s'arretait au
+#      deuxieme niveau.
+#
+#  Topologie : push -> les deux CI en parallele -> chaque CD
+#  derriere sa propre CI, en parallele.
+# ============================================================
+
 name: frontend-ci
 
 on:
-  workflow_run:
-    workflows: ["backend-ci"]
-    types:
-      - completed
+  push:
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: frontend-ci-${{ github.event.workflow_run.head_sha }}
+  group: frontend-ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -19,17 +34,16 @@ jobs:
     name: Build, SonarCloud and artifact
     runs-on: ubuntu-latest
 
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-
     defaults:
       run:
         working-directory: "front end_Rent_Car"
 
     steps:
-      - name: Checkout triggering commit
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          # Historique complet : SonarCloud en a besoin pour dater les
+          # lignes et distinguer le code neuf de l'existant.
           fetch-depth: 0
 
       - name: Set up Node.js 20

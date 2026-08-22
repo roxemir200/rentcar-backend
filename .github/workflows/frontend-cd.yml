@@ -1,0 +1,146 @@
+# ============================================================
+#  Livraison continue du frontend
+#
+#  Enchaine sur frontend-ci et livre vers deux cibles :
+#
+#    1. Docker Hub — image nginx, pour la variante tout-conteneur
+#       et pour la tracabilite (un tag par commit).
+#    2. Vercel — ce que les visiteurs atteignent reellement.
+#
+#  Les deux sont construits DANS ce pipeline, pas ailleurs : c'est
+#  la difference entre livrer et se contenter d'appuyer sur un
+#  bouton chez l'hebergeur.
+#
+#  /!\ Deux jeux de variables VITE_*, et c'est inevitable.
+#
+#  Vite fige ces valeurs au build. L'image Docker les recoit en ARG,
+#  depuis les secrets GitHub ; le build Vercel les lit dans les
+#  variables du projet Vercel, que la plateforme injecte elle-meme.
+#  Les deux doivent rester identiques : une divergence produirait une
+#  image et un site qui n'appellent pas la meme API.
+# ============================================================
+
+name: frontend-cd
+
+on:
+  workflow_run:
+    workflows: ["frontend-ci"]
+    types: [completed]
+  # Permet de relivrer sans pousser de commit.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-cd
+  # On annule un build, jamais un deploiement en cours.
+  cancel-in-progress: false
+
+jobs:
+  publish-and-deploy:
+    name: Publish image and deploy to Vercel
+    runs-on: ubuntu-latest
+
+    # frontend-ci se declenche sur `on: push:` sans restriction, donc
+    # sur toutes les branches. Le filtre est ici, et non dans la CI :
+    # restreindre la CI priverait les branches de travail de leurs
+    # tests, alors que c'est la qu'ils servent le plus.
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'global')
+
+    environment: production
+
+    env:
+      IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/rentcar-frontend
+      COMMIT_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+      # Lues par la CLI Vercel pour savoir quel projet cibler.
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+    steps:
+      # Sans `ref`, un workflow declenche par workflow_run se place sur
+      # la branche par defaut, pas sur le commit qui a passe la CI :
+      # on livrerait le mauvais code, sans aucun signal d'erreur.
+      - name: Checkout triggering commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT_SHA }}
+
+      # ---------- Cible 1 : Docker Hub ----------
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Double etiquetage, comme pour le backend : `latest` designe la
+      # version courante, le SHA rend chaque image tracable et permet
+      # de revenir en arriere.
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: "./front end_Rent_Car"
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ env.COMMIT_SHA }}
+          build-args: |
+            VITE_API_URL=${{ secrets.VITE_API_URL }}
+            VITE_STRIPE_PUBLISHABLE_KEY=${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ---------- Cible 2 : Vercel ----------
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # `vercel@latest` plutot qu'une version figee : la CLI suit de
+      # pres l'API de la plateforme, et une version epinglee finit par
+      # ne plus etre acceptee. A epingler le jour ou une version
+      # connue-bonne doit etre garantie sur la duree.
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      # Recupere les reglages du projet — dont son "Root Directory",
+      # qui pointe sur "front end_Rent_Car". C'est pour cela que la
+      # CLI s'execute a la racine du depot et non dans le sous-dossier :
+      # le chemin est applique par la CLI, le repeter le doublerait.
+      - name: Pull Vercel project settings
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      # Le build a lieu ici, sur le runner. Vercel ne fait que recevoir
+      # le resultat : c'est ce pipeline qui decide de ce qui part en
+      # production, et le journal du build est consultable dans Actions.
+      - name: Build with Vercel
+        run: vercel build --prod --token="$VERCEL_TOKEN"
+
+      - name: Deploy prebuilt output to Vercel
+        run: |
+          url=$(vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")
+          echo "DEPLOY_URL=$url" >> "$GITHUB_ENV"
+          echo "Deploiement en ligne : $url"
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Frontend livre"
+            echo ""
+            echo "| Element | Valeur |"
+            echo "|---|---|"
+            echo "| Commit | \`$COMMIT_SHA\` |"
+            echo "| Image | \`$IMAGE:latest\` |"
+            echo "| Retour arriere | \`$IMAGE:$COMMIT_SHA\` |"
+            echo "| Deploiement | ${DEPLOY_URL:-non declenche} |"
+          } >> "$GITHUB_STEP_SUMMARY"
