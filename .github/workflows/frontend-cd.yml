@@ -42,6 +42,11 @@ jobs:
     name: Publish image and deploy to Vercel
     runs-on: ubuntu-latest
 
+    # Le delai par defaut d'un job GitHub est de six heures. Un
+    # deploiement bloque en file d'attente les consommerait en silence,
+    # sur un quota gratuit et mensuel.
+    timeout-minutes: 25
+
     # frontend-ci se declenche sur `on: push:` sans restriction, donc
     # sur toutes les branches. Le filtre est ici, et non dans la CI :
     # restreindre la CI priverait les branches de travail de leurs
@@ -238,7 +243,14 @@ jobs:
       - name: Build with Vercel
         run: vercel build --prod --token="$VERCEL_TOKEN"
 
+      # La CLI attend que le deploiement soit pret avant de rendre la
+      # main : c'est ce qui permet au pipeline de rapporter un echec
+      # cote Vercel. Mais l'offre gratuite ne construit qu'un
+      # deploiement a la fois — un autre en cours fait patienter
+      # celui-ci indefiniment. On borne donc l'attente : au-dela,
+      # l'etape echoue avec un message, au lieu de rester suspendue.
       - name: Deploy prebuilt output to Vercel
+        timeout-minutes: 10
         run: |
           url=$(vercel deploy --prebuilt --prod                   --scope="$VERCEL_ORG_ID" --token="$VERCEL_TOKEN")
           echo "DEPLOY_URL=$url" >> "$GITHUB_ENV"
