@@ -1,0 +1,124 @@
+# ============================================================
+#  Livraison continue du backend
+#
+#  Enchaine sur backend-ci : publication de l'image sur Docker
+#  Hub, puis declenchement du deploiement Render.
+#
+#  Rien n'est reconstruit ni reteste ici. La CI a deja valide le
+#  commit ; ce pipeline empaquette et livre, c'est tout.
+# ============================================================
+
+name: backend-cd
+
+on:
+  workflow_run:
+    workflows: ["backend-ci"]
+    types: [completed]
+  # Permet de relivrer sans pousser de commit — utile pour
+  # reprendre un deploiement interrompu, ou pour demontrer la
+  # chaine sans modifier le code.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-cd
+  # Volontairement false : on annule un build, jamais un
+  # deploiement en cours. Interrompre un push d'image laisserait
+  # un tag partiellement publie sur Docker Hub.
+  cancel-in-progress: false
+
+jobs:
+  publish-and-deploy:
+    name: Publish image and trigger Render
+    runs-on: ubuntu-latest
+
+    # backend-ci se declenche sur `on: push:` sans restriction, donc
+    # sur toutes les branches. Le filtre est ici, et non dans la CI :
+    # restreindre la CI priverait les branches de travail de leurs
+    # tests, alors que c'est la qu'ils servent le plus.
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'global')
+
+    # Cloisonne les secrets de production et rend possible une
+    # approbation manuelle avant livraison.
+    environment: production
+
+    env:
+      IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/rentcar-backend
+      # Un workflow declenche par workflow_run ne connait pas le
+      # commit d'origine via github.sha : il faut le lire dans
+      # l'evenement. Le repli sert aux declenchements manuels.
+      COMMIT_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+      # Declare au niveau du job, et non de l'etape : une variable
+      # definie dans le bloc `env:` d'une etape n'est pas lisible
+      # par le `if:` de cette meme etape.
+      RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+
+    steps:
+      # Sans `ref`, un workflow declenche par workflow_run se place
+      # sur la branche par defaut du depot, pas sur le commit qui a
+      # fait passer la CI. On construirait alors une image a partir
+      # du mauvais code, sans le moindre signal d'erreur : tout
+      # reste vert.
+      - name: Checkout triggering commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT_SHA }}
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Double etiquetage volontaire :
+      #   latest    — ce que Render deploie
+      #   <sha>     — la tracabilite, et le seul moyen de revenir en
+      #               arriere. Ne livrer que `latest` laisse sans
+      #               recours le jour ou une image casse la prod.
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./Rent_Car
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ env.COMMIT_SHA }}
+          # Le cache GitHub Actions evite de retelecharger les
+          # dependances Maven a chaque livraison.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Le hook n'existe que lorsque Render est bascule en mode
+      # « Deploy an existing image ». Tant que le service se
+      # construit depuis Git, l'etape est ignoree plutot que de
+      # faire echouer la livraison : l'image, elle, est publiee.
+      - name: Trigger Render deployment
+        if: env.RENDER_DEPLOY_HOOK != ''
+        run: curl -fsS -X POST "$RENDER_DEPLOY_HOOK"
+
+      - name: Skipped deployment notice
+        if: env.RENDER_DEPLOY_HOOK == ''
+        run: |
+          echo "RENDER_DEPLOY_HOOK absent : image publiee, deploiement non declenche."
+          echo "Attendu tant que Render se construit depuis Git (etape 4 du plan)."
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Backend livre"
+            echo ""
+            echo "| Element | Valeur |"
+            echo "|---|---|"
+            echo "| Commit | \`$COMMIT_SHA\` |"
+            echo "| Image | \`$IMAGE:latest\` |"
+            echo "| Retour arriere | \`$IMAGE:$COMMIT_SHA\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
