@@ -70,6 +70,34 @@ jobs:
         with:
           ref: ${{ env.COMMIT_SHA }}
 
+      # Un secret GitHub absent n'est pas signale : il est fourni comme
+      # chaine vide. Sans cette verification, la panne se manifeste bien
+      # plus loin et sous une forme trompeuse — soit un
+      # « Could not retrieve Project Settings » qui ne dit pas lequel des
+      # identifiants manque, soit, pire, une image publiee avec une
+      # VITE_* vide : le build reussit, l'image part sur `latest`, et le
+      # defaut ne se voit qu'a l'execution, dans le navigateur du client.
+      #
+      # La verification passe donc AVANT la construction de l'image.
+      - name: Check required secrets
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_STRIPE_PUBLISHABLE_KEY: ${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}
+        run: |
+          missing=""
+          [ -n "$VITE_API_URL" ]                || missing="$missing VITE_API_URL"
+          [ -n "$VITE_STRIPE_PUBLISHABLE_KEY" ] || missing="$missing VITE_STRIPE_PUBLISHABLE_KEY"
+          [ -n "$VERCEL_TOKEN" ]                || missing="$missing VERCEL_TOKEN"
+          [ -n "$VERCEL_ORG_ID" ]               || missing="$missing VERCEL_ORG_ID"
+          [ -n "$VERCEL_PROJECT_ID" ]           || missing="$missing VERCEL_PROJECT_ID"
+
+          if [ -n "$missing" ]; then
+            echo "::error::Secret(s) GitHub vide(s) ou absent(s) :$missing"
+            echo "A renseigner dans Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          echo "Les cinq secrets requis sont renseignes."
+
       # ---------- Cible 1 : Docker Hub ----------
 
       - name: Set up Buildx
@@ -105,6 +133,57 @@ jobs:
         with:
           node-version: "20"
 
+      # « Could not retrieve Project Settings » recouvre trois causes
+      # distinctes que la CLI ne distingue pas : token invalide, token
+      # sans acces a l'equipe, ou projet introuvable. L'API REST, elle,
+      # repond par un code different pour chacune. On l'interroge donc
+      # avant, pour nommer la cause au lieu de la deviner.
+      - name: Diagnose Vercel access
+        run: |
+          api() {
+            curl -sS -o /tmp/vercel-body.json -w '%{http_code}' \
+              -H "Authorization: Bearer $VERCEL_TOKEN" "$1"
+          }
+
+          status=$(api "https://api.vercel.com/v2/user")
+          if [ "$status" != "200" ]; then
+            echo "::error::Token Vercel refuse (HTTP $status) : il est invalide ou revoque."
+            jq -r '.error.message // .' /tmp/vercel-body.json
+            exit 1
+          fi
+          echo "Token valide, compte : $(jq -r '.user.username // .user.email' /tmp/vercel-body.json)"
+
+          api "https://api.vercel.com/v2/teams" > /dev/null
+          echo "Equipes accessibles avec ce token :"
+          jq -r '.teams[]? | "  - \(.name)  id=\(.id)"' /tmp/vercel-body.json
+          echo "(un id affiche *** est masque par GitHub : c'est celui de VERCEL_ORG_ID,"
+          echo " et sa presence dans cette liste prouve que le token y a acces)"
+
+          status=$(api "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID?teamId=$VERCEL_ORG_ID")
+          case "$status" in
+            200)
+              echo "Projet trouve : $(jq -r '.name' /tmp/vercel-body.json)"
+              echo "Root Directory : $(jq -r '.rootDirectory // "(racine du depot)"' /tmp/vercel-body.json)"
+              ;;
+            403)
+              echo "::error::403 — le token n'a pas acces a cette equipe."
+              echo "Le token a ete cree avec la portee du compte personnel."
+              echo "Recreer le token en choisissant l'equipe proprietaire du projet."
+              exit 1
+              ;;
+            404)
+              echo "::error::404 — aucun projet avec cet identifiant dans cette equipe."
+              echo "VERCEL_PROJECT_ID et VERCEL_ORG_ID ne designent pas le meme projet."
+              echo "Les deux se lisent ensemble dans .vercel/project.json, apres 'npx vercel link'."
+              exit 1
+              ;;
+            *)
+              echo "::error::Reponse inattendue de l'API Vercel (HTTP $status)."
+              jq -r '.error.message // .' /tmp/vercel-body.json
+              exit 1
+              ;;
+          esac
+
       # `vercel@latest` plutot qu'une version figee : la CLI suit de
       # pres l'API de la plateforme, et une version epinglee finit par
       # ne plus etre acceptee. A epingler le jour ou une version
@@ -112,12 +191,30 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
+      # Le lien au projet est ecrit explicitement plutot que laisse
+      # aux seules variables d'environnement : c'est le fichier que la
+      # CLI lit en premier, et son format ne bouge pas d'une version a
+      # l'autre. Les valeurs viennent des secrets, rien n'est affiche.
+      - name: Link Vercel project
+        run: |
+          mkdir -p .vercel
+          printf '{"orgId":"%s","projectId":"%s"}\n' \
+            "$VERCEL_ORG_ID" "$VERCEL_PROJECT_ID" > .vercel/project.json
+          echo "Projet lie."
+
       # Recupere les reglages du projet — dont son "Root Directory",
       # qui pointe sur "front end_Rent_Car". C'est pour cela que la
       # CLI s'execute a la racine du depot et non dans le sous-dossier :
       # le chemin est applique par la CLI, le repeter le doublerait.
+      # --scope explicite. Le projet appartient a une equipe, et la CLI
+      # ne deduit pas toujours ce contexte du seul project.json : elle
+      # interroge alors le compte personnel, ou le projet n'existe pas,
+      # et rapporte « Could not retrieve Project Settings » — le meme
+      # message que pour un lien absent. L'identifiant d'equipe est
+      # accepte la ou la documentation montre un slug.
       - name: Pull Vercel project settings
-        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+        run: |
+          vercel pull --yes --environment=production             --scope="$VERCEL_ORG_ID" --token="$VERCEL_TOKEN"
 
       # Le build a lieu ici, sur le runner. Vercel ne fait que recevoir
       # le resultat : c'est ce pipeline qui decide de ce qui part en
@@ -127,7 +224,7 @@ jobs:
 
       - name: Deploy prebuilt output to Vercel
         run: |
-          url=$(vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")
+          url=$(vercel deploy --prebuilt --prod                   --scope="$VERCEL_ORG_ID" --token="$VERCEL_TOKEN")
           echo "DEPLOY_URL=$url" >> "$GITHUB_ENV"
           echo "Deploiement en ligne : $url"
 
