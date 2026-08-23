@@ -12,6 +12,7 @@ import org.springframework.core.io.ClassPathResource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -128,6 +129,46 @@ class MetricsConfigurationTest {
 
         assertThat(common.getProperty("management.endpoints.web.exposure.include"))
                 .isEqualTo("${ACTUATOR_EXPOSURE:health}");
+    }
+
+    /**
+     * L'URL reellement saisie sur l'hebergeur lors de la premiere tentative :
+     * la passerelle sans son segment /otlp. Elle finit bien par /v1/metrics,
+     * ce qui la fait paraitre complete — et Grafana Cloud rejette tout, sans
+     * qu'aucune erreur ne remonte cote application.
+     */
+    @Test
+    void shouldDetectGatewayUrlMissingItsOtlpSegment() {
+        List<String> problemes = MonitoringConfig.checkOtlp(
+                "https://otlp-gateway-prod-eu-west-2.grafana.net/v1/metrics", "Basic jeton");
+
+        assertThat(problemes).hasSize(1);
+        assertThat(problemes.get(0)).contains("/otlp");
+    }
+
+    @Test
+    void shouldDetectUrlMissingTheSignalPath() {
+        List<String> problemes = MonitoringConfig.checkOtlp(
+                "https://otlp-gateway-prod-eu-west-2.grafana.net/otlp", "Basic jeton");
+
+        assertThat(problemes).hasSize(1);
+        assertThat(problemes.get(0)).contains("/v1/metrics");
+    }
+
+    @Test
+    void shouldDetectMissingAuthorizationHeader() {
+        List<String> problemes = MonitoringConfig.checkOtlp(
+                "https://otlp-gateway-prod-eu-west-2.grafana.net/otlp/v1/metrics", "");
+
+        assertThat(problemes).hasSize(1);
+        assertThat(problemes.get(0)).contains("OTLP_AUTH_HEADER");
+    }
+
+    @Test
+    void shouldAcceptAWellFormedConfiguration() {
+        assertThat(MonitoringConfig.checkOtlp(
+                "https://otlp-gateway-prod-eu-west-2.grafana.net/otlp/v1/metrics",
+                "Basic jeton")).isEmpty();
     }
 
     private static Properties loadClasspathProperties(String name) throws IOException {

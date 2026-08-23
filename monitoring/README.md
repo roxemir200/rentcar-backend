@@ -118,14 +118,34 @@ Le résultat s'utilise préfixé de `Basic `.
 | Variable | Valeur |
 |---|---|
 | `OTLP_ENABLED` | `true` |
-| `OTLP_METRICS_URL` | l'URL de la passerelle **suivie de** `/v1/metrics` |
+| `OTLP_METRICS_URL` | `https://otlp-gateway-<zone>.grafana.net/otlp/v1/metrics` |
 | `OTLP_AUTH_HEADER` | `Basic <résultat de l'étape 3>` |
 | `APP_ENV` | `production` |
 | `OTLP_STEP` | *(facultatif)* `60s` par défaut |
 
-⚠️ L'URL doit se terminer par **`/v1/metrics`**. La passerelle seule reçoit
-aussi les traces et les journaux : sans le chemin du signal, les métriques
-partent au mauvais endroit et l'erreur est silencieuse.
+⚠️ **L'URL comporte deux parties que l'on oublie facilement.** Grafana Cloud
+affiche la passerelle sous la forme `https://otlp-gateway-<zone>.grafana.net/otlp`
+— le segment `/otlp` en fait partie. Il faut y ajouter le chemin du signal,
+`/v1/metrics`. D'où :
+
+```
+https://otlp-gateway-prod-eu-west-2.grafana.net/otlp/v1/metrics
+                                              └──┬──┘└────┬────┘
+                                            passerelle   signal
+```
+
+Omettre `/otlp` produit une URL qui *paraît* complète, puisqu'elle finit bien
+par `/v1/metrics`. Grafana Cloud rejette alors chaque envoi, sans qu'aucune
+erreur ne remonte côté application.
+
+Le backend vérifie désormais cette forme au démarrage et journalise :
+
+```
+Metriques : export OTLP actif vers https://otlp-gateway-.../otlp/v1/metrics
+```
+
+ou, si quelque chose cloche, une ligne `ERROR` qui nomme précisément le
+problème. C'est la première chose à regarder dans les logs Render.
 
 `APP_ENV` étiquette toutes les métriques. Sans lui, la production et un poste
 de développement qui pousseraient vers la même pile s'additionneraient dans un
@@ -133,15 +153,23 @@ seul graphique, sans que rien ne le signale.
 
 ### 5. Vérifier
 
-Après redéploiement, comptez une à deux fois `OTLP_STEP` — les premières
-métriques n'arrivent qu'au premier envoi, pas au démarrage. Puis, dans Grafana
-Cloud, interrogez :
+D'abord dans les **logs Render**, au démarrage : la ligne `Metriques : export
+OTLP actif vers ...` confirme que la configuration est exploitable.
+
+Ensuite, comptez une à deux fois `OTLP_STEP` — les premières métriques
+n'arrivent qu'au premier envoi, pas au démarrage. Puis, dans Grafana Cloud,
+ouvrez **Explore** et interrogez :
 
 ```promql
 jvm_memory_used_bytes{application="rentcar-backend", env="production"}
 ```
 
 Une série qui apparaît confirme la chaîne complète.
+
+⚠️ N'utilisez pas le bouton **Test connection** de l'assistant OpenTelemetry
+pour juger du résultat : il cherche des **traces**, or nous n'envoyons que des
+**métriques**. Son message « We could not find any traces yet » est donc
+attendu, et ne dit rien de l'état de votre supervision.
 
 ## Ce que le pipeline automatise
 
