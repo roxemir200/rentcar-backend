@@ -57,6 +57,11 @@ jobs:
       # definie dans le bloc `env:` d'une etape n'est pas lisible
       # par le `if:` de cette meme etape.
       RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+      # Supervision. Chacune est facultative : le pipeline reste vert et
+      # ignore l'etape correspondante tant qu'elle n'est pas renseignee.
+      BACKEND_HEALTH_URL: ${{ secrets.BACKEND_HEALTH_URL }}
+      GRAFANA_URL: ${{ secrets.GRAFANA_URL }}
+      GRAFANA_API_TOKEN: ${{ secrets.GRAFANA_API_TOKEN }}
 
     steps:
       # Sans `ref`, un workflow declenche par workflow_run se place
@@ -136,6 +141,85 @@ jobs:
         run: |
           echo "RENDER_DEPLOY_HOOK absent : image publiee, deploiement non declenche."
           echo "Attendu tant que Render se construit depuis Git (etape 4 du plan)."
+
+      # ---------- Verification et supervision ----------
+
+      # Livrer sans verifier que le service est revenu, c'est declarer une
+      # victoire sur la foi d'un appel HTTP accepte. Le hook Render repond
+      # immediatement : il accuse reception, il ne dit rien du resultat.
+      #
+      # L'attente est longue a dessein — le demarrage a froid de l'instance
+      # gratuite a deja depasse quatre minutes.
+      #
+      # Ce que cette etape prouve : le service repond et se declare sain.
+      # Ce qu'elle ne prouve pas : qu'il s'agit deja du nouveau build. Pour
+      # cela il faudrait exposer la version, donc ouvrir /actuator/info.
+      - name: Wait for the service to be healthy
+        if: env.BACKEND_HEALTH_URL != '' && env.RENDER_DEPLOY_HOOK != ''
+        timeout-minutes: 12
+        run: |
+          echo "Attente du retour du service..."
+          for i in $(seq 1 60); do
+            body=$(curl -sS --max-time 20 "$BACKEND_HEALTH_URL" || true)
+            case "$body" in
+              *'"status":"UP"'*)
+                echo "Service sain apres $((i * 10)) secondes."
+                exit 0
+                ;;
+            esac
+            sleep 10
+          done
+          echo "::error::Le service n'a pas repondu UP dans le delai imparti."
+          echo "Derniere reponse : $body"
+          exit 1
+
+      # Publie le tableau de bord versionne vers Grafana Cloud.
+      #
+      # C'est ce qui fait du tableau de bord du CODE plutot qu'un objet
+      # construit a la souris : il se relit dans une revue, se corrige par
+      # commit, et se retrouve a l'identique si la pile est recreee. Un
+      # tableau de bord dessine dans l'interface n'existe qu'a un endroit,
+      # et disparait avec lui.
+      - name: Publish dashboard to Grafana Cloud
+        if: env.GRAFANA_URL != '' && env.GRAFANA_API_TOKEN != ''
+        run: |
+          set -o pipefail
+          dashboard=monitoring/grafana/provisioning/dashboards/rentcar-backend.json
+
+          # `del(.id)` est indispensable : l'identifiant interne appartient a
+          # l'instance qui a cree le tableau de bord. Le transmettre a une
+          # autre instance provoque un refus, l'id n'y designant rien.
+          payload=$(jq '{dashboard: del(.id), overwrite: true, message: "Publie par backend-cd"}' "$dashboard")
+
+          status=$(curl -sS -o /tmp/grafana.out -w '%{http_code}' -X POST "$GRAFANA_URL/api/dashboards/db" -H "Authorization: Bearer $GRAFANA_API_TOKEN" -H "Content-Type: application/json" -d "$payload")
+
+          if [ "$status" = "200" ]; then
+            echo "Tableau de bord publie : $(jq -r '.url // "(sans url)"' /tmp/grafana.out)"
+          else
+            echo "::error::Grafana a refuse le tableau de bord (HTTP $status)."
+            cat /tmp/grafana.out
+            exit 1
+          fi
+
+      # Pose un repere date sur les graphiques.
+      #
+      # Sans lui, une degradation de latence reste une coincidence a prouver ;
+      # avec lui, elle s'aligne visuellement sur une livraison precise, et le
+      # commit fautif se lit directement sur le tableau de bord.
+      - name: Annotate the deployment in Grafana
+        if: env.GRAFANA_URL != '' && env.GRAFANA_API_TOKEN != ''
+        run: |
+          payload=$(jq -n --arg sha "$COMMIT_SHA" --arg img "$IMAGE" '{tags: ["deploiement", "backend"], text: ("Backend livre - commit " + $sha[0:7] + " - " + $img + ":latest")}')
+
+          status=$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$GRAFANA_URL/api/annotations" -H "Authorization: Bearer $GRAFANA_API_TOKEN" -H "Content-Type: application/json" -d "$payload")
+
+          # Un repere manquant ne justifie pas de faire echouer une livraison
+          # par ailleurs reussie : on signale, on ne bloque pas.
+          if [ "$status" = "200" ]; then
+            echo "Deploiement annote dans Grafana."
+          else
+            echo "::warning::Annotation refusee par Grafana (HTTP $status)."
+          fi
 
       - name: Summary
         if: always()

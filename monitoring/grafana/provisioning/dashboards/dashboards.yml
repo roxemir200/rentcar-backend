@@ -1,0 +1,19 @@
+# ============================================================
+#  Chargement automatique des tableaux de bord versionnes.
+# ============================================================
+
+apiVersion: 1
+
+providers:
+  - name: rentcar
+    orgId: 1
+    folder: RentCar
+    type: file
+    # Empeche la suppression depuis l'interface : le fichier reste la
+    # source de verite. Une modification faite a la souris serait perdue
+    # au redemarrage — elle doit passer par le depot.
+    disableDeletion: true
+    allowUiUpdates: false
+    options:
+      path: /etc/grafana/provisioning/dashboards
+      foldersFromFilesStructure: false

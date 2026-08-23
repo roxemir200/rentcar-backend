@@ -95,6 +95,14 @@ services:
       STORAGE_PROVIDER: ${STORAGE_PROVIDER:-local}
       CLOUDINARY_URL: ${CLOUDINARY_URL:-}
       APP_UPLOAD_DIR: /app/uploads
+
+      # ---------- Supervision ----------
+      # Ouvre /actuator/prometheus, que le service prometheus ci-dessous
+      # vient scruter. La variable n'existe pas sur Render : l'endpoint y
+      # reste ferme, et la surface publique se limite a /actuator/health.
+      ACTUATOR_EXPOSURE: health,prometheus
+      PROMETHEUS_ENABLED: "true"
+      APP_ENV: compose
     volumes:
       # Reproduit le comportement d'un volume persistant : les
       # images survivent a un `docker compose down`. Sans volume,
@@ -102,6 +110,63 @@ services:
       # en production sans stockage externe.
       - uploads-data:/app/uploads
 
+  # ============================================================
+  #  Supervision locale — le modele PULL
+  #
+  #  Prometheus vient chercher les metriques du backend toutes les
+  #  15 secondes, et Grafana les affiche. C'est l'architecture
+  #  classique, celle qu'on attend derriere le mot « Prometheus ».
+  #
+  #  Elle ne peut pas etre reproduite en production : l'offre gratuite
+  #  de l'hebergeur endort le service et n'offre nulle part ou loger un
+  #  collecteur. La production pousse donc vers Grafana Cloud, avec la
+  #  MEME instrumentation Micrometer. Deux chemins, une seule source.
+  # ============================================================
+
+  prometheus:
+    image: prom/prometheus:v3.1.0
+    container_name: rentcar-prometheus
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      # Sept jours suffisent a une demonstration, et bornent la place
+      # occupee sur le disque du poste.
+      - --storage.tsdb.retention.time=7d
+
+  grafana:
+    image: grafana/grafana:11.5.1
+    container_name: rentcar-grafana
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    ports:
+      - "3001:3000"
+    environment:
+      # Identifiants de demonstration, sur une instance qui n'est
+      # joignable que depuis ce poste. Ne jamais reproduire ailleurs.
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      # Aucun appel sortant : la demonstration doit fonctionner meme
+      # sans reseau, le jour de la soutenance.
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_NEWS_NEWS_FEED_ENABLED: "false"
+    volumes:
+      # Source de donnees et tableau de bord fournis par fichier : Grafana
+      # demarre deja configure. Rien a recliquer apres un `down`, et le
+      # tableau de bord est versionne comme le reste du projet.
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana-data:/var/lib/grafana
+
 volumes:
   mysql-data:
   uploads-data:
+  prometheus-data:
+  grafana-data:

@@ -56,6 +56,29 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+
+        <!-- ============ Supervision ============
+             Une seule instrumentation Micrometer, deux destinations.
+
+             OTLP : l'application POUSSE ses metriques vers Grafana Cloud.
+             C'est le seul mode viable en production : l'hebergement gratuit
+             ne permet pas d'y faire tourner un collecteur, et le service
+             s'endort — un scrutateur externe le reveillerait sans cesse ou
+             ne recolterait que des trous. Rien n'est expose non plus : le
+             flux part du conteneur, aucun endpoint de metriques n'est ouvert.
+
+             Prometheus : expose /actuator/prometheus, SCRUTE par le
+             Prometheus du docker-compose. Sert la demonstration locale du
+             modele pull, sans rien changer a la production ou l'endpoint
+             reste ferme (voir management.endpoints.web.exposure.include). -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-otlp</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>

@@ -1,0 +1,313 @@
+{
+  "uid": "rentcar-backend",
+  "title": "RentCar — Backend",
+  "description": "Supervision du backend RentCar. Meme fichier en local (Prometheus scrute le conteneur) et en production (l'application pousse vers Grafana Cloud). Publie automatiquement par le pipeline backend-cd.",
+  "tags": [
+    "rentcar",
+    "backend"
+  ],
+  "timezone": "browser",
+  "editable": false,
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "DS_PROM",
+        "label": "Source de donnees",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {},
+        "hide": 0,
+        "description": "Resolue automatiquement : la source provisionnee en local, celle de la pile en Grafana Cloud."
+      },
+      {
+        "name": "application",
+        "label": "Application",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROM}"
+        },
+        "query": "label_values(jvm_memory_used_bytes, application)",
+        "refresh": 1,
+        "current": {
+          "text": "rentcar-backend",
+          "value": "rentcar-backend"
+        },
+        "hide": 0
+      }
+    ]
+  },
+  "annotations": {
+    "list": [
+      {
+        "name": "Deploiements",
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "iconColor": "blue",
+        "enable": true,
+        "target": {
+          "type": "tags",
+          "matchAny": false,
+          "tags": [
+            "deploiement"
+          ],
+          "limit": 100
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Requetes HTTP par seconde",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROM}"
+      },
+      "description": "Trafic reel, par route. Une route qui disparait du graphique n'est plus appelee : souvent le premier signe qu'un ecran du frontend est casse.",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (uri) (rate(http_server_requests_seconds_count{application=\"$application\"}[5m]))",
+          "legendFormat": "{{uri}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROM}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "title": "Temps de reponse (p95)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROM}"
+      },
+      "description": "95e percentile, et non la moyenne : la moyenne masque la minorite de requetes lentes, qui est precisement ce que subissent les utilisateurs mecontents.",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, uri) (rate(http_server_requests_seconds_bucket{application=\"$application\"}[5m])))",
+          "legendFormat": "{{uri}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROM}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "title": "Taux d'erreurs 5xx",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROM}"
+      },
+      "description": "clamp_min evite une division par zero quand aucune requete n'arrive : sinon le graphique affiche NaN pendant les periodes calmes.",
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(http_server_requests_seconds_count{application=\"$application\", status=~\"5..\"}[5m])) / clamp_min(sum(rate(http_server_requests_seconds_count{application=\"$application\"}[5m])), 0.001)",
+          "legendFormat": "erreurs serveur",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROM}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "title": "Memoire JVM (tas)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROM}"
+      },
+      "description": "L'instance de production ne dispose que de 512 Mo. Une occupation qui approche le maximum sans redescendre annonce un arret pour depassement memoire.",
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(jvm_memory_used_bytes{application=\"$application\", area=\"heap\"})",
+          "legendFormat": "utilisee",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROM}"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "sum(jvm_memory_max_bytes{application=\"$application\", area=\"heap\"})",
+          "legendFormat": "maximum",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROM}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "title": "Paiements aboutis / echoues",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROM}"
+      },
+      "description": "Metrique metier : elle ne se deduit d'aucune mesure systeme. Un backend parfaitement sain peut n'encaisser aucun paiement.",
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (status) (increase(rentcar_payments_total{application=\"$application\"}[15m]))",
+          "legendFormat": "{{status}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROM}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 6,
+      "title": "Intentions de paiement (24 h)",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROM}"
+      },
+      "description": "Compare au panneau voisin : beaucoup d'intentions et peu de paiements aboutis signalent un abandon dans le tunnel.",
+      "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 6,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(rentcar_payment_intents_total{application=\"$application\"}[24h]))",
+          "legendFormat": "creees",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROM}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 7,
+      "title": "Connexions base actives",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROM}"
+      },
+      "description": "Un pool sature met les requetes en attente : l'application parait lente alors que ni le processeur ni la memoire ne bougent.",
+      "gridPos": {
+        "x": 18,
+        "y": 16,
+        "w": 6,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "hikaricp_connections_active{application=\"$application\"}",
+          "legendFormat": "actives",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROM}"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "hikaricp_connections_max{application=\"$application\"}",
+          "legendFormat": "maximum",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROM}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    }
+  ]
+}

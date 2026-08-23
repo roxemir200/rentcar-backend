@@ -32,7 +32,10 @@ import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.mockito.InjectMocks;
+import org.mockito.Spy;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -80,6 +83,19 @@ class PaymentServiceTest {
 
     @Mock
     private CarMapper carMapper;
+
+    /**
+     * Un vrai registre, et non un double.
+     * <p>
+     * Un MeterRegistry simule renverrait null a chaque appel de
+     * {@code counter(...)}, et le service echouerait sur un
+     * NullPointerException sans rapport avec ce que le test verifie.
+     * SimpleMeterRegistry garde les mesures en memoire : les compteurs
+     * fonctionnent reellement, et restent inspectables si l'on veut les
+     * verifier un jour.
+     */
+    @Spy
+    private MeterRegistry meterRegistry = new SimpleMeterRegistry();
 
     @InjectMocks
     private PaymentServiceImpl paymentService;

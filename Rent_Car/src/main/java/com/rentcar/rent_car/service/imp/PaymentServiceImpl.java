@@ -32,6 +32,7 @@ import com.stripe.net.Webhook;
 import com.stripe.param.PaymentIntentCreateParams;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -57,6 +58,17 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentMapper paymentMapper;
     private final ReservationMapper reservationMapper;
     private final CarMapper carMapper;
+
+    /**
+     * Registre Micrometer.
+     * <p>
+     * Les metriques techniques (memoire, threads, temps de reponse HTTP)
+     * sont fournies d'office par Spring Boot. Celles qui suivent ne le sont
+     * pas : « combien de paiements aboutissent, combien echouent » ne se
+     * deduit d'aucune metrique systeme, et c'est pourtant la seule question
+     * qui dise si la fonctionnalite marche pour de vrais clients.
+     */
+    private final MeterRegistry meterRegistry;
 
     @Value("${stripe.webhook.secret}")
     private String webhookSecret;
@@ -163,6 +175,8 @@ public class PaymentServiceImpl implements PaymentService {
                     .paymentId(savedPayment.getId())
                     .build();
             
+            meterRegistry.counter("rentcar.payment.intents").increment();
+
             log.info("Fin de createPaymentIntent() avec succès pour la réservation : {}", reservationId);
             return response;
 
@@ -266,6 +280,11 @@ public class PaymentServiceImpl implements PaymentService {
         } else if (status == PaymentStatus.FAILED) {
             log.info("Statut passé à FAILED");
         }
+
+        // Compteur etiquete par statut plutot que deux compteurs distincts :
+        // le taux d'echec se calcule alors directement dans Grafana, sans
+        // avoir a rapprocher deux series independantes.
+        meterRegistry.counter("rentcar.payments", "status", status.name().toLowerCase()).increment();
 
         log.info("Sauvegarde du paiement dans la base de données");
         Payment savedPayment = paymentRepository.save(payment);

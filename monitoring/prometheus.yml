@@ -1,0 +1,34 @@
+# ============================================================
+#  Configuration du Prometheus de demonstration
+#
+#  Ne concerne QUE le docker-compose local. La production ne scrute
+#  rien : elle pousse vers Grafana Cloud (voir application-prod.properties).
+# ============================================================
+
+global:
+  # 15 secondes : la valeur usuelle. Assez fin pour voir une montee en
+  # charge, assez espace pour ne pas peser sur l'application observee.
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    env: compose
+
+scrape_configs:
+  # Prometheus se surveille lui-meme. Utile pour distinguer « la metrique
+  # a disparu » de « le collecteur est tombe » — deux pannes qui se
+  # ressemblent sur un graphique vide.
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: rentcar-backend
+    # Spring Boot expose le format Prometheus sous ce chemin, et non
+    # sous /metrics.
+    metrics_path: /actuator/prometheus
+    static_configs:
+      # "backend" est le nom du service dans docker-compose : Docker le
+      # resout sur le reseau interne. Le port est celui du conteneur
+      # (8089), pas celui publie sur le poste.
+      - targets: ["backend:8089"]
+        labels:
+          application: rentcar-backend

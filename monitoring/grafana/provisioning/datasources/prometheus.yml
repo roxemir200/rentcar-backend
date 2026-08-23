@@ -1,0 +1,24 @@
+# ============================================================
+#  Source de donnees fournie par fichier.
+#
+#  Grafana la cree au demarrage : personne n'a a la saisir a la main,
+#  et elle est identique sur tous les postes. Un tableau de bord
+#  versionne qui pointe vers une source configuree a la souris ne
+#  fonctionne que sur la machine ou on l'a cliquee.
+# ============================================================
+
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    # "prometheus" est le nom du service docker-compose, resolu sur le
+    # reseau interne. Pas localhost : Grafana appelle depuis SON conteneur.
+    url: http://prometheus:9090
+    isDefault: true
+    # uid fixe : c'est par lui que le tableau de bord reference la source.
+    # Sans valeur imposee, Grafana en tire une au hasard et les panneaux
+    # provisionnes ne trouvent plus leurs donnees.
+    uid: rentcar-prometheus
+    editable: false
