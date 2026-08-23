@@ -1,5 +1,7 @@
 package com.rentcar.rent_car.config;
 
+import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.context.properties.source.ConfigurationPropertySource;
@@ -11,6 +13,8 @@ import org.springframework.core.io.ClassPathResource;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -169,6 +173,91 @@ class MetricsConfigurationTest {
         assertThat(MonitoringConfig.checkOtlp(
                 "https://otlp-gateway-prod-eu-west-2.grafana.net/otlp/v1/metrics",
                 "Basic jeton")).isEmpty();
+    }
+
+    /**
+     * Compose un en-tete Basic contenant un jeton glc_ de la region donnee,
+     * dans le format exact qu'emet Grafana Cloud.
+     */
+    private static String enTetePour(String region) {
+        String charge = Base64.getEncoder().encodeToString(
+                ("{\"o\":\"1\",\"n\":\"test\",\"k\":\"cle\",\"m\":{\"r\":\"" + region + "\"}}")
+                        .getBytes(StandardCharsets.UTF_8));
+        return "Basic " + Base64.getEncoder().encodeToString(
+                ("123456:glc_" + charge).getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Le cas rencontre en production : jeton cree dans la region « us »,
+     * passerelle europeenne. Grafana Cloud repond « invalid authentication
+     * credentials » — le meme message que pour un jeton revoque, ce qui envoie
+     * chercher du cote des permissions pendant des heures.
+     */
+    @Test
+    void shouldDetectATokenFromTheWrongRegion() {
+        List<String> problemes = MonitoringConfig.checkOtlp(
+                "https://otlp-gateway-prod-eu-west-2.grafana.net/otlp/v1/metrics",
+                enTetePour("us"));
+
+        assertThat(problemes).hasSize(1);
+        assertThat(problemes.get(0)).contains("region").contains("us").contains("prod-eu-west-2");
+    }
+
+    @Test
+    void shouldAcceptATokenFromTheMatchingRegion() {
+        assertThat(MonitoringConfig.checkOtlp(
+                "https://otlp-gateway-prod-eu-west-2.grafana.net/otlp/v1/metrics",
+                enTetePour("prod-eu-west-2"))).isEmpty();
+    }
+
+    /**
+     * Grafana ecrit tantot « us », tantot « prod-us-east-0 » pour la meme
+     * region. Une comparaison stricte alerterait a tort.
+     */
+    @Test
+    void shouldTolerateTheAbbreviatedRegionForm() {
+        assertThat(MonitoringConfig.checkOtlp(
+                "https://otlp-gateway-prod-us-east-0.grafana.net/otlp/v1/metrics",
+                enTetePour("us"))).isEmpty();
+    }
+
+    /** Un en-tete d'un autre format ne doit provoquer aucune alerte hative. */
+    @Test
+    void shouldStaySilentWhenTheTokenCannotBeRead() {
+        assertThat(MonitoringConfig.checkOtlp(
+                "https://otlp-gateway-prod-eu-west-2.grafana.net/otlp/v1/metrics",
+                "Basic pas-du-base64-valide")).isEmpty();
+    }
+
+    /**
+     * Spring Boot enveloppe les registres dans un composite des qu'il y en a
+     * plusieurs. Nommer le bean racine dirait « Composite » et masquerait
+     * justement ce qu'on cherche a savoir : OTLP est-il, oui ou non, en
+     * service ?
+     */
+    @Test
+    void shouldNameEachRegistryInsideAComposite() {
+        CompositeMeterRegistry composite = new CompositeMeterRegistry();
+        composite.add(new SimpleMeterRegistry());
+
+        assertThat(MonitoringConfig.nomsDesRegistres(composite))
+                .containsExactly("SimpleMeterRegistry");
+    }
+
+    @Test
+    void shouldNameASingleRegistry() {
+        assertThat(MonitoringConfig.nomsDesRegistres(new SimpleMeterRegistry()))
+                .containsExactly("SimpleMeterRegistry");
+    }
+
+    /**
+     * Le cas qui a coute le plus cher : sous initialisation paresseuse, aucun
+     * registre n'existe. La configuration est pourtant parfaite, l'API repond
+     * 200 aux tests manuels, et rien n'est jamais emis.
+     */
+    @Test
+    void shouldReportNoRegistryAtAll() {
+        assertThat(MonitoringConfig.nomsDesRegistres(null)).isEmpty();
     }
 
     private static Properties loadClasspathProperties(String name) throws IOException {
