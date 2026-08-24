@@ -221,6 +221,65 @@ jobs:
             echo "::warning::Annotation refusee par Grafana (HTTP $status)."
           fi
 
+      # Publie les regles d'alerte versionnees.
+      #
+      # Meme principe que le tableau de bord : les regles vivent dans le
+      # depot, se relisent en revue et se corrigent par commit. Une alerte
+      # creee a la souris n'existe qu'a un endroit et disparait avec la pile.
+      #
+      # Deux identifiants ne peuvent pas etre ecrits dans le fichier : celui
+      # de la source de donnees et celui du dossier sont propres a chaque
+      # instance Grafana. On les resout ici, puis on les substitue.
+      - name: Publish alert rules to Grafana Cloud
+        if: env.GRAFANA_URL != '' && env.GRAFANA_API_TOKEN != ''
+        run: |
+          set -o pipefail
+          auth="Authorization: Bearer $GRAFANA_API_TOKEN"
+
+          datasource=$(curl -sS -H "$auth" "$GRAFANA_URL/api/datasources" | jq -r '[.[] | select(.type == "prometheus")] | .[0].uid // empty')
+          if [ -z "$datasource" ]; then
+            echo "::error::Aucune source de donnees Prometheus trouvee dans Grafana."
+            exit 1
+          fi
+          echo "Source de donnees : $datasource"
+
+          # Le dossier est obligatoire pour une regle d'alerte. On le
+          # reutilise s'il existe, sans quoi une seconde execution creerait
+          # un doublon a chaque livraison.
+          folder=$(curl -sS -H "$auth" "$GRAFANA_URL/api/folders" | jq -r '[.[] | select(.title == "RentCar")] | .[0].uid // empty')
+          if [ -z "$folder" ]; then
+            folder=$(curl -sS -X POST -H "$auth" -H "Content-Type: application/json" -d '{"title":"RentCar"}' "$GRAFANA_URL/api/folders" | jq -r '.uid // empty')
+            echo "Dossier RentCar cree : $folder"
+          else
+            echo "Dossier RentCar existant : $folder"
+          fi
+          if [ -z "$folder" ]; then
+            echo "::error::Impossible d'obtenir le dossier RentCar."
+            exit 1
+          fi
+
+          resolu=/tmp/alerts.json
+          sed -e "s/__DATASOURCE_UID__/$datasource/g" -e "s/__FOLDER_UID__/$folder/g" monitoring/grafana/alerting/rentcar-alerts.json > "$resolu"
+
+          echec=0
+          for uid in $(jq -r '.rules[].uid' "$resolu"); do
+            regle=$(jq -c --arg uid "$uid" '.rules[] | select(.uid == $uid)' "$resolu")
+
+            # PUT met a jour, POST cree. On tente la mise a jour d'abord :
+            # elle est idempotente, et c'est le cas courant.
+            status=$(curl -sS -o /tmp/alert.out -w '%{http_code}' -X PUT "$GRAFANA_URL/api/v1/provisioning/alert-rules/$uid" -H "$auth" -H "Content-Type: application/json" -H "X-Disable-Provenance: true" -d "$regle")
+
+            if [ "$status" = "404" ]; then
+              status=$(curl -sS -o /tmp/alert.out -w '%{http_code}' -X POST "$GRAFANA_URL/api/v1/provisioning/alert-rules" -H "$auth" -H "Content-Type: application/json" -H "X-Disable-Provenance: true" -d "$regle")
+            fi
+
+            case "$status" in
+              2*) echo "  regle publiee : $uid" ;;
+              *)  echo "::error::Regle $uid refusee (HTTP $status)"; cat /tmp/alert.out; echo; echec=1 ;;
+            esac
+          done
+          exit $echec
+
       - name: Summary
         if: always()
         run: |

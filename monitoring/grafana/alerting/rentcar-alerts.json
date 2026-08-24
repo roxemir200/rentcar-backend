@@ -1,0 +1,238 @@
+{
+  "rules": [
+    {
+      "uid": "rentcar-taux-erreurs",
+      "title": "Taux d'erreurs serveur eleve",
+      "ruleGroup": "rentcar-backend",
+      "folderUID": "__FOLDER_UID__",
+      "orgID": 1,
+      "condition": "C",
+      "for": "5m",
+      "noDataState": "OK",
+      "execErrState": "OK",
+      "isPaused": false,
+      "labels": {
+        "severity": "critical",
+        "service": "rentcar-backend"
+      },
+      "annotations": {
+        "summary": "Plus de 5 % des requetes echouent en erreur serveur",
+        "description": "Symptome subi par les utilisateurs. Ouvrir le tableau de bord RentCar - Backend : le panneau des requetes par route indique laquelle echoue, et les journaux Render donnent l'exception."
+      },
+      "data": [
+        {
+          "refId": "A",
+          "datasourceUid": "__DATASOURCE_UID__",
+          "relativeTimeRange": {
+            "from": 600,
+            "to": 0
+          },
+          "model": {
+            "refId": "A",
+            "expr": "sum(rate(http_server_requests_seconds_count{application=\"rentcar-backend\", status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count{application=\"rentcar-backend\"}[5m])) > 0.05 and sum(rate(http_server_requests_seconds_count{application=\"rentcar-backend\"}[5m])) > 0.05",
+            "instant": true,
+            "range": false,
+            "editorMode": "code",
+            "legendFormat": "__auto"
+          }
+        },
+        {
+          "refId": "B",
+          "datasourceUid": "__expr__",
+          "relativeTimeRange": {
+            "from": 600,
+            "to": 0
+          },
+          "model": {
+            "refId": "B",
+            "type": "reduce",
+            "expression": "A",
+            "reducer": "last",
+            "settings": {
+              "mode": "dropNN"
+            }
+          }
+        },
+        {
+          "refId": "C",
+          "datasourceUid": "__expr__",
+          "relativeTimeRange": {
+            "from": 600,
+            "to": 0
+          },
+          "model": {
+            "refId": "C",
+            "type": "threshold",
+            "expression": "B",
+            "conditions": [
+              {
+                "evaluator": {
+                  "type": "gt",
+                  "params": [
+                    0
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "rentcar-paiements-echoues",
+      "title": "Paiements en echec",
+      "ruleGroup": "rentcar-backend",
+      "folderUID": "__FOLDER_UID__",
+      "orgID": 1,
+      "condition": "C",
+      "for": "2m",
+      "noDataState": "OK",
+      "execErrState": "OK",
+      "isPaused": false,
+      "labels": {
+        "severity": "critical",
+        "service": "rentcar-backend"
+      },
+      "annotations": {
+        "summary": "Au moins trois paiements ont echoue en quinze minutes",
+        "description": "Aucune metrique systeme ne signalerait ceci : le backend peut etre parfaitement sain et n'encaisser plus rien. Verifier le tableau de bord Stripe, puis les journaux Render autour de handleWebhook."
+      },
+      "data": [
+        {
+          "refId": "A",
+          "datasourceUid": "__DATASOURCE_UID__",
+          "relativeTimeRange": {
+            "from": 1800,
+            "to": 0
+          },
+          "model": {
+            "refId": "A",
+            "expr": "sum(increase(rentcar_payments_total{application=\"rentcar-backend\", status=\"failed\"}[15m])) >= 3",
+            "instant": true,
+            "range": false,
+            "editorMode": "code",
+            "legendFormat": "__auto"
+          }
+        },
+        {
+          "refId": "B",
+          "datasourceUid": "__expr__",
+          "relativeTimeRange": {
+            "from": 1800,
+            "to": 0
+          },
+          "model": {
+            "refId": "B",
+            "type": "reduce",
+            "expression": "A",
+            "reducer": "last",
+            "settings": {
+              "mode": "dropNN"
+            }
+          }
+        },
+        {
+          "refId": "C",
+          "datasourceUid": "__expr__",
+          "relativeTimeRange": {
+            "from": 1800,
+            "to": 0
+          },
+          "model": {
+            "refId": "C",
+            "type": "threshold",
+            "expression": "B",
+            "conditions": [
+              {
+                "evaluator": {
+                  "type": "gt",
+                  "params": [
+                    0
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "uid": "rentcar-memoire-tas",
+      "title": "Memoire du tas proche du plafond",
+      "ruleGroup": "rentcar-backend",
+      "folderUID": "__FOLDER_UID__",
+      "orgID": 1,
+      "condition": "C",
+      "for": "10m",
+      "noDataState": "OK",
+      "execErrState": "OK",
+      "isPaused": false,
+      "labels": {
+        "severity": "warning",
+        "service": "rentcar-backend"
+      },
+      "annotations": {
+        "summary": "Le tas JVM depasse 90 % de sa capacite depuis dix minutes",
+        "description": "L'instance ne dispose que de 512 Mo. Une occupation qui ne redescend plus annonce l'arret du conteneur pour depassement memoire. Alerte d'anticipation : elle previent avant l'incident, pas pendant."
+      },
+      "data": [
+        {
+          "refId": "A",
+          "datasourceUid": "__DATASOURCE_UID__",
+          "relativeTimeRange": {
+            "from": 1800,
+            "to": 0
+          },
+          "model": {
+            "refId": "A",
+            "expr": "sum(jvm_memory_used_bytes{application=\"rentcar-backend\", area=\"heap\"}) / sum(jvm_memory_max_bytes{application=\"rentcar-backend\", area=\"heap\"} > 0) > 0.9",
+            "instant": true,
+            "range": false,
+            "editorMode": "code",
+            "legendFormat": "__auto"
+          }
+        },
+        {
+          "refId": "B",
+          "datasourceUid": "__expr__",
+          "relativeTimeRange": {
+            "from": 1800,
+            "to": 0
+          },
+          "model": {
+            "refId": "B",
+            "type": "reduce",
+            "expression": "A",
+            "reducer": "last",
+            "settings": {
+              "mode": "dropNN"
+            }
+          }
+        },
+        {
+          "refId": "C",
+          "datasourceUid": "__expr__",
+          "relativeTimeRange": {
+            "from": 1800,
+            "to": 0
+          },
+          "model": {
+            "refId": "C",
+            "type": "threshold",
+            "expression": "B",
+            "conditions": [
+              {
+                "evaluator": {
+                  "type": "gt",
+                  "params": [
+                    0
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

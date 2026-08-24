@@ -268,6 +268,55 @@ réseau bloqué, `401` pour une authentification refusée.
 
 Compter les avertissements dit donc davantage que les lire.
 
+## Les alertes
+
+Trois règles, versionnées dans `grafana/alerting/rentcar-alerts.json` et
+publiées par `backend-cd` — comme le tableau de bord, et pour les mêmes
+raisons.
+
+| Alerte | Condition | Délai |
+|---|---|---|
+| Taux d'erreurs serveur élevé | > 5 % **et** au moins 3 req/min | 5 min |
+| Paiements en échec | ≥ 3 échecs sur 15 min | 2 min |
+| Mémoire du tas proche du plafond | > 90 % | 10 min |
+
+### Le plancher de trafic, et pourquoi il est indispensable
+
+À 0,2 requête par seconde, **quatre requêtes en échec suffisent à dépasser
+5 %**. Sans garde-fou, un robot d'indexation tombant sur une route protégée
+déclencherait l'alerte. La règle exige donc aussi un trafic minimal :
+
+```promql
+... > 0.05 and sum(rate(http_server_requests_seconds_count[5m])) > 0.05
+```
+
+En dessous, le taux n'a pas de sens statistique et la règle se tait. Une
+alerte à laquelle on cesse de croire est pire que pas d'alerte du tout : le
+jour où elle dit vrai, on l'ignore.
+
+### L'absence de données n'est pas une alarme
+
+Les trois règles portent `noDataState: OK`. L'instance gratuite s'endort et
+l'envoi des métriques s'interrompt avec elle ; sans ce réglage, chaque mise en
+veille déclencherait une alerte. « Le service est-il joignable ? » est la
+question d'UptimeRobot — pas celle-ci.
+
+### Le calcul reste en PromQL
+
+Chaque expression ne renvoie une série que **lorsque le problème existe** ;
+Grafana n'a plus qu'à constater sa présence. Déporter la logique dans les
+seuils de l'interface la rendrait invisible en revue de code.
+
+### Notifications
+
+Les règles portent un label `severity`. La **politique de notification par
+défaut** de Grafana Cloud les route vers le contact point par défaut,
+c'est-à-dire l'adresse e-mail du compte.
+
+À vérifier une fois, dans **Alerting → Contact points** : que l'adresse est la
+bonne, puis **Test** pour recevoir un message d'essai. C'est la seule étape
+qui reste manuelle — elle dépend d'une adresse, pas d'une configuration.
+
 ## Limites assumées
 
 **Les métriques s'interrompent pendant les mises en veille.** L'application ne
