@@ -19,6 +19,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -62,6 +63,41 @@ class MetricsConfigurationTest {
         // Grafana Cloud rejette chaque envoi avec un 401 que rien n'affiche
         // cote application.
         assertThat(bound.getHeaders()).containsEntry("Authorization", "Basic jeton");
+    }
+
+    /**
+     * Unite de temps et delai de connexion : deux defauts qui ne conviennent
+     * pas a ce montage.
+     * <p>
+     * Le registre OTLP publie les durees en MILLISECONDES, la ou le registre
+     * Prometheus utilise les secondes : sans alignement, la meme mesure porte
+     * deux noms selon le chemin, et un tableau de bord unique ne peut pas
+     * servir les deux. Quant au delai de connexion, il vaut UNE seconde par
+     * defaut -- insuffisant au demarrage a froid d'une instance mono-coeur.
+     */
+    @Test
+    void shouldAlignTimeUnitAndRaiseConnectTimeout() {
+        Map<String, String> values = Map.of(
+                "management.otlp.metrics.export.base-time-unit", "seconds",
+                "management.otlp.metrics.export.connect-timeout", "10s");
+
+        OtlpMetricsProperties bound = binderFor(values)
+                .bind("management.otlp.metrics.export", OtlpMetricsProperties.class)
+                .orElseThrow(() -> new AssertionError("Prefixe OTLP inconnu de Spring Boot"));
+
+        assertThat(bound.getBaseTimeUnit()).isEqualTo(TimeUnit.SECONDS);
+        assertThat(bound.getConnectTimeout()).isEqualTo(Duration.ofSeconds(10));
+    }
+
+    /** Les valeurs doivent figurer dans le fichier du profil de production. */
+    @Test
+    void shouldConfigureTimeUnitAndTimeoutInProdProfile() throws IOException {
+        Properties prod = loadClasspathProperties("application-prod.properties");
+
+        assertThat(prod.getProperty("management.otlp.metrics.export.base-time-unit"))
+                .isEqualTo("${OTLP_TIME_UNIT:seconds}");
+        assertThat(prod.getProperty("management.otlp.metrics.export.connect-timeout"))
+                .isEqualTo("${OTLP_CONNECT_TIMEOUT:10s}");
     }
 
     /** Configuration du docker-compose : exposition scrutee par Prometheus. */
