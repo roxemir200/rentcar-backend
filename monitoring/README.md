@@ -317,6 +317,74 @@ c'est-à-dire l'adresse e-mail du compte.
 bonne, puis **Test** pour recevoir un message d'essai. C'est la seule étape
 qui reste manuelle — elle dépend d'une adresse, pas d'une configuration.
 
+## La supervision du frontend
+
+Un frontend est un ensemble de fichiers statiques servis par un CDN : **aucun
+processus à interroger**. La mesure ne peut venir que du navigateur du
+visiteur, seul endroit où l'information existe.
+
+### Ce qui est mesuré
+
+Trois mesures, et trois seulement — les seules sur lesquelles on peut agir :
+
+| Mesure | Ce qu'elle révèle | Seuil « bon » |
+|---|---|---|
+| **LCP** | Temps d'affichage du contenu principal | 2,5 s |
+| **INP** | Latence de réponse aux interactions | 200 ms |
+| **CLS** | Stabilité visuelle de la mise en page | 0,1 |
+
+La lecture est **la répartition** `good / needs-improvement / poor`, et non une
+moyenne : une moyenne satisfaisante peut masquer un quart d'utilisateurs en
+souffrance.
+
+### Le chemin des mesures
+
+```
+navigateur du visiteur          backend                Grafana Cloud
+  web-vitals ──POST──> /api/public/web-vitals ──> Micrometer ──> OTLP
+```
+
+Elles empruntent donc **la même pile** que les métriques du backend : une seule
+destination, un seul mécanisme, une seule façon de publier les tableaux de bord.
+
+### La cardinalité, seul vrai risque
+
+Étiqueter chaque mesure par l'URL exacte créerait une série par réservation :
+`/reservation/1`, `/reservation/2`, `/payment/47`… Quelques centaines de pages
+suffiraient à saturer le quota de 10 000 séries — et les métriques du backend
+disparaîtraient avec.
+
+`WebVitalsServiceImpl` ramène donc tout chemin à un **motif de route issu d'une
+liste fermée** : `/reservation/:id`, `/admin/*`, et ainsi de suite. Un chemin
+inconnu devient `autre`. Aucune requête, même forgée, ne peut créer une
+étiquette nouvelle.
+
+### Le point d'entrée public
+
+`POST /api/public/web-vitals` est **la seule route publique en écriture** de
+l'application — les visiteurs mesurés ne sont pas authentifiés, il ne peut pas
+en aller autrement. Sa protection est en aval : liste fermée de mesures et de
+verdicts, bornes de plausibilité, lot limité à dix, aucune donnée personnelle
+transmise. La règle de sécurité est nominative, et non un `POST /api/public/**`
+ouvert.
+
+Côté navigateur, l'envoi utilise `keepalive` — les Web Vitals se finalisent au
+moment où la page disparaît, et une requête ordinaire serait annulée avant
+d'aboutir. Tout échec est ignoré : le backend dort après quinze minutes, et une
+mesure perdue vaut mieux qu'un onglet ralenti. **Un dispositif de mesure qui
+dégrade l'expérience qu'il mesure n'a aucun sens.**
+
+Rien n'est mesuré en développement : les temps d'un serveur Vite local n'ont
+aucun rapport avec ceux d'un visiteur réel.
+
+### La sonde externe
+
+Elle répond à une autre question — « le site est-il joignable, et depuis
+où ? » — et se configure dans **Grafana Cloud → Synthetic Monitoring**, sans
+une ligne de code : une vérification HTTP sur l'URL Vercel, toutes les minutes,
+depuis plusieurs régions. Grafana fournit ses propres tableaux de bord pour ces
+vérifications.
+
 ## Limites assumées
 
 **Les métriques s'interrompent pendant les mises en veille.** L'application ne

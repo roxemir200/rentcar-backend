@@ -1,0 +1,215 @@
+{
+  "uid": "rentcar-frontend",
+  "title": "RentCar — Frontend",
+  "description": "Experience percue par les visiteurs, mesuree dans leur navigateur (web-vitals) et relayee par le backend. Publie automatiquement par le pipeline backend-cd.",
+  "tags": [
+    "rentcar",
+    "frontend"
+  ],
+  "timezone": "browser",
+  "editable": false,
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "1m",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "DS_PROM",
+        "label": "Source de donnees",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {},
+        "hide": 0
+      },
+      {
+        "name": "application",
+        "label": "Application",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROM}"
+        },
+        "query": "label_values(rentcar_web_vitals_total, application)",
+        "refresh": 1,
+        "current": {
+          "text": "rentcar-backend",
+          "value": "rentcar-backend"
+        },
+        "hide": 0
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Affichage du contenu principal (LCP)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROM}"
+      },
+      "description": "Temps au bout duquel le visiteur voit l'element principal de la page. Une part « poor » qui grimpe designe une image trop lourde ou un script bloquant. Seuil « bon » : 2,5 s.",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (rating) (increase(rentcar_web_vitals_total{application=\"$application\", metric=\"lcp\"}[1h])) / ignoring(rating) group_left sum(increase(rentcar_web_vitals_total{application=\"$application\", metric=\"lcp\"}[1h]))",
+          "legendFormat": "{{rating}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROM}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "title": "Reactivite aux interactions (INP)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROM}"
+      },
+      "description": "Delai entre un clic et la reponse visible. Mesure le travail qui monopolise le fil principal du navigateur. Seuil « bon » : 200 ms.",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (rating) (increase(rentcar_web_vitals_total{application=\"$application\", metric=\"inp\"}[1h])) / ignoring(rating) group_left sum(increase(rentcar_web_vitals_total{application=\"$application\", metric=\"inp\"}[1h]))",
+          "legendFormat": "{{rating}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROM}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "title": "Stabilite visuelle (CLS)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROM}"
+      },
+      "description": "Amplitude des decalages de mise en page pendant le chargement. Cause habituelle : des images ou des blocs sans dimensions reservees. Seuil « bon » : 0,1.",
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (rating) (increase(rentcar_web_vitals_total{application=\"$application\", metric=\"cls\"}[1h])) / ignoring(rating) group_left sum(increase(rentcar_web_vitals_total{application=\"$application\", metric=\"cls\"}[1h]))",
+          "legendFormat": "{{rating}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROM}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "title": "Pages reellement visitees",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROM}"
+      },
+      "description": "Nombre de chargements par ecran, mesure chez les visiteurs. Contrairement au trafic HTTP du backend, ce compte ignore les robots et les sondes : il ne recense que de vraies pages affichees dans de vrais navigateurs.",
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (route) (increase(rentcar_web_vitals_total{application=\"$application\", metric=\"lcp\"}[1h]))",
+          "legendFormat": "{{route}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROM}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "title": "Mesures recues (24 h)",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROM}"
+      },
+      "description": "Volume total. S'il tombe a zero alors que le site est en ligne, la collecte cote navigateur ne fonctionne plus -- panne invisible autrement.",
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(rentcar_web_vitals_total{application=\"$application\"}[24h]))",
+          "legendFormat": "mesures",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROM}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    }
+  ]
+}

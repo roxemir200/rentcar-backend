@@ -185,6 +185,16 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                         .requestMatchers("/api/webhooks/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
+                        // Seule route publique EN ECRITURE de l'application.
+                        // Elle recoit les mesures d'experience percue relevees
+                        // dans le navigateur ; les visiteurs mesures ne sont
+                        // pas authentifies, il ne peut donc pas en aller
+                        // autrement. La regle est nominative, et non un
+                        // POST /api/public/** ouvert : elle n'autorise que
+                        // cette route-la. La protection reelle est en aval,
+                        // dans WebVitalsServiceImpl, qui n'enregistre que ce
+                        // qui figure dans une liste fermee.
+                        .requestMatchers(HttpMethod.POST, "/api/public/web-vitals").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reviews/car/**").permitAll()
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/swagger-ui.html").permitAll()

@@ -184,22 +184,28 @@ jobs:
         if: env.GRAFANA_URL != '' && env.GRAFANA_API_TOKEN != ''
         run: |
           set -o pipefail
-          dashboard=monitoring/grafana/provisioning/dashboards/rentcar-backend.json
+          echec=0
 
-          # `del(.id)` est indispensable : l'identifiant interne appartient a
-          # l'instance qui a cree le tableau de bord. Le transmettre a une
-          # autre instance provoque un refus, l'id n'y designant rien.
-          payload=$(jq '{dashboard: del(.id), overwrite: true, message: "Publie par backend-cd"}' "$dashboard")
+          # Boucle sur TOUS les tableaux de bord du dossier : en ajouter un
+          # nouveau ne doit demander aucune modification de ce pipeline.
+          for dashboard in monitoring/grafana/provisioning/dashboards/*.json; do
+            # `del(.id)` est indispensable : l'identifiant interne appartient a
+            # l'instance qui a cree le tableau de bord. Le transmettre a une
+            # autre instance provoque un refus, l'id n'y designant rien.
+            payload=$(jq '{dashboard: del(.id), overwrite: true, message: "Publie par backend-cd"}' "$dashboard")
 
-          status=$(curl -sS -o /tmp/grafana.out -w '%{http_code}' -X POST "$GRAFANA_URL/api/dashboards/db" -H "Authorization: Bearer $GRAFANA_API_TOKEN" -H "Content-Type: application/json" -d "$payload")
+            status=$(curl -sS -o /tmp/grafana.out -w '%{http_code}' -X POST "$GRAFANA_URL/api/dashboards/db" -H "Authorization: Bearer $GRAFANA_API_TOKEN" -H "Content-Type: application/json" -d "$payload")
 
-          if [ "$status" = "200" ]; then
-            echo "Tableau de bord publie : $(jq -r '.url // "(sans url)"' /tmp/grafana.out)"
-          else
-            echo "::error::Grafana a refuse le tableau de bord (HTTP $status)."
-            cat /tmp/grafana.out
-            exit 1
-          fi
+            if [ "$status" = "200" ]; then
+              echo "  publie : $(basename "$dashboard") -> $(jq -r '.url // "(sans url)"' /tmp/grafana.out)"
+            else
+              echo "::error::Grafana a refuse $(basename "$dashboard") (HTTP $status)."
+              cat /tmp/grafana.out
+              echo
+              echec=1
+            fi
+          done
+          exit $echec
 
       # Pose un repere date sur les graphiques.
       #
