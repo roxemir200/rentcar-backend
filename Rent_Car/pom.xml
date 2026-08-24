@@ -75,6 +75,23 @@
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-otlp</artifactId>
         </dependency>
+        <!-- Requis par l'auto-configuration OTLP de Spring Boot 4, qui porte :
+
+               @ConditionalOnClass({ OtlpMeterRegistry.class,
+                                     OpenTelemetryProperties.class })
+
+             Deux classes, et non une. La seconde vient de ce module, sorti
+             du coeur d'Actuator en Boot 4. Sans lui, la condition echoue
+             SANS AUCUN MESSAGE : Spring retombe sur SimpleMeterRegistry,
+             l'application demarre normalement, la configuration OTLP est
+             lue et validee — et rien n'est jamais emis. C'est la panne qui
+             a coute le plus de temps sur ce projet, faute du moindre
+             signal. Voir MonitoringConfig, qui la rend desormais visible
+             au demarrage. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-opentelemetry</artifactId>
+        </dependency>
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>

@@ -62,6 +62,26 @@ système — un backend parfaitement sain peut n'encaisser aucun paiement :
 
 Le rapport entre les deux mesure l'abandon dans le tunnel de paiement.
 
+## Les deux dépendances, et pourquoi il en faut deux
+
+En Spring Boot 4, l'auto-configuration OTLP porte cette condition :
+
+```java
+@ConditionalOnClass({ OtlpMeterRegistry.class, OpenTelemetryProperties.class })
+```
+
+`micrometer-registry-otlp` fournit la première ; la seconde vient de
+**`spring-boot-opentelemetry`**, module sorti du cœur d'Actuator en Boot 4.
+
+Sans lui, la condition échoue **sans le moindre message** : Spring retombe sur
+`SimpleMeterRegistry`, l'application démarre normalement, la configuration OTLP
+est lue et validée, et rien n'est jamais émis. Un registre existe — il n'envoie
+simplement nulle part.
+
+C'est la panne qui a coûté le plus de temps sur ce projet. `MonitoringConfig`
+la rend désormais visible au démarrage, et le test `OtlpRegistryContextTest`
+échouerait si la dépendance disparaissait du `pom.xml`.
+
 ## Utilisation locale
 
 ```bash
