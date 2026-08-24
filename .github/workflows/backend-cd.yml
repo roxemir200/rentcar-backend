@@ -274,11 +274,40 @@ jobs:
             fi
 
             case "$status" in
-              2*) echo "  regle publiee : $uid" ;;
-              *)  echo "::error::Regle $uid refusee (HTTP $status)"; cat /tmp/alert.out; echo; echec=1 ;;
+              2*)
+                echo "  regle publiee : $uid"
+                ;;
+              403)
+                echo "::warning::Regle $uid refusee : le jeton Grafana n'a pas les droits sur les regles d'alerte."
+                echo "  Le meme jeton ecrit pourtant les tableaux de bord : dans Grafana Cloud, l'alerting"
+                echo "  releve d'un jeu de permissions distinct. Porter le compte de service au role Admin"
+                echo "  (Administration > Users and access > Service accounts), puis relancer ce workflow."
+                echec=1
+                ;;
+              *)
+                echo "::warning::Regle $uid refusee (HTTP $status)"
+                cat /tmp/alert.out
+                echo
+                echec=1
+                ;;
             esac
           done
-          exit $echec
+
+          # Volontairement sans `exit 1`.
+          #
+          # A ce stade, la livraison a REUSSI : l'image est publiee, Render a
+          # deploye, le service a repondu UP, le tableau de bord est en place.
+          # Faire echouer le pipeline pour une regle d'alerte refusee
+          # afficherait un echec de livraison la ou il n'y en a pas — et,
+          # a force, apprend a ne plus regarder les pipelines rouges.
+          #
+          # L'anomalie n'est pas tue pour autant : elle apparait en
+          # avertissement, et le resume du run la reporte.
+          if [ "$echec" -eq 0 ]; then
+            echo "ALERTES=publiees" >> "$GITHUB_ENV"
+          else
+            echo "ALERTES=refusees (voir avertissements)" >> "$GITHUB_ENV"
+          fi
 
       - name: Summary
         if: always()
@@ -291,4 +320,5 @@ jobs:
             echo "| Commit | \`$COMMIT_SHA\` |"
             echo "| Image | \`$IMAGE:latest\` |"
             echo "| Retour arriere | \`$IMAGE:$COMMIT_SHA\` |"
+            echo "| Alertes | ${ALERTES:-non publiees} |"
           } >> "$GITHUB_STEP_SUMMARY"
