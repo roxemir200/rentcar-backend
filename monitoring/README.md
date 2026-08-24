@@ -246,6 +246,28 @@ Le jeton se crée dans Grafana Cloud : **Administration → Users and access →
 Service accounts → Add service account**, rôle *Editor*, puis *Add service
 account token*. Il n'est affiché qu'une fois.
 
+## Les deux avertissements du démarrage
+
+Au premier envoi suivant un démarrage à froid, vous verrez souvent :
+
+```
+WARN  Failed to publish metrics to OTLP receiver
+      java.net.http.HttpConnectTimeoutException: HTTP connect timed out
+```
+
+**C'est attendu, et sans conséquence.** L'instance gratuite dispose d'un seul
+cœur ; elle vient de passer près de trois minutes à démarrer. Résolution DNS et
+poignée de main TLS se disputent alors le processeur, et le délai de connexion
+par défaut expire.
+
+Le point de contrôle est simple : `PushMeterRegistry` journalise un `WARN` à
+**chaque** échec. Un ou deux avertissements suivis de silence signifient que
+les envois suivants ont abouti. Un avertissement **par minute** signale une
+panne réelle — et le message dit alors laquelle : `connect timed out` pour un
+réseau bloqué, `401` pour une authentification refusée.
+
+Compter les avertissements dit donc davantage que les lire.
+
 ## Limites assumées
 
 **Les métriques s'interrompent pendant les mises en veille.** L'application ne
