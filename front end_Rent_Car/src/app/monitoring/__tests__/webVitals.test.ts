@@ -6,10 +6,11 @@ import type { Metric } from 'web-vitals'
 // nous-mêmes. Impossible autrement — ces mesures ne se produisent que dans un
 // vrai navigateur qui affiche une vraie page.
 const rappels: Record<string, (m: Metric) => void> = {}
+const optionsRecues: Record<string, unknown> = {}
 vi.mock('web-vitals', () => ({
-  onLCP: (cb: (m: Metric) => void) => { rappels.LCP = cb },
-  onINP: (cb: (m: Metric) => void) => { rappels.INP = cb },
-  onCLS: (cb: (m: Metric) => void) => { rappels.CLS = cb },
+  onLCP: (cb: (m: Metric) => void, o?: unknown) => { rappels.LCP = cb; optionsRecues.LCP = o },
+  onINP: (cb: (m: Metric) => void, o?: unknown) => { rappels.INP = cb; optionsRecues.INP = o },
+  onCLS: (cb: (m: Metric) => void, o?: unknown) => { rappels.CLS = cb; optionsRecues.CLS = o },
 }))
 
 const mesure = (name: string, value: number, rating: string) =>
@@ -20,6 +21,7 @@ let fetchMock: ReturnType<typeof vi.fn>
 beforeEach(() => {
   vi.resetModules()
   for (const cle of Object.keys(rappels)) delete rappels[cle]
+  for (const cle of Object.keys(optionsRecues)) delete optionsRecues[cle]
   fetchMock = vi.fn().mockResolvedValue({ ok: true })
   vi.stubGlobal('fetch', fetchMock)
   // setup.ts remplace window.location par un objet simple : on l'ecrit
@@ -51,6 +53,10 @@ describe('app/monitoring/webVitals', () => {
     const [url, options] = fetchMock.mock.calls[0]
     expect(url).toContain('/public/web-vitals')
     expect(options.method).toBe('POST')
+    // text/plain et non application/json : ce dernier declencherait un
+    // preflight CORS que sendBeacon ne sait pas mener. Le repli fetch garde
+    // le meme type pour que les deux chemins soient interchangeables.
+    expect(options.headers['Content-Type']).toContain('text/plain')
     expect(JSON.parse(options.body)).toEqual([
       { name: 'LCP', value: 2100, rating: 'good', path: '/cars' },
     ])
@@ -116,6 +122,56 @@ describe('app/monitoring/webVitals', () => {
 
     expect(rappels.LCP).toBeUndefined()
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  /**
+   * LA correction qui a debloque la remontee des donnees.
+   *
+   * Par defaut, ces trois fonctions ne rappellent qu'une fois, au moment ou la
+   * page disparait. Dans une SPA, cet instant n'arrive qu'a la fermeture de
+   * l'onglet — souvent jamais. Verifie en production : sur 43 requetes d'une
+   * session reelle, pas une seule vers le point de collecte.
+   */
+  it('demande a etre rappele a chaque evolution, et non a la fermeture', async () => {
+    await demarrer()
+
+    expect(optionsRecues.LCP).toEqual({ reportAllChanges: true })
+    expect(optionsRecues.INP).toEqual({ reportAllChanges: true })
+    expect(optionsRecues.CLS).toEqual({ reportAllChanges: true })
+  })
+
+  /**
+   * sendBeacon est l'API prevue pour cet instant : le navigateur prend l'envoi
+   * a sa charge et le mene a terme meme si la page est detruite dans la
+   * milliseconde qui suit. Un fetch, meme avec keepalive, reste soumis au
+   * cycle de vie du document.
+   */
+  it('prefere sendBeacon quand le navigateur le propose', async () => {
+    vi.useFakeTimers()
+    const beacon = vi.fn().mockReturnValue(true)
+    vi.stubGlobal('navigator', { ...window.navigator, sendBeacon: beacon })
+    await demarrer()
+
+    rappels.LCP(mesure('LCP', 2100, 'good'))
+    await vi.runAllTimersAsync()
+
+    expect(beacon).toHaveBeenCalledTimes(1)
+    expect(fetchMock).not.toHaveBeenCalled()
+    const [url, charge] = beacon.mock.calls[0]
+    expect(url).toContain('/public/web-vitals')
+    expect(charge.type).toContain('text/plain')
+  })
+
+  /** Un lot refuse par sendBeacon ne doit pas etre perdu pour autant. */
+  it('bascule sur fetch si sendBeacon refuse le lot', async () => {
+    vi.useFakeTimers()
+    vi.stubGlobal('navigator', { ...window.navigator, sendBeacon: vi.fn().mockReturnValue(false) })
+    await demarrer()
+
+    rappels.LCP(mesure('LCP', 2100, 'good'))
+    await vi.runAllTimersAsync()
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 
   /**

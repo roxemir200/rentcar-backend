@@ -22,24 +22,42 @@ import { API_BASE_URL } from "../config/env";
 /** Une page émet exactement trois mesures ; le lot ne dépassera jamais cette taille. */
 const LOT_MAX = 10;
 
+/**
+ * Journalise dans la console du navigateur.
+ *
+ * La première version de ce fichier avalait toute erreur sans un mot
+ * (`.catch(() => {})`) et ne signalait aucun envoi. Résultat : des panneaux
+ * vides, et aucun moyen de savoir si la mesure n'avait pas été prise, pas
+ * envoyée, ou pas acceptée. Il a fallu instrumenter `fetch` dans la page en
+ * production pour l'établir.
+ *
+ * C'est le même défaut qui a coûté le plus cher côté backend, et pour la même
+ * raison : un dispositif de mesure qui ne dit rien quand il ne mesure rien
+ * n'est pas silencieux, il est aveugle. Deux lignes de console remplacent une
+ * enquête.
+ */
+function tracer(message: string, details?: unknown): void {
+  // eslint-disable-next-line no-console
+  console.debug(`[web-vitals] ${message}`, details ?? "");
+}
+
 const file: Metric[] = [];
-let envoiProgramme = false;
 
 /**
  * Envoie le lot accumulé.
  *
- * `keepalive` est indispensable : les Web Vitals se finalisent au moment où la
- * page disparaît — onglet fermé, navigation ailleurs. Une requête ordinaire
- * serait annulée par le navigateur avant d'aboutir. Avec cet indicateur, elle
- * survit à la page.
+ * `navigator.sendBeacon` et non `fetch` : c'est l'API prévue exactement pour
+ * cet instant. Le navigateur prend l'envoi à sa charge et le mène à terme même
+ * si la page est détruite dans la milliseconde qui suit. Un `fetch`, même avec
+ * `keepalive`, reste soumis au cycle de vie du document.
  *
- * Tout échec est ignoré volontairement. Le backend dort après quinze minutes
- * d'inactivité, et une mesure perdue n'est qu'une mesure perdue : mieux vaut
- * cela que retarder la fermeture d'un onglet. Un dispositif de mesure qui
- * dégrade l'expérience qu'il mesure n'a aucun sens.
+ * Elle impose en revanche un type de contenu « simple » : `application/json`
+ * déclencherait un préflight CORS que `sendBeacon` ne sait pas mener. D'où le
+ * `text/plain`, que le backend accepte explicitement pour cette route.
+ *
+ * `fetch` reste en repli pour les rares navigateurs sans `sendBeacon`.
  */
 function envoyer(): void {
-  envoiProgramme = false;
   if (file.length === 0) return;
 
   const lot = file.splice(0, LOT_MAX).map((mesure) => ({
@@ -52,29 +70,41 @@ function envoyer(): void {
     path: window.location.pathname,
   }));
 
-  void fetch(`${API_BASE_URL}/public/web-vitals`, {
+  const url = `${API_BASE_URL}/public/web-vitals`;
+  const corps = JSON.stringify(lot);
+  tracer(`envoi de ${lot.length} mesure(s)`, lot.map((m) => `${m.name}=${Math.round(m.value)}`));
+
+  if (typeof navigator.sendBeacon === "function") {
+    const accepte = navigator.sendBeacon(url, new Blob([corps], { type: "text/plain;charset=UTF-8" }));
+    if (accepte) return;
+    tracer("sendBeacon a refuse le lot, repli sur fetch");
+  }
+
+  void fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(lot),
+    headers: { "Content-Type": "text/plain;charset=UTF-8" },
+    body: corps,
     keepalive: true,
-  }).catch(() => {
-    /* Mesure perdue. Sans conséquence, et sans reprise. */
+  }).catch((erreur) => {
+    // Une mesure perdue reste sans conséquence, et sans reprise : mieux vaut
+    // cela que retarder la fermeture d'un onglet. Mais elle est desormais dite.
+    tracer("envoi impossible", erreur);
   });
 }
 
-/**
- * Regroupe les mesures avant envoi.
- *
- * Les trois arrivent à quelques millisecondes d'intervalle : les envoyer
- * séparément ferait trois requêtes réseau là où une suffit, sur la page même
- * dont on mesure la rapidité.
- */
+/** Empile la mesure et l'envoie au prochain tour de boucle, groupée avec les autres. */
+let envoiProgramme = false;
+
 function programmerEnvoi(mesure: Metric): void {
+  tracer(`mesure relevee : ${mesure.name} = ${Math.round(mesure.value)} (${mesure.rating})`);
   file.push(mesure);
   if (envoiProgramme) return;
 
   envoiProgramme = true;
-  setTimeout(envoyer, 0);
+  setTimeout(() => {
+    envoiProgramme = false;
+    envoyer();
+  }, 0);
 }
 
 /**
@@ -85,11 +115,30 @@ function programmerEnvoi(mesure: Metric): void {
  * Les mélanger fausserait la seule chose que ces métriques servent à établir.
  */
 export function startWebVitals(): void {
-  if (import.meta.env?.DEV) return;
+  if (import.meta.env?.DEV) {
+    tracer("collecte desactivee en developpement");
+    return;
+  }
 
-  onLCP(programmerEnvoi);
-  onINP(programmerEnvoi);
-  onCLS(programmerEnvoi);
+  // `reportAllChanges` est LA raison pour laquelle rien ne remontait.
+  //
+  // Par défaut, ces trois fonctions ne rappellent qu'une fois, au moment où la
+  // page disparaît — c'est cohérent de leur point de vue : le LCP n'est
+  // définitif qu'à la fin, le CLS s'accumule jusqu'au bout.
+  //
+  // Mais cette application est une SPA. Un visiteur passe de l'accueil au
+  // catalogue puis à une réservation sans jamais recharger la page : l'instant
+  // « la page disparaît » n'arrive qu'à la fermeture de l'onglet, souvent
+  // jamais. Et lorsqu'il arrive, le navigateur est déjà en train de détruire
+  // le document.
+  //
+  // Avec cette option, chaque évolution est rapportée. Les données remontent
+  // pendant la session au lieu d'être suspendues à sa fin.
+  const options = { reportAllChanges: true };
+
+  onLCP(programmerEnvoi, options);
+  onINP(programmerEnvoi, options);
+  onCLS(programmerEnvoi, options);
 
   // Filet de sécurité : si la page disparaît avant l'envoi différé, on part
   // avec ce qui a été relevé. `visibilitychange` est le seul événement fiable
@@ -97,4 +146,6 @@ export function startWebVitals(): void {
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") envoyer();
   });
+
+  tracer("collecte demarree");
 }

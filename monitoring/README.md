@@ -368,11 +368,34 @@ verdicts, bornes de plausibilité, lot limité à dix, aucune donnée personnell
 transmise. La règle de sécurité est nominative, et non un `POST /api/public/**`
 ouvert.
 
-Côté navigateur, l'envoi utilise `keepalive` — les Web Vitals se finalisent au
-moment où la page disparaît, et une requête ordinaire serait annulée avant
-d'aboutir. Tout échec est ignoré : le backend dort après quinze minutes, et une
-mesure perdue vaut mieux qu'un onglet ralenti. **Un dispositif de mesure qui
-dégrade l'expérience qu'il mesure n'a aucun sens.**
+### Deux réglages sans lesquels rien ne remonte
+
+La première version de cette collecte n'a jamais envoyé une seule mesure. Le
+diagnostic a demandé d'instrumenter `fetch` dans la page en production : sur
+43 requêtes d'une session réelle, aucune vers le point d'entrée.
+
+**`reportAllChanges: true`.** Par défaut, `onLCP`, `onINP` et `onCLS` ne
+rappellent qu'une fois, au moment où la page disparaît — cohérent de leur point
+de vue, le LCP n'étant définitif qu'à la fin. Mais cette application est une
+SPA : un visiteur passe de l'accueil au catalogue puis à une réservation sans
+jamais recharger la page. L'instant « la page disparaît » n'arrive qu'à la
+fermeture de l'onglet, souvent jamais. Avec cette option, chaque évolution est
+rapportée et les données remontent pendant la session.
+
+**`navigator.sendBeacon` plutôt que `fetch`.** C'est l'API prévue pour cet
+instant : le navigateur prend l'envoi à sa charge et le mène à terme même si la
+page est détruite dans la milliseconde qui suit. Un `fetch`, même avec
+`keepalive`, reste soumis au cycle de vie du document.
+
+Conséquence directe sur le backend : `sendBeacon` ne sait pas mener un
+préflight CORS, il impose donc un type de contenu « simple ». Le corps reste du
+JSON, mais l'en-tête devient `text/plain` — et la route l'accepte
+explicitement. Sans cela, le serveur répond `415`.
+
+Tout échec est ignoré, mais **plus silencieusement** : chaque relevé et chaque
+envoi laissent une trace `console.debug`. C'est le même défaut qui avait coûté
+le plus cher côté OTLP — un dispositif de mesure muet quand il ne mesure rien
+n'est pas discret, il est aveugle.
 
 Rien n'est mesuré en développement : les temps d'un serveur Vite local n'ont
 aucun rapport avec ceux d'un visiteur réel.
