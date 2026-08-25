@@ -1,7 +1,7 @@
 package com.rentcar.rent_car.controller;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import com.rentcar.rent_car.dto.request.WebVitalRequest;
 import com.rentcar.rent_car.service.WebVitalsService;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +29,22 @@ public class WebVitalsController {
     private static final int TAILLE_MAX = 8_192;
 
     private final WebVitalsService webVitalsService;
+
+    /**
+     * ATTENTION : {@code tools.jackson}, et non {@code com.fasterxml}.
+     * <p>
+     * Spring Boot 4 est passe a Jackson 3, publie sous le paquetage
+     * {@code tools.jackson}. C'est de cette classe-la, et d'elle seule, qu'un
+     * bean est auto-configure. Le {@code com.fasterxml.jackson} d'origine est
+     * pourtant bien present dans le classpath -- amene par JJWT -- de sorte que
+     * l'import fautif compile sans un mot.
+     * <p>
+     * L'erreur ne se manifeste qu'a l'execution, et seulement a la premiere
+     * requete puisque l'hebergeur active l'initialisation paresseuse :
+     * « No qualifying bean of type ObjectMapper available », sur une classe
+     * dont le nom parait pourtant familier. Voir PaymentServiceImpl, qui
+     * importe le bon paquetage.
+     */
     private final ObjectMapper objectMapper;
 
     /**

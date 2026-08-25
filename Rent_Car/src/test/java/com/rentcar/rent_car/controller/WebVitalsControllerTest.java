@@ -1,6 +1,6 @@
 package com.rentcar.rent_car.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.rentcar.rent_car.dto.request.WebVitalRequest;
 import com.rentcar.rent_car.service.imp.WebVitalsServiceImpl;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -103,6 +103,30 @@ class WebVitalsControllerTest {
 
         assertThat(controleur.collect(rejete).getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
         assertThat(comptees()).isZero();
+    }
+
+    /**
+     * Verrou contre l'erreur qui a mis ce point d'entree hors service.
+     * <p>
+     * Deux Jackson coexistent dans le classpath : celui de Spring Boot 4
+     * ({@code tools.jackson}, Jackson 3) et celui qu'amene JJWT
+     * ({@code com.fasterxml}, Jackson 2). Seul le premier donne lieu a un bean.
+     * Importer le second compile sans un mot, et echoue a la premiere requete
+     * en production par un « No qualifying bean of type ObjectMapper ».
+     * <p>
+     * Un test qui instancie le controleur lui-meme ne peut pas detecter cela :
+     * il fournit l'objet au lieu de le demander au conteneur. D'ou cette
+     * verification sur le TYPE attendu par le constructeur.
+     */
+    @Test
+    void shouldDependOnTheJacksonThatSpringActuallyProvides() {
+        Class<?>[] parametres = WebVitalsController.class.getDeclaredConstructors()[0].getParameterTypes();
+
+        assertThat(parametres)
+                .as("le constructeur doit exiger l'ObjectMapper de Jackson 3")
+                .contains(tools.jackson.databind.ObjectMapper.class);
+        assertThat(parametres)
+                .noneMatch(type -> type.getName().startsWith("com.fasterxml.jackson"));
     }
 
     /** Le DTO reste utilisable directement, sans passer par la deserialisation. */
