@@ -12,7 +12,7 @@
   "version": 1,
   "refresh": "1m",
   "time": {
-    "from": "now-24h",
+    "from": "now-6h",
     "to": "now"
   },
   "templating": {
@@ -62,7 +62,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (rating) (increase(rentcar_web_vitals_total{application=\"$application\", metric=\"lcp\"}[1h])) / ignoring(rating) group_left sum(increase(rentcar_web_vitals_total{application=\"$application\", metric=\"lcp\"}[1h]))",
+          "expr": "sum by (rating) (increase(rentcar_web_vitals_total{application=\"$application\", metric=\"lcp\"}[1h]))\n  / scalar(sum(increase(rentcar_web_vitals_total{application=\"$application\", metric=\"lcp\"}[1h])))",
           "legendFormat": "{{rating}}",
           "datasource": {
             "type": "prometheus",
@@ -97,7 +97,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (rating) (increase(rentcar_web_vitals_total{application=\"$application\", metric=\"inp\"}[1h])) / ignoring(rating) group_left sum(increase(rentcar_web_vitals_total{application=\"$application\", metric=\"inp\"}[1h]))",
+          "expr": "sum by (rating) (increase(rentcar_web_vitals_total{application=\"$application\", metric=\"inp\"}[1h]))\n  / scalar(sum(increase(rentcar_web_vitals_total{application=\"$application\", metric=\"inp\"}[1h])))",
           "legendFormat": "{{rating}}",
           "datasource": {
             "type": "prometheus",
@@ -132,7 +132,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (rating) (increase(rentcar_web_vitals_total{application=\"$application\", metric=\"cls\"}[1h])) / ignoring(rating) group_left sum(increase(rentcar_web_vitals_total{application=\"$application\", metric=\"cls\"}[1h]))",
+          "expr": "sum by (rating) (increase(rentcar_web_vitals_total{application=\"$application\", metric=\"cls\"}[1h]))\n  / scalar(sum(increase(rentcar_web_vitals_total{application=\"$application\", metric=\"cls\"}[1h])))",
           "legendFormat": "{{rating}}",
           "datasource": {
             "type": "prometheus",
