@@ -15,7 +15,7 @@ import type {
   ReservationStatus, Inspection, Role,
 } from "../data/types";
 import { authAPI, toFrontendUser } from "../api/auth.api";
-import { NOTIFICATIONS_STREAM_URL, resolveImageUrl } from "../config/env";
+import { notificationsStreamUrl, resolveImageUrl } from "../config/env";
 
 import { api } from "../api/axios";
 
@@ -567,8 +567,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    // L'URL est construite — et le jeton validé — par le module de
+    // configuration : c'est lui qui sait ce qu'est une URL de ce backend.
+    // Un jeton absent ou altéré ne donne aucune URL, et l'on n'ouvre alors
+    // aucun flux plutôt que d'en ouvrir un vers une adresse imprévue.
+    const streamUrl = notificationsStreamUrl(localStorage.getItem("token"));
+    if (!streamUrl) return;
 
     let reconnectAttempts = 0;
     const maxShortRetries = 5; // Nombre de tentatives avec délais courts
@@ -577,7 +581,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const connectSSE = () => {
       try {
-        const eventSource = new EventSource(`${NOTIFICATIONS_STREAM_URL}?token=${token}`);
+        const eventSource = new EventSource(streamUrl);
         eventSourceRef.current = eventSource;
 
         eventSource.onopen = () => {

@@ -72,6 +72,21 @@ describe('AppContext · connexion SSE', () => {
     expect(stream().url).toBe('http://localhost:8089/api/notifications/stream?token=jwt-sse')
   })
 
+  /**
+   * `localStorage` est réinscriptible par n'importe quel script du domaine :
+   * un jeton porteur d'un `&` ne serait plus une valeur mais un second
+   * paramètre, et l'URL du flux cesserait d'être celle qu'on croit. Mieux
+   * vaut aucune connexion qu'une connexion vers autre chose.
+   */
+  it('n’ouvre aucun flux si le token stocké a été altéré', async () => {
+    authenticate()
+    localStorage.setItem('token', 'jwt&url=https://ailleurs.invalid')
+
+    await renderApp()
+
+    expect(MockEventSource.instances).toHaveLength(0)
+  })
+
   it('ferme le flux au démontage', async () => {
     authenticate()
 

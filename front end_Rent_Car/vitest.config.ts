@@ -35,6 +35,13 @@ export default defineConfig({
         'src/app/components/common/**/*.{ts,tsx}',
         'src/app/components/figma/**/*.{ts,tsx}',
         'src/app/components/layout/**/*.{ts,tsx}',
+        // Ces deux dossiers etaient absents de la liste alors qu'ils sont
+        // testes : leurs fichiers ne figuraient donc pas dans lcov.info, et
+        // SonarCloud, qui compte comme non couvert tout fichier analyse mais
+        // absent du rapport, les affichait a 0 %. Le code etait couvert, la
+        // mesure ne l'etait pas.
+        'src/app/config/**/*.{ts,tsx}',
+        'src/app/monitoring/**/*.{ts,tsx}',
         'src/app/context/**/*.{ts,tsx}',
         'src/app/hooks/**/*.{ts,tsx}',
         'src/app/lib/**/*.{ts,tsx}',

@@ -63,6 +63,38 @@ export const WS_URL = `${API_ORIGIN}/ws`;
 /** Flux SSE des notifications temps réel. */
 export const NOTIFICATIONS_STREAM_URL = `${API_BASE_URL}/notifications/stream`;
 
+/**
+ * Caractères admis dans un jeton porteur : ceux du base64 standard et du
+ * base64url, plus le point qui sépare les trois segments d'un JWT. Ni `&`,
+ * ni `?`, ni `#`, ni espace — c'est-à-dire aucun des délimiteurs d'une URL.
+ */
+const TOKEN_PATTERN = /^[\w.~+\/=-]{1,4096}$/;
+
+/**
+ * Construit l'URL du flux SSE en y plaçant le jeton d'authentification.
+ *
+ * Ce détour par le paramètre de requête n'est pas un choix : `EventSource`
+ * est la seule API de flux du navigateur, et elle n'accepte aucun en-tête —
+ * impossible d'y envoyer un `Authorization: Bearer`. Le jeton doit donc
+ * voyager dans l'URL. Le WebSocket du chat, lui, accepte des en-têtes STOMP
+ * et n'a pas ce problème : voir `useWebSocket`.
+ *
+ * Le jeton vient de `localStorage`, que rien ne garantit intact : son contenu
+ * est modifiable par n'importe quel script s'exécutant sur le domaine. Inséré
+ * tel quel, un jeton contenant `&` ou `#` ne serait pas une valeur mais une
+ * suite de paramètres — de quoi détourner la connexion vers autre chose que
+ * ce flux. D'où les deux contrôles, dans cet ordre :
+ *
+ *   1. liste blanche de caractères, et refus pur et simple sinon ;
+ *   2. encodage de la valeur, qui neutralise ce qui aurait pu passer.
+ *
+ * @returns l'URL du flux, ou `null` si le jeton stocké n'est pas exploitable
+ */
+export function notificationsStreamUrl(token?: string | null): string | null {
+  if (!token || !TOKEN_PATTERN.test(token)) return null;
+  return `${NOTIFICATIONS_STREAM_URL}?token=${encodeURIComponent(token)}`;
+}
+
 /** Clé publiable Stripe. Publique par conception : elle est destinée au navigateur. */
 export const STRIPE_PUBLISHABLE_KEY =
   import.meta.env?.VITE_STRIPE_PUBLISHABLE_KEY?.trim() || "";
