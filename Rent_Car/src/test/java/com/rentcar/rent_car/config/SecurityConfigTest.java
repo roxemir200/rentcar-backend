@@ -203,6 +203,24 @@ class SecurityConfigTest {
         assertThat(corsConfig.getAllowCredentials()).isTrue();
     }
 
+    /**
+     * Les origines sont saisies a la main sur l'hebergeur : une barre finale
+     * ou un separateur en trop y sont la regle. La comparaison CORS porte sur
+     * la chaine exacte — « https://rentcar.app/ » ne correspond pas a
+     * l'origine annoncee par le navigateur, et tous les appels sont bloques.
+     */
+    @Test
+    void shouldNormaliseTheConfiguredCorsOrigins() {
+        org.springframework.test.util.ReflectionTestUtils.setField(
+                securityConfig, "allowedOrigins", " https://rentcar.app/ , ,http://localhost:5173 ");
+
+        UrlBasedCorsConfigurationSource source =
+                (UrlBasedCorsConfigurationSource) securityConfig.corsConfigurationSource();
+
+        assertThat(source.getCorsConfigurations().get("/**").getAllowedOrigins())
+                .containsExactly("https://rentcar.app", "http://localhost:5173");
+    }
+
     @Test
     void shouldEncodePasswordCorrectly() {
         PasswordEncoder encoder = securityConfig.passwordEncoder();

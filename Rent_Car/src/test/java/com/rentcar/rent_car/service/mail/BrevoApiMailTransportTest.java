@@ -13,6 +13,7 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withException;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
@@ -138,6 +139,40 @@ class BrevoApiMailTransportTest {
                 .run(context -> assertThat(context)
                         .hasNotFailed()
                         .hasSingleBean(BrevoApiMailTransport.class));
+    }
+
+    /**
+     * Toute autre réponse d'erreur reste exploitable : le code HTTP est repris
+     * tel quel, faute de cause connue à nommer.
+     */
+    @Test
+    void shouldReportTheStatusForAnyOtherFailure() {
+        BrevoApiMailTransport transport = transportWith("cle", "no-reply@rentcar.tn");
+
+        server.expect(requestTo(BASE_URL + "/v3/smtp/email"))
+                .andRespond(withStatus(HttpStatus.TOO_MANY_REQUESTS));
+
+        assertThatThrownBy(() -> transport.send("client@test.com", "Objet", "Corps"))
+                .isInstanceOf(MailDeliveryException.class)
+                .hasMessageContaining("client@test.com")
+                .hasMessageContaining("429");
+    }
+
+    /**
+     * Brevo injoignable : panne réseau, DNS ou coupure sortante. L'échec doit
+     * ressortir sous le même type que les refus applicatifs, sans quoi
+     * l'appelant devrait connaître le transport pour l'attraper.
+     */
+    @Test
+    void shouldTranslateNetworkFailuresIntoDeliveryException() {
+        BrevoApiMailTransport transport = transportWith("cle", "no-reply@rentcar.tn");
+
+        server.expect(requestTo(BASE_URL + "/v3/smtp/email"))
+                .andRespond(withException(new java.io.IOException("connexion refusée")));
+
+        assertThatThrownBy(() -> transport.send("client@test.com", "Objet", "Corps"))
+                .isInstanceOf(MailDeliveryException.class)
+                .hasMessageContaining("client@test.com");
     }
 
     /** Le transport Brevo ne doit pas être chargé lorsque le SMTP est retenu. */

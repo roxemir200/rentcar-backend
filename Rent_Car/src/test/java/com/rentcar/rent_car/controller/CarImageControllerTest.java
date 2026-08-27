@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import com.rentcar.rent_car.service.storage.ImageStorage;
 import com.rentcar.rent_car.service.storage.ImageStorageException;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -161,5 +162,110 @@ class CarImageControllerTest {
         ResponseEntity<MessageResponse> response = carImageController.uploadImage(file);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    /**
+     * Les controles d'entree du televersement.
+     * <p>
+     * Ce point d'entree accepte un fichier arbitraire : c'est la surface
+     * d'attaque la plus large de l'API. Chaque refus est verifie
+     * individuellement, et surtout : aucun d'eux ne doit atteindre le stockage.
+     */
+    @Test
+    void shouldRejectMissingFile() {
+        ResponseEntity<MessageResponse> response = carImageController.uploadImage(null);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        verifyNoInteractions(imageStorage);
+    }
+
+    @Test
+    void shouldRejectEmptyFile() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "car.png", "image/png", new byte[0]
+        );
+
+        ResponseEntity<MessageResponse> response = carImageController.uploadImage(file);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getMessage()).contains("vide");
+        verifyNoInteractions(imageStorage);
+    }
+
+    /**
+     * Au-dela de 5 Mo, le fichier est refuse avant toute lecture : le simuler
+     * evite d'allouer reellement les octets pour le verifier.
+     */
+    @Test
+    void shouldRejectOversizedFile() {
+        MultipartFile file = mock(MultipartFile.class);
+        when(file.isEmpty()).thenReturn(false);
+        when(file.getSize()).thenReturn(6L * 1024 * 1024);
+
+        ResponseEntity<MessageResponse> response = carImageController.uploadImage(file);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getMessage()).contains("5MB");
+        verifyNoInteractions(imageStorage);
+    }
+
+    @Test
+    void shouldRejectDisallowedMimeType() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "facture.pdf", "application/pdf", "%PDF-1.4".getBytes()
+        );
+
+        ResponseEntity<MessageResponse> response = carImageController.uploadImage(file);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getMessage()).contains("Type de fichier non autorisé");
+        verifyNoInteractions(imageStorage);
+    }
+
+    /** Sans type declare, on ne peut rien affirmer du contenu : on refuse. */
+    @Test
+    void shouldRejectFileWithoutDeclaredMimeType() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "car.png", null, "des-octets".getBytes()
+        );
+
+        ResponseEntity<MessageResponse> response = carImageController.uploadImage(file);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        verifyNoInteractions(imageStorage);
+    }
+
+    @Test
+    void shouldRejectFileWithoutName() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "", "image/png", "des-octets".getBytes()
+        );
+
+        ResponseEntity<MessageResponse> response = carImageController.uploadImage(file);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getMessage()).contains("Nom de fichier invalide");
+        verifyNoInteractions(imageStorage);
+    }
+
+    /**
+     * Toute autre defaillance reste generique cote client : le detail de
+     * l'erreur va dans les journaux, jamais dans la reponse HTTP, qui
+     * renseignerait un attaquant sur l'infrastructure de stockage.
+     */
+    @Test
+    void shouldReturnNeutralMessageOnUnexpectedError() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "car.png", "image/png", "des-octets".getBytes()
+        );
+        when(imageStorage.store(any(), anyString()))
+                .thenThrow(new IllegalStateException("jeton Cloudinary expiré"));
+
+        ResponseEntity<MessageResponse> response = carImageController.uploadImage(file);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getMessage())
+                .isEqualTo("Erreur lors de l'upload. Veuillez réessayer.")
+                .doesNotContain("Cloudinary");
     }
 }

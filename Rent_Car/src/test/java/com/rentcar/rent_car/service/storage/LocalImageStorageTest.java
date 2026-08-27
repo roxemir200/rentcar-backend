@@ -4,12 +4,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 
 class LocalImageStorageTest {
 
@@ -55,6 +61,39 @@ class LocalImageStorageTest {
 
         assertThatThrownBy(() -> storage.store(image(), "abc_car.png"))
                 .isInstanceOf(ImageStorageException.class);
+    }
+
+    /**
+     * Un fichier de taille nulle sur le disque ne doit pas produire une URL :
+     * la fiche vehicule afficherait une image cassee, sans que rien ne signale
+     * ou l'enregistrement a echoue.
+     */
+    @Test
+    void shouldRejectAFileThatLandsEmptyOnDisk() {
+        LocalImageStorage storage = new LocalImageStorage(tempDir.toString());
+        MockMultipartFile vide = new MockMultipartFile("file", "car.png", "image/png", new byte[0]);
+
+        assertThatThrownBy(() -> storage.store(vide, "abc_car.png"))
+                .isInstanceOf(ImageStorageException.class)
+                .hasMessageContaining("vide");
+    }
+
+    /**
+     * Panne d'ecriture — disque plein, droits insuffisants. L'appelant ne
+     * connait que {@link ImageStorageException} : c'est ce qui permet au
+     * controleur de traiter de la meme facon un echec local et un echec
+     * Cloudinary.
+     */
+    @Test
+    void shouldTranslateWriteFailuresIntoStorageException() throws Exception {
+        LocalImageStorage storage = new LocalImageStorage(tempDir.toString());
+        MultipartFile file = mock(MultipartFile.class);
+        doThrow(new IOException("disque plein")).when(file).transferTo(any(File.class));
+
+        assertThatThrownBy(() -> storage.store(file, "abc_car.png"))
+                .isInstanceOf(ImageStorageException.class)
+                .hasMessageContaining("abc_car.png")
+                .hasCauseInstanceOf(IOException.class);
     }
 
     /** Verifie que Spring sait construire ce bean, et seulement quand il est retenu. */

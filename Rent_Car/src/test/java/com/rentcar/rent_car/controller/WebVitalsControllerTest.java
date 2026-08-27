@@ -68,6 +68,17 @@ class WebVitalsControllerTest {
     }
 
     /**
+     * Un corps « null » est du JSON valide : il passe l'analyse et produit une
+     * liste absente. Sans le controle correspondant, la boucle qui suit
+     * echouerait sur un NullPointerException.
+     */
+    @Test
+    void shouldIgnoreABodyThatParsesToNothing() {
+        assertThat(controleur.collect("null").getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        assertThat(comptees()).isZero();
+    }
+
+    /**
      * Une page emet trois mesures. Un lot de cinquante est forge, et sa seule
      * raison d'etre serait de gonfler les compteurs.
      */

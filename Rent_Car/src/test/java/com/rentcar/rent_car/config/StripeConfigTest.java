@@ -20,6 +20,24 @@ class StripeConfigTest {
     }
 
     /**
+     * Cle absente : le demarrage se poursuit, seul le paiement est concerne.
+     * <p>
+     * Refuser de demarrer rendrait indisponible tout le reste de l'application
+     * — catalogue, reservations, contrats — pour une variable d'environnement
+     * oubliee. La cle en place ne doit pas non plus etre ecrasee par du vide.
+     */
+    @Test
+    void shouldNotApplyAnEmptyKeyNorPreventStartup() {
+        Stripe.apiKey = "sk_test_deja_en_place";
+        StripeConfig config = new StripeConfig();
+        ReflectionTestUtils.setField(config, "secretKey", "");
+
+        config.init();
+
+        assertThat(Stripe.apiKey).isEqualTo("sk_test_deja_en_place");
+    }
+
+    /**
      * Sous {@code spring.main.lazy-initialization=true}, un bean dont personne
      * ne depend n'est jamais instancie. Cette classe n'existant que pour
      * l'effet de bord de son {@code @PostConstruct}, elle doit rester eager :

@@ -15,6 +15,7 @@ import com.rentcar.rent_car.service.imp.AuthServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -110,6 +111,32 @@ class AuthServiceTest {
 
         // Does not throw, logs error
         verify(emailService).sendEmail(anyString(), anyString(), anyString());
+    }
+
+    /**
+     * L'URL du frontend est saisie a la main sur l'hebergeur, souvent avec une
+     * barre finale. Sans ce nettoyage, le lien de verification comporte un
+     * double « // » : la plupart des routeurs frontaux ne le reconnaissent
+     * pas, et le compte reste inactivable.
+     */
+    @Test
+    void shouldBuildTheVerificationLink_whateverTheTrailingSlash() {
+        user.setVerificationToken("jeton-123");
+        ArgumentCaptor<String> corps = ArgumentCaptor.forClass(String.class);
+
+        org.springframework.test.util.ReflectionTestUtils.setField(
+                authService, "frontendUrl", "https://rentcar.example/");
+        authService.sendVerificationEmail(user);
+
+        org.springframework.test.util.ReflectionTestUtils.setField(
+                authService, "frontendUrl", "https://rentcar.example");
+        authService.sendVerificationEmail(user);
+
+        verify(emailService, times(2))
+                .sendEmail(anyString(), anyString(), corps.capture());
+        assertThat(corps.getAllValues())
+                .allMatch(texte -> texte.contains("https://rentcar.example/verify-email?token=jeton-123"))
+                .allMatch(texte -> !texte.contains("example//"));
     }
 
     @Test

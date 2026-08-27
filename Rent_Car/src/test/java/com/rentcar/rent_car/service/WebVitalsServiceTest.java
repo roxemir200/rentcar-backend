@@ -117,4 +117,20 @@ class WebVitalsServiceTest {
         assertThat(service.record(null)).isFalse();
         assertThat(service.record(mesure("LCP", 0, "good", "/"))).isTrue();
     }
+
+    /**
+     * Champs absents plutot que corps absent : le point d'entree est public,
+     * et rien n'oblige un appelant a remplir la totalite de l'objet. Aucune de
+     * ces mesures incompletes ne doit produire de serie temporelle — ni de
+     * NullPointerException.
+     */
+    @Test
+    void shouldRejectMeasurementsWithMissingFields() {
+        assertThat(service.record(new WebVitalRequest("LCP", null, "good", "/cars"))).isFalse();
+        assertThat(service.record(new WebVitalRequest("LCP", 2100.0, null, "/cars"))).isFalse();
+        assertThat(service.record(new WebVitalRequest(null, 2100.0, "good", "/cars"))).isFalse();
+        assertThat(service.record(new WebVitalRequest("   ", 2100.0, "good", "/cars"))).isFalse();
+
+        assertThat(registre.find("rentcar.web.vitals").counter()).isNull();
+    }
 }

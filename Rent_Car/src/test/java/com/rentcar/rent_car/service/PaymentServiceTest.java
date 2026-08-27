@@ -23,9 +23,14 @@ import com.rentcar.rent_car.repository.ReservationRepository;
 import com.rentcar.rent_car.repository.UserRepository;
 import com.rentcar.rent_car.service.imp.PaymentServiceImpl;
 
+import com.rentcar.rent_car.dto.response.ReservationResponse;
 import com.stripe.exception.ApiConnectionException;
 import com.stripe.exception.AuthenticationException;
+import com.stripe.exception.SignatureVerificationException;
+import com.stripe.model.Event;
+import com.stripe.model.EventDataObjectDeserializer;
 import com.stripe.model.PaymentIntent;
+import com.stripe.net.Webhook;
 import com.stripe.param.PaymentIntentCreateParams;
 
 import tools.jackson.databind.ObjectMapper;
@@ -34,6 +39,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Spy;
 import org.mockito.Mock;
@@ -522,6 +528,205 @@ class PaymentServiceTest {
             assertThat(response).isNotNull();
             assertThat(response.getPaymentIntentId()).isEqualTo("pi_test_456");
             verify(paymentRepository, times(1)).save(any(Payment.class));
+        }
+    }
+
+    // --- TESTS POUR handleWebhook ---
+    //
+    // C'est Stripe, et non le client, qui confirme un paiement : ce chemin est
+    // le seul qui fasse passer un paiement a COMPLETED. Une erreur ici se
+    // traduit par un client debite dont la reservation reste impayee, sans que
+    // rien ne signale l'ecart cote application.
+
+    /** Compose l'evenement Stripe tel que le service le lit. */
+    private Event evenementStripe(String type, String paymentIntentId) {
+        Event event = mock(Event.class);
+        EventDataObjectDeserializer deserialiseur = mock(EventDataObjectDeserializer.class);
+        String rawJson = "{\"id\":\"" + paymentIntentId + "\"}";
+
+        when(event.getType()).thenReturn(type);
+        when(event.getDataObjectDeserializer()).thenReturn(deserialiseur);
+        when(deserialiseur.getRawJson()).thenReturn(rawJson);
+        when(objectMapper.readTree(rawJson))
+                .thenReturn(new tools.jackson.databind.ObjectMapper().readTree(rawJson));
+
+        return event;
+    }
+
+    @Test
+    void shouldMarkThePaymentCompleted_whenStripeConfirmsIt() {
+        payment.setStatus(PaymentStatus.PENDING);
+        when(paymentRepository.findByExternalPaymentId("pi_stripe_123"))
+                .thenReturn(Optional.of(payment));
+        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
+        when(paymentMapper.toResponse(any(Payment.class))).thenReturn(new PaymentResponse());
+        when(reservationMapper.toResponse(any(Reservation.class))).thenReturn(new ReservationResponse());
+        when(userRepository.findByRole(Role.ADMIN)).thenReturn(List.of(admin));
+
+        Event event = evenementStripe("payment_intent.succeeded", "pi_stripe_123");
+
+        try (var webhook = mockStatic(Webhook.class)) {
+            webhook.when(() -> Webhook.constructEvent(anyString(), anyString(), any()))
+                    .thenReturn(event);
+
+            paymentService.handleWebhook("{}", "signature");
+        }
+
+        ArgumentCaptor<Payment> sauvegarde = ArgumentCaptor.forClass(Payment.class);
+        verify(paymentRepository).save(sauvegarde.capture());
+        assertThat(sauvegarde.getValue().getStatus()).isEqualTo(PaymentStatus.COMPLETED);
+        assertThat(sauvegarde.getValue().getPaymentDate()).isNotNull();
+
+        // Le client et les administrateurs sont prevenus, sans quoi le
+        // paiement reste invisible jusqu'au prochain rafraichissement manuel.
+        verify(sseService).createAndSend(eq(client.getId()), contains("accepté"), anyString(), eq("PAYMENT"));
+        verify(sseService).createAndSend(eq(admin.getId()), contains("reçu"), anyString(), eq("PAYMENT"));
+    }
+
+    @Test
+    void shouldMarkThePaymentFailed_whenStripeRejectsIt() {
+        payment.setStatus(PaymentStatus.PENDING);
+        when(paymentRepository.findByExternalPaymentId("pi_stripe_123"))
+                .thenReturn(Optional.of(payment));
+        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
+        when(paymentMapper.toResponse(any(Payment.class))).thenReturn(new PaymentResponse());
+        when(userRepository.findByRole(Role.ADMIN)).thenReturn(List.of(admin));
+
+        Event event = evenementStripe("payment_intent.payment_failed", "pi_stripe_123");
+
+        try (var webhook = mockStatic(Webhook.class)) {
+            webhook.when(() -> Webhook.constructEvent(anyString(), anyString(), any()))
+                    .thenReturn(event);
+
+            paymentService.handleWebhook("{}", "signature");
+        }
+
+        ArgumentCaptor<Payment> sauvegarde = ArgumentCaptor.forClass(Payment.class);
+        verify(paymentRepository).save(sauvegarde.capture());
+        assertThat(sauvegarde.getValue().getStatus()).isEqualTo(PaymentStatus.FAILED);
+        // Un echec ne date pas le paiement : la date signifie « regle ».
+        assertThat(sauvegarde.getValue().getPaymentDate()).isNull();
+    }
+
+    /**
+     * Le compteur porte le statut en etiquette : le taux d'echec se lit
+     * directement dans Grafana, sans rapprocher deux series independantes.
+     */
+    @Test
+    void shouldCountPaymentsByStatus() {
+        payment.setStatus(PaymentStatus.PENDING);
+        payment.setReservation(null);
+        when(paymentRepository.findByExternalPaymentId("pi_stripe_123"))
+                .thenReturn(Optional.of(payment));
+        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
+
+        Event event = evenementStripe("payment_intent.succeeded", "pi_stripe_123");
+
+        try (var webhook = mockStatic(Webhook.class)) {
+            webhook.when(() -> Webhook.constructEvent(anyString(), anyString(), any()))
+                    .thenReturn(event);
+
+            paymentService.handleWebhook("{}", "signature");
+        }
+
+        assertThat(meterRegistry.counter("rentcar.payments", "status", "completed").count())
+                .isEqualTo(1.0);
+    }
+
+    /**
+     * Stripe cree parfois l'evenement avant que l'identifiant du PaymentIntent
+     * n'ait ete enregistre de notre cote. Le dernier paiement en attente est
+     * alors rattache, sans quoi le reglement serait perdu.
+     */
+    @Test
+    void shouldAttachTheLastPendingPayment_whenTheIntentIdIsUnknown() {
+        payment.setStatus(PaymentStatus.PENDING);
+        payment.setExternalPaymentId(null);
+        payment.setReservation(null);
+        when(paymentRepository.findByExternalPaymentId("pi_inconnu")).thenReturn(Optional.empty());
+        when(paymentRepository.findTopByStatusOrderByCreatedAtDesc(PaymentStatus.PENDING))
+                .thenReturn(Optional.of(payment));
+        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
+
+        Event event = evenementStripe("payment_intent.succeeded", "pi_inconnu");
+
+        try (var webhook = mockStatic(Webhook.class)) {
+            webhook.when(() -> Webhook.constructEvent(anyString(), anyString(), any()))
+                    .thenReturn(event);
+
+            paymentService.handleWebhook("{}", "signature");
+        }
+
+        ArgumentCaptor<Payment> sauvegarde = ArgumentCaptor.forClass(Payment.class);
+        verify(paymentRepository).save(sauvegarde.capture());
+        assertThat(sauvegarde.getValue().getExternalPaymentId()).isEqualTo("pi_inconnu");
+        assertThat(sauvegarde.getValue().getStatus()).isEqualTo(PaymentStatus.COMPLETED);
+    }
+
+    /** Aucun paiement a rattacher : on ne cree rien a l'aveugle. */
+    @Test
+    void shouldChangeNothing_whenNoPendingPaymentExists() {
+        when(paymentRepository.findByExternalPaymentId("pi_inconnu")).thenReturn(Optional.empty());
+        when(paymentRepository.findTopByStatusOrderByCreatedAtDesc(PaymentStatus.PENDING))
+                .thenReturn(Optional.empty());
+
+        Event event = evenementStripe("payment_intent.succeeded", "pi_inconnu");
+
+        try (var webhook = mockStatic(Webhook.class)) {
+            webhook.when(() -> Webhook.constructEvent(anyString(), anyString(), any()))
+                    .thenReturn(event);
+
+            paymentService.handleWebhook("{}", "signature");
+        }
+
+        verify(paymentRepository, never()).save(any(Payment.class));
+    }
+
+    /** Stripe emet des dizaines de types d'evenements : les autres sont ignores. */
+    @Test
+    void shouldIgnoreUnrelatedStripeEvents() {
+        Event event = evenementStripe("charge.refunded", "pi_stripe_123");
+
+        try (var webhook = mockStatic(Webhook.class)) {
+            webhook.when(() -> Webhook.constructEvent(anyString(), anyString(), any()))
+                    .thenReturn(event);
+
+            paymentService.handleWebhook("{}", "signature");
+        }
+
+        verify(paymentRepository, never()).save(any(Payment.class));
+        verifyNoInteractions(sseService);
+    }
+
+    /**
+     * Signature invalide : la requete ne vient pas de Stripe. C'est la seule
+     * protection de ce point d'entree, qui est public par necessite.
+     */
+    @Test
+    void shouldRejectAWebhookWithAnInvalidSignature() {
+        try (var webhook = mockStatic(Webhook.class)) {
+            webhook.when(() -> Webhook.constructEvent(anyString(), anyString(), any()))
+                    .thenThrow(new SignatureVerificationException("signature invalide", "en-tete"));
+
+            assertThatThrownBy(() -> paymentService.handleWebhook("{}", "mauvaise-signature"))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Signature webhook invalide");
+        }
+
+        verify(paymentRepository, never()).save(any(Payment.class));
+    }
+
+    /** Toute autre defaillance reste generique : le detail va aux journaux. */
+    @Test
+    void shouldReturnANeutralErrorOnUnexpectedWebhookFailure() {
+        try (var webhook = mockStatic(Webhook.class)) {
+            webhook.when(() -> Webhook.constructEvent(anyString(), anyString(), any()))
+                    .thenThrow(new IllegalStateException("secret webhook absent"));
+
+            assertThatThrownBy(() -> paymentService.handleWebhook("{}", "signature"))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Erreur interne du serveur")
+                    .hasMessageNotContaining("secret");
         }
     }
 }
