@@ -55,7 +55,7 @@
         "type": "prometheus",
         "uid": "${DS_PROM}"
       },
-      "description": "Temps au bout duquel le visiteur voit l'element principal de la page. Une part « poor » qui grimpe designe une image trop lourde ou un script bloquant. Seuil « bon » : 2,5 s.",
+      "description": "Temps au bout duquel le visiteur voit l'element principal de la page. Une part « poor » qui grimpe designe une image trop lourde ou un script bloquant. Seuil « bon » : 2,5 s. Le rapport est calcule sur les compteurs cumules, et non sur increase([1h]) comme dans la premiere version : sur une plage sans nouvelle mesure, increase() vaut 0 au numerateur ET au denominateur ; 0/0 donne NaN, et le panneau restait vide tout en affichant sa legende -- symptome trompeur, indiscernable d'une panne de collecte. Le cumul est non nul des qu'une mesure existe, quelle que soit la plage affichee ; une remise a zero du compteur touche les deux termes a la fois et ne fausse donc pas la repartition.",
       "gridPos": {
         "x": 0,
         "y": 0,
@@ -65,7 +65,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (rating) (increase(rentcar_web_vitals_total{application=~\"$application\", metric=\"lcp\"}[1h]))\n  / scalar(sum(increase(rentcar_web_vitals_total{application=~\"$application\", metric=\"lcp\"}[1h])))",
+          "expr": "sum by (rating) (rentcar_web_vitals_total{application=~\"$application\", metric=\"lcp\"})\n  / scalar(sum(rentcar_web_vitals_total{application=~\"$application\", metric=\"lcp\"}))",
           "legendFormat": "{{rating}}",
           "datasource": {
             "type": "prometheus",
@@ -90,7 +90,7 @@
         "type": "prometheus",
         "uid": "${DS_PROM}"
       },
-      "description": "Delai entre un clic et la reponse visible. Mesure le travail qui monopolise le fil principal du navigateur. Seuil « bon » : 200 ms.",
+      "description": "Delai entre un clic et la reponse visible. Mesure le travail qui monopolise le fil principal du navigateur. Seuil « bon » : 200 ms. Le rapport est calcule sur les compteurs cumules, et non sur increase([1h]) comme dans la premiere version : sur une plage sans nouvelle mesure, increase() vaut 0 au numerateur ET au denominateur ; 0/0 donne NaN, et le panneau restait vide tout en affichant sa legende -- symptome trompeur, indiscernable d'une panne de collecte. Le cumul est non nul des qu'une mesure existe, quelle que soit la plage affichee ; une remise a zero du compteur touche les deux termes a la fois et ne fausse donc pas la repartition.",
       "gridPos": {
         "x": 12,
         "y": 0,
@@ -100,7 +100,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (rating) (increase(rentcar_web_vitals_total{application=~\"$application\", metric=\"inp\"}[1h]))\n  / scalar(sum(increase(rentcar_web_vitals_total{application=~\"$application\", metric=\"inp\"}[1h])))",
+          "expr": "sum by (rating) (rentcar_web_vitals_total{application=~\"$application\", metric=\"inp\"})\n  / scalar(sum(rentcar_web_vitals_total{application=~\"$application\", metric=\"inp\"}))",
           "legendFormat": "{{rating}}",
           "datasource": {
             "type": "prometheus",
@@ -125,7 +125,7 @@
         "type": "prometheus",
         "uid": "${DS_PROM}"
       },
-      "description": "Amplitude des decalages de mise en page pendant le chargement. Cause habituelle : des images ou des blocs sans dimensions reservees. Seuil « bon » : 0,1.",
+      "description": "Amplitude des decalages de mise en page pendant le chargement. Cause habituelle : des images ou des blocs sans dimensions reservees. Seuil « bon » : 0,1. Le rapport est calcule sur les compteurs cumules, et non sur increase([1h]) comme dans la premiere version : sur une plage sans nouvelle mesure, increase() vaut 0 au numerateur ET au denominateur ; 0/0 donne NaN, et le panneau restait vide tout en affichant sa legende -- symptome trompeur, indiscernable d'une panne de collecte. Le cumul est non nul des qu'une mesure existe, quelle que soit la plage affichee ; une remise a zero du compteur touche les deux termes a la fois et ne fausse donc pas la repartition.",
       "gridPos": {
         "x": 0,
         "y": 8,
@@ -135,7 +135,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (rating) (increase(rentcar_web_vitals_total{application=~\"$application\", metric=\"cls\"}[1h]))\n  / scalar(sum(increase(rentcar_web_vitals_total{application=~\"$application\", metric=\"cls\"}[1h])))",
+          "expr": "sum by (rating) (rentcar_web_vitals_total{application=~\"$application\", metric=\"cls\"})\n  / scalar(sum(rentcar_web_vitals_total{application=~\"$application\", metric=\"cls\"}))",
           "legendFormat": "{{rating}}",
           "datasource": {
             "type": "prometheus",
