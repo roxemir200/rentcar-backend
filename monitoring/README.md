@@ -230,6 +230,66 @@ found » là-bas.
 Une seconde variable, `application`, permet de filtrer si plusieurs services
 poussent un jour vers la même pile.
 
+### Un tableau de bord entièrement vide alors que les métriques arrivent
+
+Le symptôme est déroutant : dans **Explore**, `jvm_memory_used_bytes` renvoie
+des séries ; dans le tableau de bord, **tous** les panneaux affichent « No
+data ». La collecte n'est pas en cause — c'est la variable `application` qui
+est vide, et un panneau vide est ici la *conséquence*, pas la panne.
+
+`label_values(jvm_memory_used_bytes, application)` est évalué **sur la plage de
+temps affichée**. Sur une plage où l'instance dormait — « Last 15 minutes »
+suffit, l'instance gratuite s'endort après 15 minutes d'inactivité — la
+requête ne renvoie rien. La variable devient vide, et chaque panneau interroge
+alors `application=""`, qui ne correspond à aucune série. Tout s'éteint d'un
+coup, ce qui ressemble à s'y méprendre à une chaîne de collecte rompue.
+
+Trois réglages ferment le piège :
+
+| Réglage | Rôle |
+|---|---|
+| `includeAll: true` | Grafana retombe sur « All » au lieu du vide |
+| `allValue: ".*"` | la valeur « All » est une regexp, pas une chaîne vide |
+| `=~` dans les panneaux | `application=~"$application"` accepte cette regexp |
+
+Le passage de `=` à `=~` a un second effet, utile : `.*` correspond aussi aux
+séries **dépourvues** du libellé `application`. Le tableau de bord affiche donc
+quelque chose même si les étiquettes communes venaient à manquer, au lieu de se
+taire.
+
+Deux vérifications utiles quand un panneau reste vide :
+
+```promql
+# 1. Le libellé existe-t-il vraiment sur les métriques poussées ?
+count by (application) (jvm_memory_used_bytes)
+
+# 2. Y a-t-il des points sur la plage affichée, ou l'instance dormait-elle ?
+jvm_memory_used_bytes
+```
+
+Si la première requête ne renvoie **aucune** valeur d'`application`, les
+étiquettes communes de `application.properties` n'arrivent pas jusqu'à Grafana
+Cloud : les règles d'alerte, qui écrivent `application="rentcar-backend"` en
+dur, sont alors muettes elles aussi et demandent la même correction.
+
+### `up` n'existe pas en production, et c'est normal
+
+`up` n'est pas une métrique de l'application : Prometheus la **fabrique** à
+chaque scrutation, pour dire si la cible a répondu. En local, où Prometheus
+scrute le conteneur, elle existe. En production, où l'application *pousse*, il
+n'y a pas de scrutation — donc pas de `up`, et il n'y en aura jamais. Aucun
+panneau ni aucune alerte ne s'en sert.
+
+Le corollaire vaut pour `/actuator/prometheus`, fermé en production
+(`ACTUATOR_EXPOSURE` n'y est pas défini) : l'ouvrir ne ferait pas apparaître
+`up` et ne remplirait aucun panneau, puisque **rien ne scrute ce service depuis
+l'extérieur**. Cela exposerait en revanche l'endpoint sur Internet. L'équivalent
+de `up` en mode push est la présence de points récents :
+
+```promql
+count(jvm_memory_used_bytes{application="rentcar-backend"})
+```
+
 ### Secrets GitHub à ajouter
 
 | Secret | Valeur |

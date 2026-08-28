@@ -35,12 +35,15 @@
           "uid": "${DS_PROM}"
         },
         "query": "label_values(jvm_memory_used_bytes, application)",
-        "refresh": 1,
+        "refresh": 2,
+        "includeAll": true,
+        "allValue": ".*",
         "current": {
-          "text": "rentcar-backend",
-          "value": "rentcar-backend"
+          "text": "All",
+          "value": "$__all"
         },
-        "hide": 0
+        "hide": 0,
+        "description": "Filtre les panneaux si plusieurs services poussent un jour vers la meme pile. Trois reglages evitent la panne la plus sournoise de ce tableau de bord : un panneau vide alors que la metrique existe. label_values() est evalue sur la plage de temps affichee ; sur une plage ou l'instance dormait, il ne renvoie RIEN, la variable devient vide, et les panneaux interrogent alors application=\"\" -- qui ne correspond a aucune serie. Chaque panneau affiche « No data », et l'on soupconne la collecte alors qu'elle fonctionne. D'ou : includeAll, pour que Grafana retombe sur « All » au lieu du vide ; allValue \".*\", regexp que les panneaux appliquent avec =~ (et non =), et qui accepte aussi les series depourvues du libelle ; refresh 2, pour reevaluer la liste a chaque changement de plage."
       }
     ]
   },
@@ -84,7 +87,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (uri) (rate(http_server_requests_seconds_count{application=\"$application\"}[5m]))",
+          "expr": "sum by (uri) (rate(http_server_requests_seconds_count{application=~\"$application\"}[5m]))",
           "legendFormat": "{{uri}}",
           "datasource": {
             "type": "prometheus",
@@ -117,7 +120,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "histogram_quantile(0.95, sum by (le, uri) (rate(http_server_requests_seconds_bucket{application=\"$application\"}[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le, uri) (rate(http_server_requests_seconds_bucket{application=~\"$application\"}[5m])))",
           "legendFormat": "{{uri}}",
           "datasource": {
             "type": "prometheus",
@@ -150,7 +153,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(rate(http_server_requests_seconds_count{application=\"$application\", status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count{application=\"$application\"}[5m]))",
+          "expr": "sum(rate(http_server_requests_seconds_count{application=~\"$application\", status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count{application=~\"$application\"}[5m]))",
           "legendFormat": "erreurs serveur",
           "datasource": {
             "type": "prometheus",
@@ -185,7 +188,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(jvm_memory_used_bytes{application=\"$application\", area=\"heap\"})",
+          "expr": "sum(jvm_memory_used_bytes{application=~\"$application\", area=\"heap\"})",
           "legendFormat": "utilisee",
           "datasource": {
             "type": "prometheus",
@@ -194,7 +197,7 @@
         },
         {
           "refId": "B",
-          "expr": "sum(jvm_memory_max_bytes{application=\"$application\", area=\"heap\"})",
+          "expr": "sum(jvm_memory_max_bytes{application=~\"$application\", area=\"heap\"})",
           "legendFormat": "maximum",
           "datasource": {
             "type": "prometheus",
@@ -227,7 +230,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (status) (increase(rentcar_payments_total{application=\"$application\"}[15m]))",
+          "expr": "sum by (status) (increase(rentcar_payments_total{application=~\"$application\"}[15m]))",
           "legendFormat": "{{status}}",
           "datasource": {
             "type": "prometheus",
@@ -258,7 +261,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(increase(rentcar_payment_intents_total{application=\"$application\"}[24h]))",
+          "expr": "sum(increase(rentcar_payment_intents_total{application=~\"$application\"}[24h]))",
           "legendFormat": "creees",
           "datasource": {
             "type": "prometheus",
@@ -289,7 +292,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "hikaricp_connections_active{application=\"$application\"}",
+          "expr": "hikaricp_connections_active{application=~\"$application\"}",
           "legendFormat": "actives",
           "datasource": {
             "type": "prometheus",
@@ -298,7 +301,7 @@
         },
         {
           "refId": "B",
-          "expr": "hikaricp_connections_max{application=\"$application\"}",
+          "expr": "hikaricp_connections_max{application=~\"$application\"}",
           "legendFormat": "maximum",
           "datasource": {
             "type": "prometheus",
