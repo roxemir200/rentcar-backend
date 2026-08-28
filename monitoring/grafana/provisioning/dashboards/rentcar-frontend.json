@@ -34,12 +34,15 @@
           "uid": "${DS_PROM}"
         },
         "query": "label_values(rentcar_web_vitals_total, application)",
-        "refresh": 1,
+        "refresh": 2,
+        "includeAll": true,
+        "allValue": ".*",
         "current": {
-          "text": "rentcar-backend",
-          "value": "rentcar-backend"
+          "text": "All",
+          "value": "$__all"
         },
-        "hide": 0
+        "hide": 0,
+        "description": "Meme reglage que le tableau de bord backend. label_values() est evalue sur la plage de temps affichee : sur une plage ou le service dormait, il ne renvoie RIEN, la variable devient vide, et les panneaux interrogent application=\"\" -- qui ne correspond a aucune serie, d'ou le « No data » alors que la collecte fonctionne. D'ou : includeAll, pour retomber sur « All » au lieu du vide ; allValue \".*\", regexp que les panneaux appliquent avec =~ (et non =) ; refresh 2, pour reevaluer la liste a chaque changement de plage."
       }
     ]
   },
@@ -62,7 +65,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (rating) (increase(rentcar_web_vitals_total{application=\"$application\", metric=\"lcp\"}[1h]))\n  / scalar(sum(increase(rentcar_web_vitals_total{application=\"$application\", metric=\"lcp\"}[1h])))",
+          "expr": "sum by (rating) (increase(rentcar_web_vitals_total{application=~\"$application\", metric=\"lcp\"}[1h]))\n  / scalar(sum(increase(rentcar_web_vitals_total{application=~\"$application\", metric=\"lcp\"}[1h])))",
           "legendFormat": "{{rating}}",
           "datasource": {
             "type": "prometheus",
@@ -97,7 +100,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (rating) (increase(rentcar_web_vitals_total{application=\"$application\", metric=\"inp\"}[1h]))\n  / scalar(sum(increase(rentcar_web_vitals_total{application=\"$application\", metric=\"inp\"}[1h])))",
+          "expr": "sum by (rating) (increase(rentcar_web_vitals_total{application=~\"$application\", metric=\"inp\"}[1h]))\n  / scalar(sum(increase(rentcar_web_vitals_total{application=~\"$application\", metric=\"inp\"}[1h])))",
           "legendFormat": "{{rating}}",
           "datasource": {
             "type": "prometheus",
@@ -132,7 +135,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (rating) (increase(rentcar_web_vitals_total{application=\"$application\", metric=\"cls\"}[1h]))\n  / scalar(sum(increase(rentcar_web_vitals_total{application=\"$application\", metric=\"cls\"}[1h])))",
+          "expr": "sum by (rating) (increase(rentcar_web_vitals_total{application=~\"$application\", metric=\"cls\"}[1h]))\n  / scalar(sum(increase(rentcar_web_vitals_total{application=~\"$application\", metric=\"cls\"}[1h])))",
           "legendFormat": "{{rating}}",
           "datasource": {
             "type": "prometheus",
@@ -167,7 +170,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (route) (increase(rentcar_web_vitals_total{application=\"$application\", metric=\"lcp\"}[1h]))",
+          "expr": "sum by (route) (increase(rentcar_web_vitals_total{application=~\"$application\", metric=\"lcp\"}[1h]))",
           "legendFormat": "{{route}}",
           "datasource": {
             "type": "prometheus",
@@ -198,7 +201,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(increase(rentcar_web_vitals_total{application=\"$application\"}[24h]))",
+          "expr": "sum(increase(rentcar_web_vitals_total{application=~\"$application\"}[24h]))",
           "legendFormat": "mesures",
           "datasource": {
             "type": "prometheus",
