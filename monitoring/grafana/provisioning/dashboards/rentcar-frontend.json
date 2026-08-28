@@ -55,7 +55,7 @@
         "type": "prometheus",
         "uid": "${DS_PROM}"
       },
-      "description": "Temps au bout duquel le visiteur voit l'element principal de la page. Une part « poor » qui grimpe designe une image trop lourde ou un script bloquant. Seuil « bon » : 2,5 s. Le rapport est calcule sur les compteurs cumules, et non sur increase([1h]) comme dans la premiere version : sur une plage sans nouvelle mesure, increase() vaut 0 au numerateur ET au denominateur ; 0/0 donne NaN, et le panneau restait vide tout en affichant sa legende -- symptome trompeur, indiscernable d'une panne de collecte. Le cumul est non nul des qu'une mesure existe, quelle que soit la plage affichee ; une remise a zero du compteur touche les deux termes a la fois et ne fausse donc pas la repartition.",
+      "description": "Temps au bout duquel le visiteur voit l'element principal de la page. Une part « poor » qui grimpe designe une image trop lourde ou un script bloquant. Seuil « bon » : 2,5 s. La forme de la requete contourne DEUX pieges, qui produisent le meme symptome. (1) increase([1h]) au numerateur ET au denominateur : sans nouvelle mesure sur la fenetre, 0/0 donne NaN, le panneau reste vide en affichant quand meme sa legende. (2) un selecteur instantane nu : l'instance Render s'endort apres 15 minutes, la poussee OTLP s'arrete, et au-dela du lookback de 5 minutes de Prometheus le selecteur ne renvoie plus rien du tout -- « No data » franc, alors qu'Explore sur une plage plus large montre les series. last_over_time([24h]) repond aux deux : il retrouve le dernier echantillon connu malgre le trou de collecte, et il porte sur des compteurs cumules, donc non nuls des qu'une mesure existe. Consequence assumee : ce panneau lit la derniere repartition connue dans les 24 h, il ne suit pas la plage du selecteur de temps.",
       "gridPos": {
         "x": 0,
         "y": 0,
@@ -65,7 +65,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (rating) (rentcar_web_vitals_total{application=~\"$application\", metric=\"lcp\"})\n  / scalar(sum(rentcar_web_vitals_total{application=~\"$application\", metric=\"lcp\"}))",
+          "expr": "sum by (rating) (last_over_time(rentcar_web_vitals_total{application=~\"$application\", metric=\"lcp\"}[24h]))\n  / scalar(sum(last_over_time(rentcar_web_vitals_total{application=~\"$application\", metric=\"lcp\"}[24h])))",
           "legendFormat": "{{rating}}",
           "datasource": {
             "type": "prometheus",
@@ -90,7 +90,7 @@
         "type": "prometheus",
         "uid": "${DS_PROM}"
       },
-      "description": "Delai entre un clic et la reponse visible. Mesure le travail qui monopolise le fil principal du navigateur. Seuil « bon » : 200 ms. Le rapport est calcule sur les compteurs cumules, et non sur increase([1h]) comme dans la premiere version : sur une plage sans nouvelle mesure, increase() vaut 0 au numerateur ET au denominateur ; 0/0 donne NaN, et le panneau restait vide tout en affichant sa legende -- symptome trompeur, indiscernable d'une panne de collecte. Le cumul est non nul des qu'une mesure existe, quelle que soit la plage affichee ; une remise a zero du compteur touche les deux termes a la fois et ne fausse donc pas la repartition.",
+      "description": "Delai entre un clic et la reponse visible. Mesure le travail qui monopolise le fil principal du navigateur. Seuil « bon » : 200 ms. La forme de la requete contourne DEUX pieges, qui produisent le meme symptome. (1) increase([1h]) au numerateur ET au denominateur : sans nouvelle mesure sur la fenetre, 0/0 donne NaN, le panneau reste vide en affichant quand meme sa legende. (2) un selecteur instantane nu : l'instance Render s'endort apres 15 minutes, la poussee OTLP s'arrete, et au-dela du lookback de 5 minutes de Prometheus le selecteur ne renvoie plus rien du tout -- « No data » franc, alors qu'Explore sur une plage plus large montre les series. last_over_time([24h]) repond aux deux : il retrouve le dernier echantillon connu malgre le trou de collecte, et il porte sur des compteurs cumules, donc non nuls des qu'une mesure existe. Consequence assumee : ce panneau lit la derniere repartition connue dans les 24 h, il ne suit pas la plage du selecteur de temps.",
       "gridPos": {
         "x": 12,
         "y": 0,
@@ -100,7 +100,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (rating) (rentcar_web_vitals_total{application=~\"$application\", metric=\"inp\"})\n  / scalar(sum(rentcar_web_vitals_total{application=~\"$application\", metric=\"inp\"}))",
+          "expr": "sum by (rating) (last_over_time(rentcar_web_vitals_total{application=~\"$application\", metric=\"inp\"}[24h]))\n  / scalar(sum(last_over_time(rentcar_web_vitals_total{application=~\"$application\", metric=\"inp\"}[24h])))",
           "legendFormat": "{{rating}}",
           "datasource": {
             "type": "prometheus",
@@ -125,7 +125,7 @@
         "type": "prometheus",
         "uid": "${DS_PROM}"
       },
-      "description": "Amplitude des decalages de mise en page pendant le chargement. Cause habituelle : des images ou des blocs sans dimensions reservees. Seuil « bon » : 0,1. Le rapport est calcule sur les compteurs cumules, et non sur increase([1h]) comme dans la premiere version : sur une plage sans nouvelle mesure, increase() vaut 0 au numerateur ET au denominateur ; 0/0 donne NaN, et le panneau restait vide tout en affichant sa legende -- symptome trompeur, indiscernable d'une panne de collecte. Le cumul est non nul des qu'une mesure existe, quelle que soit la plage affichee ; une remise a zero du compteur touche les deux termes a la fois et ne fausse donc pas la repartition.",
+      "description": "Amplitude des decalages de mise en page pendant le chargement. Cause habituelle : des images ou des blocs sans dimensions reservees. Seuil « bon » : 0,1. La forme de la requete contourne DEUX pieges, qui produisent le meme symptome. (1) increase([1h]) au numerateur ET au denominateur : sans nouvelle mesure sur la fenetre, 0/0 donne NaN, le panneau reste vide en affichant quand meme sa legende. (2) un selecteur instantane nu : l'instance Render s'endort apres 15 minutes, la poussee OTLP s'arrete, et au-dela du lookback de 5 minutes de Prometheus le selecteur ne renvoie plus rien du tout -- « No data » franc, alors qu'Explore sur une plage plus large montre les series. last_over_time([24h]) repond aux deux : il retrouve le dernier echantillon connu malgre le trou de collecte, et il porte sur des compteurs cumules, donc non nuls des qu'une mesure existe. Consequence assumee : ce panneau lit la derniere repartition connue dans les 24 h, il ne suit pas la plage du selecteur de temps.",
       "gridPos": {
         "x": 0,
         "y": 8,
@@ -135,7 +135,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (rating) (rentcar_web_vitals_total{application=~\"$application\", metric=\"cls\"})\n  / scalar(sum(rentcar_web_vitals_total{application=~\"$application\", metric=\"cls\"}))",
+          "expr": "sum by (rating) (last_over_time(rentcar_web_vitals_total{application=~\"$application\", metric=\"cls\"}[24h]))\n  / scalar(sum(last_over_time(rentcar_web_vitals_total{application=~\"$application\", metric=\"cls\"}[24h])))",
           "legendFormat": "{{rating}}",
           "datasource": {
             "type": "prometheus",
